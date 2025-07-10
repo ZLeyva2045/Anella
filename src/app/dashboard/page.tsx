@@ -4,7 +4,9 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const { user, signOut, loading } = useAuth();
@@ -16,28 +18,44 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return <p>Cargando...</p>;
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
   }
 
   if (!user) {
-    // Esto no debería pasar si el middleware funciona, pero es una buena práctica
-    return <p>Acceso denegado. Por favor, inicia sesión.</p>;
+    // This shouldn't happen if middleware works, but good practice
+    router.push('/login');
+    return null;
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <Card>
+    <div className="container mx-auto p-4 md:p-8">
+      <Card className="max-w-2xl mx-auto shadow-paper">
         <CardHeader>
-          <CardTitle>Bienvenido a tu Panel, {user.displayName || user.email}</CardTitle>
+          <CardTitle>Bienvenido a tu Panel, {user.displayName || user.email?.split('@')[0]}</CardTitle>
           <CardDescription>Aquí podrás gestionar tus pedidos y tu perfil.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p>Email: {user.email}</p>
-          <p>UID: {user.uid}</p>
-          <Button onClick={handleSignOut} variant="destructive" className="mt-4">
-            Cerrar Sesión
-          </Button>
+        <CardContent className="space-y-4">
+            <div>
+                <h3 className="font-semibold text-muted-foreground">Email</h3>
+                <p>{user.email}</p>
+            </div>
+             <div>
+                <h3 className="font-semibold text-muted-foreground">ID de Usuario</h3>
+                <p className="text-sm break-all">{user.uid}</p>
+            </div>
         </CardContent>
+        <CardFooter className="flex justify-between">
+            <Button asChild variant="outline">
+                <Link href="/products">Ver Productos</Link>
+            </Button>
+            <Button onClick={handleSignOut} variant="destructive">
+                Cerrar Sesión
+            </Button>
+        </CardFooter>
       </Card>
     </div>
   );

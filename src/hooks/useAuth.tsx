@@ -3,22 +3,23 @@
 
 import React, { useState, useEffect, useContext, createContext, ReactNode } from 'react';
 import { 
-  User as FirebaseUser,
+  type User as FirebaseUser,
   onAuthStateChanged, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
-  GoogleAuthProvider
+  GoogleAuthProvider,
+  type UserCredential
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 
 interface AuthContextType {
   user: FirebaseUser | null;
   loading: boolean;
-  signInWithEmail: (email: string, password: string) => Promise<any>;
-  signUpWithEmail: (email: string, password: string) => Promise<any>;
-  signInWithGoogle: () => Promise<any>;
+  signInWithEmail: (email: string, password: string) => Promise<UserCredential>;
+  signUpWithEmail: (email: string, password: string) => Promise<UserCredential>;
+  signInWithGoogle: () => Promise<UserCredential>;
   signOut: () => Promise<void>;
 }
 

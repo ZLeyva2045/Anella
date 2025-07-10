@@ -43,6 +43,7 @@ import {
   Briefcase,
   PlusCircle,
   Package,
+  UserPlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
@@ -85,17 +86,17 @@ export function Header() {
           <>
             <DropdownMenuLabel>
               <p className="font-normal">Conectado como</p>
-              <p className="font-semibold truncate">{user.email}</p>
+              <p className="font-semibold truncate">{user.displayName || user.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/dashboard">
-                <User className="mr-2" />
+                <User />
                 <span>Mi Cuenta</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSignOut}>
-              <LogOut className="mr-2" />
+              <LogOut />
               <span>Cerrar Sesión</span>
             </DropdownMenuItem>
           </>
@@ -105,13 +106,13 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/login">
-                <LogIn className="mr-2" />
+                <LogIn />
                 <span>Iniciar Sesión</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/signup">
-                <User className="mr-2" />
+                <UserPlus />
                 <span>Registrarse</span>
               </Link>
             </DropdownMenuItem>

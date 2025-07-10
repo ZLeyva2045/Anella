@@ -1,17 +1,24 @@
 // src/app/(auth)/signup/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, UserPlus } from 'lucide-react';
-import { setDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
-import { User } from '@/types/firestore';
+import {useState, type FormEvent} from 'react';
+import {useRouter} from 'next/navigation';
+import {useAuth} from '@/hooks/useAuth';
+import {Button} from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Loader2, UserPlus} from 'lucide-react';
+import {doc, setDoc} from 'firebase/firestore';
+import {db} from '@/lib/firebase/config';
+import type {User} from '@/types/firestore';
+import Link from 'next/link';
 
 export default function SignUpPage() {
   const [name, setName] = useState('');
@@ -19,10 +26,10 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { signUpWithEmail } = useAuth();
+  const {signUpWithEmail} = useAuth();
   const router = useRouter();
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
@@ -39,24 +46,31 @@ export default function SignUpPage() {
         orders: [],
       };
 
-      await setDoc(doc(db, "users", user.uid), newUser);
-      
+      await setDoc(doc(db, 'users', user.uid), newUser);
+
       router.push('/dashboard');
     } catch (error: any) {
       setError(error.message || 'Error al registrarse. Inténtalo de nuevo.');
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+      <Card className="w-full max-w-md shadow-floating">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Crear Cuenta</CardTitle>
-          <CardDescription>Únete a Anella Boutique para regalos únicos</CardDescription>
+          <CardDescription>
+            Únete a Anella Boutique para regalos únicos
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {error && <p className="mb-4 text-center text-red-500 bg-red-100 p-3 rounded-md">{error}</p>}
+          {error && (
+            <p className="mb-4 rounded-md bg-destructive/10 p-3 text-center text-sm text-destructive">
+              {error}
+            </p>
+          )}
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nombre Completo</Label>
@@ -95,13 +109,20 @@ export default function SignUpPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : <UserPlus className="mr-2" />}
+              {isLoading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <UserPlus />
+              )}
               Registrarse
             </Button>
           </form>
-           <p className="mt-4 text-center text-sm text-muted-foreground">
-              ¿Ya tienes una cuenta? <a href="/login" className="font-semibold text-primary hover:underline">Inicia Sesión</a>
-            </p>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            ¿Ya tienes una cuenta?{' '}
+            <Link href="/login" className="font-semibold text-primary hover:underline">
+              Inicia Sesión
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>
