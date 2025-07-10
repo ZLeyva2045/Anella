@@ -1,12 +1,18 @@
 // src/lib/mock-data.ts
 import type { Product } from '@/types/firestore';
 
+export interface CustomizationChoice {
+    name: string;
+    priceModifier: number; // 0 for free options
+}
+
 export interface CustomizationOption {
     id: string;
     label: string;
-    type: 'text' | 'textarea' | 'radio' | 'image';
+    type: 'text' | 'textarea' | 'radio' | 'image' | 'select';
     placeholder?: string;
-    choices?: string[];
+    choices?: CustomizationChoice[];
+    priceModifier?: number; // For text/textarea/image inputs
 }
 
 
@@ -161,9 +167,9 @@ export const mockProductDetails: ProductDetail[] = mockProducts.map(p => ({
   ...p,
   detailedDescription: p.description + " Este es un texto de descripción más largo que detalla las características, materiales y el proceso de creación de este fantástico producto. Es ideal para convencer al cliente de la calidad y el valor que está a punto de adquirir.",
   customizationOptions: p.isPersonalizable ? [
-    { id: 'nombre', label: 'Nombre para Grabar', type: 'text', placeholder: 'Ej: "Para mi amor, María"' },
-    { id: 'color-luz', label: 'Color de la Luz', type: 'radio', choices: ['Cálida', 'Fría', 'RGB'] },
-    { id: 'foto', label: 'Sube tu Foto', type: 'image'},
-    { id: 'dedicatoria', label: 'Dedicatoria Adicional', type: 'textarea', placeholder: 'Escribe aquí un mensaje especial...'},
+    { id: 'nombre', label: 'Nombre para Grabar (+S/5.00)', type: 'text', placeholder: 'Ej: "Para mi amor, María"', priceModifier: 5 },
+    { id: 'color-luz', label: 'Color de la Luz', type: 'radio', choices: [{name: 'Cálida', priceModifier: 0}, {name: 'Fría', priceModifier: 0}, {name: 'RGB (+S/15.00)', priceModifier: 15}] },
+    { id: 'foto', label: 'Sube tu Foto (+S/10.00)', type: 'image', priceModifier: 10},
+    { id: 'dedicatoria', label: 'Dedicatoria Adicional', type: 'textarea', placeholder: 'Escribe aquí un mensaje especial...', priceModifier: 0},
   ] : undefined,
 }));

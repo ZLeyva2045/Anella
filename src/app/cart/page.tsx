@@ -48,11 +48,20 @@ export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartCount, totalPrice } = useCart();
   
   const handleWhatsAppOrder = () => {
-    const header = "¡Hola Anella! 👋 Quiero hacer un pedido:\n\n";
-    const productLines = cartItems.map(item => 
-      `*${item.name}* (x${item.quantity}) - S/${(item.price * item.quantity).toFixed(2)}`
-    ).join("\n");
-    const footer = `\n\n*Total:* S/${totalPrice.toFixed(2)}\n\n_Espero su pronta respuesta para coordinar la personalización y el pago._`;
+    let header = "¡Hola Anella! 👋 Quiero hacer un pedido:\n\n";
+    
+    const productLines = cartItems.map(item => {
+      let productMessage = `*${item.name}* (x${item.quantity}) - S/${(item.price * item.quantity).toFixed(2)}`;
+      if (item.customizations && Object.keys(item.customizations).length > 0) {
+        const customizationDetails = Object.values(item.customizations)
+          .map(cust => `  - ${cust.label.split('(')[0].trim()}: ${cust.value}`)
+          .join("\n");
+        productMessage += `\n_Personalización:_\n${customizationDetails}`;
+      }
+      return productMessage;
+    }).join("\n\n");
+
+    const footer = `\n\n*Total:* S/${totalPrice.toFixed(2)}\n\n_Espero su pronta respuesta para coordinar los detalles y el pago._`;
     
     const message = encodeURIComponent(header + productLines + footer);
     const phoneNumber = "51987771610"; // Número de Anella
@@ -72,7 +81,7 @@ export default function CartPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map(item => (
-                <Card key={item.id} className="flex items-center p-4">
+                <Card key={item.cartItemId} className="flex items-center p-4">
                   <Image
                     src={item.images[0]}
                     alt={item.name}
@@ -83,20 +92,27 @@ export default function CartPage() {
                   <div className="ml-4 flex-grow">
                     <h3 className="font-semibold text-lg">{item.name}</h3>
                     <p className="text-muted-foreground text-sm">S/{item.price.toFixed(2)}</p>
+                     {item.customizations && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {Object.values(item.customizations).map(cust => (
+                          <div key={cust.label}>- {cust.value}</div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}>
                       <Minus className="h-4 w-4" />
                     </Button>
                     <span className="w-10 text-center font-bold">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                   <div className="ml-4 font-bold text-lg w-24 text-right">
                     S/{(item.price * item.quantity).toFixed(2)}
                   </div>
-                  <Button variant="ghost" size="icon" className="ml-4" onClick={() => removeFromCart(item.id)}>
+                  <Button variant="ghost" size="icon" className="ml-4" onClick={() => removeFromCart(item.cartItemId)}>
                     <Trash2 className="h-5 w-5 text-destructive" />
                   </Button>
                 </Card>

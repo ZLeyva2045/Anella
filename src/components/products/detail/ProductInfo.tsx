@@ -6,21 +6,30 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import type { ProductDetail } from '@/lib/mock-data';
+import type { SelectedCustomization } from '@/app/products/[id]/page';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { Heart, Share2, ShoppingCart, Star } from 'lucide-react';
 
 interface ProductInfoProps {
   product: ProductDetail;
+  totalPrice: number;
+  customizationCost: number;
+  selectedCustomizations: SelectedCustomization;
 }
 
-export function ProductInfo({ product }: ProductInfoProps) {
+export function ProductInfo({ product, totalPrice, customizationCost, selectedCustomizations }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   const { toast } = useToast();
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    const productWithCustomizations = {
+      ...product,
+      price: totalPrice, // Use the final calculated price
+      customizations: selectedCustomizations,
+    };
+    addToCart(productWithCustomizations, quantity);
     toast({
       title: "¡Añadido al carrito!",
       description: `${quantity} x ${product.name} se ha añadido a tu carrito.`,
@@ -47,7 +56,21 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </Badge>
         </div>
       </div>
-      <p className="text-3xl font-bold text-primary">S/{product.price.toFixed(2)}</p>
+      
+      <div>
+        <div className="flex justify-between items-baseline">
+            <span className="text-muted-foreground">Precio Base</span>
+            <span className="text-muted-foreground">S/{product.price.toFixed(2)}</span>
+        </div>
+         {customizationCost > 0 && (
+          <div className="flex justify-between items-baseline text-sm">
+            <span className="text-muted-foreground">Personalización</span>
+            <span className="text-muted-foreground">+ S/{customizationCost.toFixed(2)}</span>
+          </div>
+        )}
+        <p className="text-3xl font-bold text-primary text-right mt-1">S/{totalPrice.toFixed(2)}</p>
+      </div>
+
       <p className="text-muted-foreground pb-4">{product.description}</p>
       
       <Separator />
