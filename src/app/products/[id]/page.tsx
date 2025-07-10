@@ -14,11 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const { id } = params;
 
   useEffect(() => {
-    // Simulate fetching product details
-    const fetchedProduct = mockProductDetails.find(p => p.id === id);
+    // Access params.id only inside the effect
+    const fetchedProduct = mockProductDetails.find(p => p.id === params.id);
     
     // Set a timeout to simulate network latency
     const timer = setTimeout(() => {
@@ -29,7 +28,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     }, 500); // 0.5 second delay
 
     return () => clearTimeout(timer);
-  }, [id]);
+  }, [params]); // Depend on the entire params object
 
   if (loading) {
     return (
