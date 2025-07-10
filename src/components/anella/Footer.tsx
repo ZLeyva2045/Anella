@@ -20,11 +20,11 @@ export function Footer() {
               </li>
               <li className="flex items-center justify-center md:justify-start gap-2">
                 <Phone className="h-4 w-4 text-primary" />
-                <span>+51 987 654 321</span>
+                <span>+51 987 771 610</span>
               </li>
               <li className="flex items-center justify-center md:justify-start gap-2">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span>Jr. Dos de Mayo 345, Cajamarca</span>
+                <span>Jr. El Inca 332, Cajamarca</span>
               </li>
             </ul>
           </div>
