@@ -95,6 +95,12 @@ export function Header() {
                 <span>Mi Cuenta</span>
               </Link>
             </DropdownMenuItem>
+             <DropdownMenuItem asChild>
+              <Link href="/wishlist">
+                <Heart />
+                <span>Lista de Deseos</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSignOut}>
               <LogOut />
               <span>Cerrar Sesión</span>

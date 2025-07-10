@@ -10,6 +10,7 @@ import type { SelectedCustomization } from '@/app/products/[id]/page';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { Heart, Share2, ShoppingCart, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProductInfoProps {
   product: ProductDetail;
@@ -20,6 +21,7 @@ interface ProductInfoProps {
 
 export function ProductInfo({ product, totalPrice, customizationCost, selectedCustomizations }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
+  const [isFavorite, setIsFavorite] = useState(false);
   const { addToCart } = useCart();
   const { toast } = useToast();
 
@@ -35,6 +37,14 @@ export function ProductInfo({ product, totalPrice, customizationCost, selectedCu
       description: `${quantity} x ${product.name} se ha añadido a tu carrito.`,
     });
   };
+
+  const handleToggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    toast({
+      title: isFavorite ? "Quitado de favoritos" : "¡Añadido a favoritos!",
+      description: `${product.name} se ha ${isFavorite ? 'quitado de tu' : 'añadido a tu'} lista de deseos.`,
+    });
+  }
 
   const increaseQuantity = () => setQuantity(prev => prev + 1);
   const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
@@ -91,9 +101,14 @@ export function ProductInfo({ product, totalPrice, customizationCost, selectedCu
             <ShoppingCart className="mr-2"/>
             Añadir al Carrito
         </Button>
-         <Button size="lg" variant="outline" className="w-full">
-            <Heart className="mr-2"/>
-            Añadir a Favoritos
+         <Button 
+            size="lg" 
+            variant="outline" 
+            className="w-full"
+            onClick={handleToggleFavorite}
+          >
+            <Heart className={cn("mr-2", isFavorite && "fill-current text-red-500")} />
+            {isFavorite ? 'En tu lista de deseos' : 'Añadir a Favoritos'}
         </Button>
       </div>
 
