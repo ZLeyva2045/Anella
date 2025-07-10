@@ -88,12 +88,12 @@ export function Header() {
               <p className="font-semibold truncate">{user.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <Link href="/dashboard" passHref>
-              <DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard">
                 <User className="mr-2" />
                 <span>Mi Cuenta</span>
-              </DropdownMenuItem>
-            </Link>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="mr-2" />
               <span>Cerrar Sesión</span>
@@ -103,18 +103,18 @@ export function Header() {
           <>
             <DropdownMenuLabel>Bienvenido</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <Link href="/login" passHref>
-              <DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/login">
                 <LogIn className="mr-2" />
                 <span>Iniciar Sesión</span>
-              </DropdownMenuItem>
-            </Link>
-            <Link href="/signup" passHref>
-              <DropdownMenuItem>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/signup">
                 <User className="mr-2" />
                 <span>Registrarse</span>
-              </DropdownMenuItem>
-            </Link>
+              </Link>
+            </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>
