@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function para verificar si un usuario está autenticado
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper function para verificar si el usuario es el dueño del documento
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // --- Users Collection ---
+    // Cualquiera puede crear su propia cuenta de usuario.
+    // Solo el usuario propietario puede leer o actualizar sus datos.
+    // Nadie puede eliminar su cuenta directamente desde el cliente.
+    match /users/{userId} {
+      allow create: if isSignedIn() && request.resource.id == request.auth.uid;
+      allow read, update: if isSignedIn() && isOwner(userId);
+      allow delete: if false;
+    }
+
+    // --- Products Collection ---
+    // Cualquiera puede leer la lista de productos y los detalles de un producto.
+    // Solo los administradores (rol 'admin' futuro) podrán crear, actualizar o eliminar productos.
+    // Por ahora, estas operaciones están deshabilitadas desde el cliente.
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if false; // Cambiar a `if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'` en el futuro
+    }
+
+    // --- Categories Collection ---
+    // Cualquiera puede leer las categorías y subcategorías.
+    // Solo los administradores podrán gestionarlas.
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if false; // Futuro: `if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'`
+    }
+
+    // --- Orders Collection ---
+    // Un usuario autenticado puede crear un pedido para sí mismo.
+    // Un usuario solo puede leer sus propios pedidos.
+    // Los pedidos no se pueden actualizar ni eliminar desde el cliente una vez creados.
+    match /orders/{orderId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid; // Futuro: permitir a admins leer todo
+      allow update, delete: if false;
+    }
+  }
+}
