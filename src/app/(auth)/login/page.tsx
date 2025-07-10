@@ -1,3 +1,4 @@
+
 // src/app/(auth)/login/page.tsx
 'use client';
 import {useState, type FormEvent} from 'react';
@@ -31,7 +32,12 @@ export default function LoginPage() {
     setError(null);
     try {
       await signInWithEmail(email, password);
-      router.push('/dashboard');
+      // Redirigir a admin si el email es de un administrador, si no a dashboard
+      if (['gabriela@anella.pe', 'blanca@anella.pe', 'karen@anella.pe', 'mafer@anella.pe', 'andrea@anella.pe'].includes(email)) {
+          router.push('/admin');
+      } else {
+          router.push('/dashboard');
+      }
     } catch (error: any) {
       setError(error.message || 'Error al iniciar sesión. Verifica tus credenciales.');
     } finally {
@@ -43,8 +49,13 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
-      await signInWithGoogle();
-      router.push('/dashboard');
+      const userCredential = await signInWithGoogle();
+      const userEmail = userCredential.user.email;
+       if (userEmail && ['gabriela@anella.pe', 'blanca@anella.pe', 'karen@anella.pe', 'mafer@anella.pe', 'andrea@anella.pe'].includes(userEmail)) {
+          router.push('/admin');
+      } else {
+          router.push('/dashboard');
+      }
     } catch (error: any) {
       setError(error.message || 'Error al iniciar sesión con Google.');
     } finally {

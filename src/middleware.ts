@@ -1,3 +1,4 @@
+
 // src/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -13,7 +14,7 @@ export function middleware(request: NextRequest) {
   const isLoggedIn = request.cookies.get('firebaseAuth.user');
 
   // Rutas protegidas que requieren autenticación
-  const protectedPaths = ['/dashboard'];
+  const protectedPaths = ['/dashboard', '/admin'];
 
   // Si el usuario intenta acceder a una ruta protegida y no está logueado
   if (protectedPaths.some(p => pathname.startsWith(p)) && !isLoggedIn) {
@@ -35,5 +36,5 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // Ejecutar el middleware en estas rutas
-  matcher: ['/dashboard/:path*', '/login', '/signup', '/forgot-password'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/login', '/signup', '/forgot-password'],
 };
