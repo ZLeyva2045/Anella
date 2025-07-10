@@ -125,7 +125,7 @@ export function Header() {
     <NavigationMenu className={className}>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <Link href="/" passHref>
+          <Link href="/" passHref legacyBehavior>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               Inicio
             </NavigationMenuLink>
@@ -148,14 +148,14 @@ export function Header() {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <Link href="/#gallery" passHref>
+          <Link href="/#gallery" passHref legacyBehavior>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               Galería
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <Link href="/#contact" passHref>
+           <Link href="/#contact" passHref legacyBehavior>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               Contacto
             </NavigationMenuLink>
