@@ -39,7 +39,7 @@ const FloatingParticle = ({ icon: Icon, className, style }: { icon: React.Elemen
 
 
 export function HeroSection() {
-  const title = useTypewriter("La Mejor Tienda de Regalos de Cajamarca", 50, 500);
+  const title = useTypewriter("El regalo perfecto", 50, 500);
   const subtitle = useTypewriter("Miles de productos personalizados con fotos y frases únicas.", 30, 2500);
 
   return (
