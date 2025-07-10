@@ -26,7 +26,7 @@ export default function DashboardPage() {
   }
 
   if (!user) {
-    // This shouldn't happen if middleware works, but good practice
+    // Esto no debería suceder si el middleware funciona, pero es una buena práctica
     router.push('/login');
     return null;
   }
