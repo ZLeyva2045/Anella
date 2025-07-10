@@ -1,32 +1,109 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Users can only read and write to their own user document.
-    // They cannot read the entire 'users' collection.
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Anyone can read the products collection, but only admins (in the future) can write.
-    match /products/{productId} {
-      allow read: if true;
-      allow write: if false; // For now, lock down writes completely.
+  
+    // --- Helper Functions for Role-Based Access ---
+    
+    // Checks if the user's email is in the list of Managers
+    function isManager() {
+      return request.auth.token.email in [
+        'gabriela@anella.pe'
+      ];
     }
     
-    // Anyone can read categories and themes.
-    match /categories/{categoryId} {
-        allow read: if true;
-        allow write: if false;
+    // Checks if the user's email is in the list of Sales
+    function isSales() {
+      return request.auth.token.email in [
+        'blanca@anella.pe'
+      ];
+    }
+    
+    // Checks if the user's email is in the list of Designers
+    function isDesigner() {
+      return request.auth.token.email in [
+        'karen@anella.pe'
+      ];
+    }
+    
+    // Checks if the user's email is in the list of Manufacturing
+    function isManufacturing() {
+      return request.auth.token.email in [
+        'mafer@anella.pe'
+      ];
+    }
+    
+    // Checks if the user's email is in the list of Creative
+    function isCreative() {
+        return request.auth.token.email in [
+            'andrea@anella.pe'
+        ];
     }
 
-    match /themes/{themeId} {
-        allow read: if true;
-        allow write: if false;
+    // Checks if the user is any kind of admin
+    function isAdmin() {
+      return isManager() || isSales() || isDesigner() || isManufacturing() || isCreative();
+    }
+    
+    // Checks if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Checks if the request is from the user who owns the document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    // Add rules for other collections as needed
+    // --- Collection Rules ---
+
+    // Users Collection
+    // Users can see and edit their own profile.
+    // Admins have broader access based on their roles.
+    match /users/{userId} {
+      // Allow read/write access to the owner of the document
+      allow read, update: if isAuthenticated() && isOwner(userId);
+      
+      // Allow Managers and Sales to read any user's profile
+      allow get: if isAuthenticated() && (isManager() || isSales());
+      
+      // Allow new users to create their own document during sign up
+      allow create: if isAuthenticated() && isOwner(userId);
+      
+      // Allow Managers to list all users
+      allow list: if isAuthenticated() && isManager();
+    }
+
+    // Products Collection
+    // Publicly readable by anyone.
+    // Writable only by Managers and Designers.
+    match /products/{productId} {
+      // Anyone can view products
+      allow read: if true;
+      
+      // Only Managers and Designers can create, update, or delete products
+      allow write: if isAuthenticated() && (isManager() || isDesigner());
+    }
+
+    // Orders Collection
+    // Accessible only by authenticated users, with specific admin roles.
+    match /orders/{orderId} {
+      // Users can read their own orders.
+      // Admins (Manager, Sales, Manufacturing, Creative) can read any order.
+      allow get: if isAuthenticated() && (isOwner(resource.data.userId) || isManager() || isSales() || isManufacturing() || isCreative());
+      
+      // Users can create their own orders.
+      // Sales and Managers can create orders.
+      allow create: if isAuthenticated() && (isOwner(request.resource.data.userId) || isSales() || isManager());
+
+      // Only Managers, Sales, or Manufacturing can update orders (e.g., change status)
+      allow update: if isAuthenticated() && (isManager() || isSales() || isManufacturing());
+
+      // Only Managers can list all orders. Sales can also list for their needs.
+      allow list: if isAuthenticated() && (isManager() || isSales());
+      
+      // Only a Manager can delete an order.
+      allow delete: if isAuthenticated() && isManager();
+    }
   }
 }
