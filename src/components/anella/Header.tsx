@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { useCart } from '@/hooks/useCart';
 
 const categories = [
   { name: 'Listos en tienda', href: '/products?category=store-ready', icon: Package },
@@ -64,11 +65,11 @@ const categories = [
 
 export function Header() {
   const { user, signOut, loading } = useAuth();
+  const { cartCount } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
-    // La redirección se maneja en el middleware o en la página
   };
 
   const UserMenu = () => (
@@ -222,10 +223,16 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input type="search" placeholder="Buscar regalos..." className="pl-9 w-40 lg:w-64" />
           </div>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <ShoppingCart className="h-5 w-5" />
-            <span className="sr-only">Carrito</span>
-             <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span>
+          <Button asChild variant="ghost" size="icon" className="rounded-full relative">
+            <Link href="/cart">
+              <ShoppingCart className="h-5 w-5" />
+              <span className="sr-only">Carrito</span>
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground transform translate-x-1/4 -translate-y-1/4">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
           </Button>
           {!loading && <UserMenu />}
         </div>

@@ -1,8 +1,13 @@
 // src/components/products/detail/ProductInfo.tsx
+'use client';
+
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import type { ProductDetail } from '@/lib/mock-data';
+import { useCart } from '@/hooks/useCart';
+import { useToast } from '@/hooks/use-toast';
 import { Heart, Share2, ShoppingCart, Star } from 'lucide-react';
 
 interface ProductInfoProps {
@@ -10,6 +15,21 @@ interface ProductInfoProps {
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
+  const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+    toast({
+      title: "¡Añadido al carrito!",
+      description: `${quantity} x ${product.name} se ha añadido a tu carrito.`,
+    });
+  };
+
+  const increaseQuantity = () => setQuantity(prev => prev + 1);
+  const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
+
   return (
     <div className="space-y-4">
       <div>
@@ -36,15 +56,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <div className="flex items-center justify-between">
             <span className="font-medium">Cantidad</span>
             <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-8 w-8">-</Button>
-                <span className="w-10 text-center font-bold text-lg">1</span>
-                <Button variant="outline" size="icon" className="h-8 w-8">+</Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={decreaseQuantity}>-</Button>
+                <span className="w-10 text-center font-bold text-lg">{quantity}</span>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={increaseQuantity}>+</Button>
             </div>
         </div>
       </div>
       
       <div className="flex flex-col gap-3">
-        <Button size="lg" className="w-full text-lg py-6">
+        <Button size="lg" className="w-full text-lg py-6" onClick={handleAddToCart}>
             <ShoppingCart className="mr-2"/>
             Añadir al Carrito
         </Button>
