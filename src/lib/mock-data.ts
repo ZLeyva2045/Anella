@@ -1,6 +1,20 @@
 // src/lib/mock-data.ts
 import type { Product } from '@/types/firestore';
 
+export interface CustomizationOption {
+    id: string;
+    label: string;
+    type: 'text' | 'textarea' | 'radio' | 'image';
+    placeholder?: string;
+    choices?: string[];
+}
+
+
+export interface ProductDetail extends Product {
+    detailedDescription: string;
+    customizationOptions?: CustomizationOption[];
+}
+
 export const mockCategories = [
   { id: 'botiquines', name: 'Botiquines' },
   { id: 'lamparas', name: 'Lámparas' },
@@ -24,7 +38,7 @@ export const mockProducts: Product[] = [
     description: 'Ilumina tus noches con esta mágica lámpara de luna con tu foto y frase grabada.',
     price: 120.00,
     category: 'lamparas',
-    images: ['https://placehold.co/400x300.png', 'https://placehold.co/400x300.png'],
+    images: ['https://placehold.co/400x300.png', 'https://placehold.co/400x301.png', 'https://placehold.co/400x302.png'],
     isPersonalizable: true,
     createdAt: new Date('2023-10-26T10:00:00Z'),
     updatedAt: new Date('2023-10-26T10:00:00Z'),
@@ -142,3 +156,14 @@ export const mockProducts: Product[] = [
     themes: ['dragon-ball']
   }
 ];
+
+export const mockProductDetails: ProductDetail[] = mockProducts.map(p => ({
+  ...p,
+  detailedDescription: p.description + " Este es un texto de descripción más largo que detalla las características, materiales y el proceso de creación de este fantástico producto. Es ideal para convencer al cliente de la calidad y el valor que está a punto de adquirir.",
+  customizationOptions: p.isPersonalizable ? [
+    { id: 'nombre', label: 'Nombre para Grabar', type: 'text', placeholder: 'Ej: "Para mi amor, María"' },
+    { id: 'color-luz', label: 'Color de la Luz', type: 'radio', choices: ['Cálida', 'Fría', 'RGB'] },
+    { id: 'foto', label: 'Sube tu Foto', type: 'image'},
+    { id: 'dedicatoria', label: 'Dedicatoria Adicional', type: 'textarea', placeholder: 'Escribe aquí un mensaje especial...'},
+  ] : undefined,
+}));
