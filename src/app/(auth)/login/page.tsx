@@ -89,6 +89,11 @@ export default function LoginPage() {
                 disabled={isLoading}
               />
             </div>
+             <div className="flex items-center justify-end">
+                <Link href="/forgot-password" passHref>
+                  <Button variant="link" size="sm" className="px-0 h-auto py-1 text-sm">¿Olvidaste tu contraseña?</Button>
+                </Link>
+              </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin" /> : <LogIn />}
               Acceder

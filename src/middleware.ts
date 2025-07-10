@@ -3,17 +3,37 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Las cookies de Firebase Auth se gestionan automáticamente en el lado del cliente,
-  // y la sesión se verifica con el oyente onAuthStateChanged.
-  // Un middleware basado en cookies del lado del servidor podría ser complejo
-  // y propenso a errores sin una estrategia de sincronización de tokens.
-  // Por lo tanto, dejaremos que la lógica del lado del cliente en los componentes y hooks
-  // maneje la redirección basada en el estado de autenticación.
+  const { pathname } = request.nextUrl;
+
+  // El nombre de la cookie de sesión de Firebase puede variar, pero a menudo
+  // la presencia de una cookie de sesión es un buen indicador (aunque no infalible).
+  // La validación real se hace en el cliente con onAuthStateChanged.
+  // Esta cookie es un proxy para saber si el usuario *podría* estar logueado.
+  // La nombraremos 'isLoggedIn' y la manejaremos en el cliente.
+  const isLoggedIn = request.cookies.get('firebaseAuth.user');
+
+  // Rutas protegidas que requieren autenticación
+  const protectedPaths = ['/dashboard'];
+
+  // Si el usuario intenta acceder a una ruta protegida y no está logueado
+  if (protectedPaths.some(p => pathname.startsWith(p)) && !isLoggedIn) {
+    // Redirigir a la página de login
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirectedFrom', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Si el usuario está logueado e intenta acceder a login o signup
+  const authPaths = ['/login', '/signup', '/forgot-password'];
+  if (authPaths.includes(pathname) && isLoggedIn) {
+    // Redirigir al dashboard
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
 
   return NextResponse.next();
 }
 
 export const config = {
-  // No es necesario que el middleware se ejecute en ninguna ruta por ahora.
-  matcher: [],
+  // Ejecutar el middleware en estas rutas
+  matcher: ['/dashboard/:path*', '/login', '/signup', '/forgot-password'],
 };
