@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
 import { ProductDetail, mockProductDetails } from '@/lib/mock-data';
@@ -11,24 +11,28 @@ import { ProductInfo } from '@/components/products/detail/ProductInfo';
 import { CustomizationOptions } from '@/components/products/detail/CustomizationOptions';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage() {
+  const params = useParams();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Access params.id only inside the effect
-    const fetchedProduct = mockProductDetails.find(p => p.id === params.id);
-    
-    // Set a timeout to simulate network latency
-    const timer = setTimeout(() => {
-        if (fetchedProduct) {
-            setProduct(fetchedProduct);
-        }
-        setLoading(false);
-    }, 500); // 0.5 second delay
+    const productId = params.id;
+    if (productId) {
+      const fetchedProduct = mockProductDetails.find(p => p.id === productId);
+      
+      const timer = setTimeout(() => {
+          if (fetchedProduct) {
+              setProduct(fetchedProduct);
+          }
+          setLoading(false);
+      }, 500);
 
-    return () => clearTimeout(timer);
-  }, [params]); // Depend on the entire params object
+      return () => clearTimeout(timer);
+    } else {
+        setLoading(false);
+    }
+  }, [params.id]);
 
   if (loading) {
     return (
