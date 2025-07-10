@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/hooks/useAuth';
 import { CartProvider } from '@/hooks/useCart';
+import { WhatsAppButton } from '@/components/anella/WhatsAppButton';
 
 export const metadata: Metadata = {
   title: 'Anella Boutique',
@@ -25,6 +26,7 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             {children}
+            <WhatsAppButton />
           </CartProvider>
         </AuthProvider>
         <Toaster />
