@@ -1,53 +1,32 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function para verificar si un usuario está autenticado
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Helper function para verificar si el usuario es el dueño del documento
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // --- Users Collection ---
-    // Cualquiera puede crear su propia cuenta de usuario.
-    // Solo el usuario propietario puede leer o actualizar sus datos.
-    // Nadie puede eliminar su cuenta directamente desde el cliente.
+    // Users can only read and write to their own user document.
+    // They cannot read the entire 'users' collection.
     match /users/{userId} {
-      allow create: if isSignedIn() && request.resource.id == request.auth.uid;
-      allow read, update: if isSignedIn() && isOwner(userId);
-      allow delete: if false;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // --- Products Collection ---
-    // Cualquiera puede leer la lista de productos y los detalles de un producto.
-    // Solo los administradores (rol 'admin' futuro) podrán crear, actualizar o eliminar productos.
-    // Por ahora, estas operaciones están deshabilitadas desde el cliente.
+    // Anyone can read the products collection, but only admins (in the future) can write.
     match /products/{productId} {
       allow read: if true;
-      allow create, update, delete: if false; // Cambiar a `if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'` en el futuro
+      allow write: if false; // For now, lock down writes completely.
     }
-
-    // --- Categories Collection ---
-    // Cualquiera puede leer las categorías y subcategorías.
-    // Solo los administradores podrán gestionarlas.
+    
+    // Anyone can read categories and themes.
     match /categories/{categoryId} {
-      allow read: if true;
-      allow create, update, delete: if false; // Futuro: `if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'`
+        allow read: if true;
+        allow write: if false;
     }
 
-    // --- Orders Collection ---
-    // Un usuario autenticado puede crear un pedido para sí mismo.
-    // Un usuario solo puede leer sus propios pedidos.
-    // Los pedidos no se pueden actualizar ni eliminar desde el cliente una vez creados.
-    match /orders/{orderId} {
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid; // Futuro: permitir a admins leer todo
-      allow update, delete: if false;
+    match /themes/{themeId} {
+        allow read: if true;
+        allow write: if false;
     }
+
+    // Add rules for other collections as needed
   }
 }
