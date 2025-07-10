@@ -1,4 +1,3 @@
-
 // src/components/anella/Header.tsx
 'use client';
 
@@ -49,18 +48,18 @@ import { cn } from '@/lib/utils';
 import React from 'react';
 
 const categories = [
-  { name: 'Listos en tienda', href: '/products/store-ready', icon: Package },
-  { name: 'Románticos', href: '/products/romantic', icon: Heart },
-  { name: 'Cumpleaños', href: '/products/birthday', icon: Cake },
-  { name: 'Otras temáticas', href: '/products/themes', icon: Star },
-  { name: 'Individuales', href: '/products/individual', icon: Sparkles },
-  { name: 'Hot Wheels', href: '/products/hot-wheels', icon: Car },
-  { name: 'Desayunos', href: '/products/breakfast', icon: Coffee },
-  { name: 'Postres', href: '/products/desserts', icon: IceCream },
-  { name: 'Flores', href: '/products/flowers', icon: Flower },
-  { name: 'Ocasiones', href: '/products/occasions', icon: Gift },
-  { name: 'Corporativos', href: '/products/corporate', icon: Briefcase },
-  { name: 'Complementos', href: '/products/addons', icon: PlusCircle },
+  { name: 'Listos en tienda', href: '/products?category=store-ready', icon: Package },
+  { name: 'Románticos', href: '/products?category=romantic', icon: Heart },
+  { name: 'Cumpleaños', href: '/products?category=birthday', icon: Cake },
+  { name: 'Otras temáticas', href: '/products?category=themes', icon: Star },
+  { name: 'Individuales', href: '/products?category=individual', icon: Sparkles },
+  { name: 'Hot Wheels', href: '/products?category=hot-wheels', icon: Car },
+  { name: 'Desayunos', href: '/products?category=breakfast', icon: Coffee },
+  { name: 'Postres', href: '/products?category=desserts', icon: IceCream },
+  { name: 'Flores', href: '/products?category=flowers', icon: Flower },
+  { name: 'Ocasiones', href: '/products?category=occasions', icon: Gift },
+  { name: 'Corporativos', href: '/products?category=corporate', icon: Briefcase },
+  { name: 'Complementos', href: '/products?category=addons', icon: PlusCircle },
 ];
 
 export function Header() {
@@ -129,6 +128,11 @@ export function Header() {
               Inicio
             </NavigationMenuLink>
         </NavigationMenuItem>
+         <NavigationMenuItem>
+           <NavigationMenuLink href="/products" className={navigationMenuTriggerStyle()}>
+              Productos
+            </NavigationMenuLink>
+        </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuTrigger>Categorías</NavigationMenuTrigger>
           <NavigationMenuContent>
@@ -167,16 +171,17 @@ export function Header() {
           <span className="sr-only">Abrir menú</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[350px]">
+      <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
         <nav className="flex flex-col h-full">
           <div className="p-4 border-b">
              <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
               <Gift className="h-7 w-7 text-primary" />
-              <span className="text-2xl font-headline text-primary">Anella</span>
+              <span className="text-2xl font-headline text-primary" style={{fontFamily: 'Amarillo'}}>Anella</span>
             </Link>
           </div>
           <div className="flex-grow p-4 space-y-2 overflow-y-auto">
              <Link href="/" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Inicio</Link>
+             <Link href="/products" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Productos</Link>
              <p className="py-2 text-lg font-semibold">Categorías</p>
              {categories.map((item) => (
               <Link
@@ -198,13 +203,13 @@ export function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur-lg">
       <div className="container mx-auto flex h-20 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <MobileNav />
           <Link href="/" className="flex items-center gap-2">
-            <Gift className="h-8 w-8 text-primary animate-soft-glow" />
-            <span className="text-3xl font-headline text-primary" style={{textShadow: '1px 1px 2px hsl(var(--secondary))'}}>Anella</span>
+            <Gift className="h-8 w-8 text-primary" />
+            <span className="text-3xl" style={{fontFamily: 'Amarillo', color: 'hsl(var(--primary))'}}>Anella</span>
           </Link>
         </div>
 

@@ -14,6 +14,9 @@ export interface Product {
   isPersonalizable: boolean; // Indica si el producto se puede personalizar
   createdAt: Date; // Fecha de creación del producto
   updatedAt: Date; // Fecha de la última actualización del producto
+  rating?: number; // Valoración promedio del producto
+  isNew?: boolean; // Para destacar productos nuevos
+  themes?: string[]; // IDs de las temáticas asociadas
 }
 
 /**

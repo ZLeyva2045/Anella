@@ -18,7 +18,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['Montserrat', 'sans-serif'],
-        headline: ['Pacifico', 'cursive'],
+        headline: ['Amarillo', 'cursive'],
         code: ['monospace'],
       },
       colors: {
@@ -55,9 +55,6 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Paleta secundaria personalizada
-        lavender: 'hsl(var(--lavender))',
-        mint: 'hsl(var(--mint))',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -95,29 +92,12 @@ export default {
         'soft-glow': 'soft-glow 4s ease-in-out infinite',
       },
       backgroundImage: {
-        'soft-gradient': 'var(--soft-gradient)',
-      },
-      filter: {
-        'vintage': 'var(--vintage-filter)',
-      },
-      backdropFilter: {
-        'blur': 'var(--blur-effect)',
+        'soft-gradient': 'linear-gradient(120deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1), hsl(var(--background)))',
       },
     },
   },
   plugins: [
     require('tailwindcss-animate'),
-    // Plugin para variantes de backdrop-filter
-    function ({ addUtilities, theme, e }: any) {
-      const utilities = {
-        '.glassmorphism': {
-          'backgroundColor': 'hsl(var(--card) / 0.6)',
-          'backdropFilter': 'blur(12px) saturate(1.5)',
-          'border': '1px solid hsl(var(--border) / 0.2)',
-          'box-shadow': '0 4px 30px rgba(0, 0, 0, 0.1)',
-        }
-      };
-      addUtilities(utilities, ['responsive', 'hover']);
-    }
+    require('@tailwindcss/line-clamp'),
   ],
 } satisfies Config;
