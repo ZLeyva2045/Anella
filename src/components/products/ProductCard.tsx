@@ -25,7 +25,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/products/${product.id}`} className="group block">
-      <Card className="w-full h-full flex flex-col overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <Card className="w-full h-full flex flex-col overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 active:animate-button-press">
         <CardHeader className="p-0 relative">
           <Image
             src={product.images[0]}
@@ -39,7 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
             size="icon"
             variant="ghost"
             className={cn(
-              "absolute top-2 right-2 h-8 w-8 rounded-full bg-white/70 backdrop-blur-sm transition-colors",
+              "absolute top-2 right-2 h-8 w-8 rounded-full bg-white/70 backdrop-blur-sm transition-colors hover:scale-110 active:scale-100",
               isFavorite ? "text-red-500" : "text-muted-foreground hover:text-red-500"
             )}
             onClick={toggleFavorite}

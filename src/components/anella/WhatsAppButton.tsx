@@ -12,7 +12,7 @@ export function WhatsAppButton() {
     return (
         <button
             onClick={openWhatsApp}
-            className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-green-600 transition-transform duration-300 ease-in-out hover:scale-110"
+            className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-green-600 transition-transform duration-300 ease-in-out hover:scale-110 active:animate-button-press"
             aria-label="Contactar por WhatsApp"
         >
              <div className="relative w-full h-full flex items-center justify-center">

@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
-      <Card className="w-full max-w-md shadow-floating">
+      <Card className="w-full max-w-md shadow-floating animate-subtle-bounce">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">¿Olvidaste tu Contraseña?</CardTitle>
           <CardDescription>

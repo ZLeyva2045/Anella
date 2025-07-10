@@ -83,6 +83,15 @@ export default {
         'soft-glow': {
           '0%, 100%': { boxShadow: '0 0 5px hsl(var(--primary) / 0.2)' },
           '50%': { boxShadow: '0 0 20px hsl(var(--primary) / 0.4)' },
+        },
+        'subtle-bounce': {
+          '0%': { transform: 'translateY(0) scale(0.98)', opacity: '0.8' },
+          '100%': { transform: 'translateY(0) scale(1)', opacity: '1' },
+        },
+        'button-press': {
+          '0%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(0.95)' },
+          '100%': { transform: 'scale(1)' },
         }
       },
       animation: {
@@ -90,6 +99,8 @@ export default {
         'accordion-up': 'accordion-up 0.3s ease-out',
         'fade-in': 'fade-in 0.5s ease-out forwards',
         'soft-glow': 'soft-glow 4s ease-in-out infinite',
+        'subtle-bounce': 'subtle-bounce 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+        'button-press': 'button-press 0.2s ease-in-out',
       },
       backgroundImage: {
         'soft-gradient': 'linear-gradient(120deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1), hsl(var(--background)))',

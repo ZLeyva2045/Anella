@@ -33,7 +33,7 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8">
-      <Card className="max-w-2xl mx-auto shadow-paper">
+      <Card className="max-w-2xl mx-auto shadow-paper animate-subtle-bounce">
         <CardHeader>
           <CardTitle>Bienvenido a tu Panel, {user.displayName || user.email?.split('@')[0]}</CardTitle>
           <CardDescription>Aquí podrás gestionar tus pedidos y tu perfil.</CardDescription>
