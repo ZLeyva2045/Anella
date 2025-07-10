@@ -9,9 +9,9 @@ export function Header() {
           <span className="text-2xl font-headline text-primary">Anella</span>
         </a>
         <nav className="hidden md:flex gap-6 text-sm font-medium">
-          <a href="#recommendations" className="hover:text-primary transition-colors">Find a Gift</a>
-          <a href="#gallery" className="hover:text-primary transition-colors">Gallery</a>
-          <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
+          <a href="#recommendations" className="hover:text-primary transition-colors">Encontrar un Regalo</a>
+          <a href="#gallery" className="hover:text-primary transition-colors">Galería</a>
+          <a href="#contact" className="hover:text-primary transition-colors">Contacto</a>
         </nav>
       </div>
     </header>

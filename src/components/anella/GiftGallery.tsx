@@ -6,20 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 
 const gifts = [
-  { id: 1, title: 'Personalized Coffee Mug', category: 'Birthdays', description: 'A classic mug with a custom name and message.', imageUrl: 'https://placehold.co/600x400.png', hint: 'coffee mug' },
-  { id: 2, title: 'Engraved Photo Frame', category: 'Anniversaries', description: 'Cherish memories with a beautifully engraved frame.', imageUrl: 'https://placehold.co/600x400.png', hint: 'photo frame' },
-  { id: 3, title: 'Custom Star Map', category: 'Anniversaries', description: 'The night sky from your special date.', imageUrl: 'https://placehold.co/600x400.png', hint: 'star map' },
-  { id: 4, title: 'Monogrammed T-Shirt', category: 'Birthdays', description: 'Stylish and personal, with their initial.', imageUrl: 'https://placehold.co/600x400.png', hint: 'custom t-shirt' },
-  { id: 5, title: 'Personalized Story Book', category: 'All', description: 'A unique book where they are the main character.', imageUrl: 'https://placehold.co/600x400.png', hint: 'custom book' },
-  { id: 6, title: 'Engraved Cutting Board', category: 'All', description: 'Perfect for the foodie in your life.', imageUrl: 'https://placehold.co/600x400.png', hint: 'cutting board' },
+  { id: 1, title: 'Taza de Café Personalizada', category: 'Cumpleaños', description: 'Una taza clásica con un nombre y mensaje personalizado.', imageUrl: 'https://placehold.co/600x400.png', hint: 'coffee mug' },
+  { id: 2, title: 'Marco de Fotos Grabado', category: 'Aniversarios', description: 'Atresora recuerdos con un marco hermosamente grabado.', imageUrl: 'https://placehold.co/600x400.png', hint: 'photo frame' },
+  { id: 3, title: 'Mapa Estelar Personalizado', category: 'Aniversarios', description: 'El cielo nocturno de tu fecha especial.', imageUrl: 'https://placehold.co/600x400.png', hint: 'star map' },
+  { id: 4, title: 'Camiseta con Monograma', category: 'Cumpleaños', description: 'Elegante y personal, con su inicial.', imageUrl: 'https://placehold.co/600x400.png', hint: 'custom t-shirt' },
+  { id: 5, title: 'Libro de Cuentos Personalizado', category: 'Todos', description: 'Un libro único donde son los protagonistas.', imageUrl: 'https://placehold.co/600x400.png', hint: 'custom book' },
+  { id: 6, title: 'Tabla de Cortar Grabada', category: 'Todos', description: 'Perfecto para el amante de la cocina en tu vida.', imageUrl: 'https://placehold.co/600x400.png', hint: 'cutting board' },
 ];
 
-const filters = ["All", "Birthdays", "Anniversaries"];
+const filters = ["Todos", "Cumpleaños", "Aniversarios"];
 
 export function GiftGallery() {
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState("Todos");
 
-  const filteredGifts = activeFilter === "All"
+  const filteredGifts = activeFilter === "Todos"
     ? gifts
     : gifts.filter(gift => gift.category === activeFilter);
 
@@ -27,9 +27,9 @@ export function GiftGallery() {
     <section id="gallery" className="bg-background py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold tracking-tight">Our Creations</h2>
+          <h2 className="text-4xl font-bold tracking-tight">Nuestras Creaciones</h2>
           <p className="mt-2 text-lg text-muted-foreground">
-            A glimpse into the personalized gifts we love to make.
+            Un vistazo a los regalos personalizados que amamos crear.
           </p>
         </div>
 

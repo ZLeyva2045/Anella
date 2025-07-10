@@ -8,11 +8,11 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-3">Anella Boutique</h3>
             <p className="text-muted-foreground text-sm">
-              Creating personalized gifts with love from Cajamarca, Perú.
+              Creando regalos personalizados con amor desde Cajamarca, Perú.
             </p>
           </div>
           <div>
-            <h3 className="text-lg font-semibold mb-3">Contact Us</h3>
+            <h3 className="text-lg font-semibold mb-3">Contáctanos</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center justify-center md:justify-start gap-2">
                 <Mail className="h-4 w-4 text-primary" />
@@ -29,7 +29,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="text-lg font-semibold mb-3">Follow Us</h3>
+            <h3 className="text-lg font-semibold mb-3">Síguenos</h3>
             <div className="flex justify-center md:justify-start gap-4">
               <a href="#" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors">
                 <Instagram className="h-6 w-6" />
@@ -41,7 +41,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Anella Boutique. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Anella Boutique. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

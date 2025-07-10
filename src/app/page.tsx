@@ -16,7 +16,7 @@ export default function Home() {
             Anella
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Gifts from the heart, personalized for your special moments.
+            Regalos desde el corazón, personalizados para tus momentos especiales.
           </p>
         </section>
 

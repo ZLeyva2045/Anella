@@ -2,11 +2,11 @@
 'use server';
 
 /**
- * @fileOverview A gift recommendation AI agent.
+ * @fileOverview Un agente de IA para recomendar regalos.
  *
- * - recommendGift - A function that handles the gift recommendation process.
- * - RecommendGiftInput - The input type for the recommendGift function.
- * - RecommendGiftOutput - The return type for the recommendGift function.
+ * - recommendGift - Una función que maneja el proceso de recomendación de regalos.
+ * - RecommendGiftInput - El tipo de entrada para la función recommendGift.
+ * - RecommendGiftOutput - El tipo de retorno para la función recommendGift.
  */
 
 import {ai} from '@/ai/genkit';
@@ -15,15 +15,15 @@ import {z} from 'genkit';
 const RecommendGiftInputSchema = z.object({
   recipientInterests: z
     .string()
-    .describe("The recipient's interests and hobbies."),
-  occasion: z.string().describe('The occasion for the gift.'),
-  budget: z.string().describe('The budget for the gift.'),
+    .describe("Los intereses y pasatiempos del destinatario."),
+  occasion: z.string().describe('La ocasión para el regalo.'),
+  budget: z.string().describe('El presupuesto para el regalo.'),
 });
 export type RecommendGiftInput = z.infer<typeof RecommendGiftInputSchema>;
 
 const RecommendGiftOutputSchema = z.object({
-  giftIdeas: z.array(z.string()).describe('A list of personalized gift ideas.'),
-  reasoning: z.string().describe('The reasoning behind the gift recommendations.'),
+  giftIdeas: z.array(z.string()).describe('Una lista de ideas de regalos personalizadas.'),
+  reasoning: z.string().describe('El razonamiento detrás de las recomendaciones de regalos.'),
 });
 export type RecommendGiftOutput = z.infer<typeof RecommendGiftOutputSchema>;
 
@@ -35,15 +35,15 @@ const prompt = ai.definePrompt({
   name: 'recommendGiftPrompt',
   input: {schema: RecommendGiftInputSchema},
   output: {schema: RecommendGiftOutputSchema},
-  prompt: `You are a personalized gift recommendation expert.
+  prompt: `Eres un experto en recomendaciones de regalos personalizados.
 
-  Based on the recipient's interests, the occasion, and the budget, provide a list of personalized gift ideas.
+  Basándote en los intereses del destinatario, la ocasión y el presupuesto, proporciona una lista de ideas de regalos personalizadas.
 
-  Recipient Interests: {{{recipientInterests}}}
-  Occasion: {{{occasion}}}
-  Budget: {{{budget}}}
+  Intereses del Destinatario: {{{recipientInterests}}}
+  Ocasión: {{{occasion}}}
+  Presupuesto: {{{budget}}}
 
-  Format your response as a JSON object with 'giftIdeas' (an array of gift ideas) and 'reasoning' (your explanation for the suggestions).
+  Formatea tu respuesta como un objeto JSON con 'giftIdeas' (un array de ideas de regalos) y 'reasoning' (tu explicación para las sugerencias).
   `,
 });
 
