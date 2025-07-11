@@ -8,6 +8,7 @@ import {
   Users,
   LineChart,
   Settings,
+  Store,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -53,6 +54,15 @@ const AdminNav = () => {
                             tooltip={{ children: "Dashboard" }}
                          >
                             <Link href="/admin"><Home /><span>Dashboard</span></Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname.startsWith('/admin/pos')}
+                            tooltip={{ children: "Punto de Venta" }}
+                        >
+                             <Link href="/admin/pos"><Store /><span>Punto de Venta</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
