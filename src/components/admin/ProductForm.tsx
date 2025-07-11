@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -122,20 +122,15 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     setLoading(true);
 
     try {
-      let finalImageUrls = data.images;
+      let finalData = { ...data };
 
       if (selectedImageFile) {
         const productIdForPath = product?.id || `new_${Date.now()}`;
         const uploadedImageUrl = await uploadImage(selectedImageFile, `products/${productIdForPath}`);
-        finalImageUrls = [uploadedImageUrl];
+        finalData.images = [uploadedImageUrl];
       }
       
-      const productData = {
-        ...data,
-        images: finalImageUrls,
-      };
-      
-      await saveProduct(product?.id, productData);
+      await saveProduct(product?.id, finalData);
 
       toast({
         title: `Producto ${product ? 'actualizado' : 'creado'}`,
