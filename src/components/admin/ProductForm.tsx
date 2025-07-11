@@ -122,14 +122,19 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     setLoading(true);
 
     try {
-      let finalData = { ...data };
+      let imageUrls = data.images;
 
       if (selectedImageFile) {
         const productIdForPath = product?.id || `new_${Date.now()}`;
         const uploadedImageUrl = await uploadImage(selectedImageFile, `products/${productIdForPath}`);
-        finalData.images = [uploadedImageUrl];
+        imageUrls = [uploadedImageUrl];
       }
       
+      const finalData = { 
+        ...data,
+        images: imageUrls,
+      };
+
       await saveProduct(product?.id, finalData);
 
       toast({
