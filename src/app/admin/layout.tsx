@@ -61,7 +61,7 @@ const AdminNav = () => {
                             isActive={pathname.startsWith('/admin/orders')}
                             tooltip={{ children: "Pedidos" }}
                         >
-                             <Link href="#"><ShoppingCart /><span>Pedidos</span></Link>
+                             <Link href="/admin/orders"><ShoppingCart /><span>Pedidos</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
@@ -79,7 +79,7 @@ const AdminNav = () => {
                             isActive={pathname.startsWith('/admin/customers')}
                             tooltip={{ children: "Clientes" }}
                         >
-                             <Link href="#"><Users /><span>Clientes</span></Link>
+                             <Link href="/admin/customers"><Users /><span>Clientes</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
