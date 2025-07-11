@@ -138,4 +138,20 @@ export default function LoginPage() {
                 <path
                   fill="#EA4335"
                   d="M24 9.18c3.55 0 6.63 1.23 9.09 3.57l6.23-6.23C35.91 2.51 30.46 0 24 0 14.63 0 6.27 5.15 2.3 13.5l7.19 5.68C11.53 13.73 17.24 9.18 24 9.18z"
-...
+                ></path>
+                <path fill="none" d="M0 0h48v48H0z"></path>
+              </svg>
+              Continuar con Google
+            </Button>
+          </div>
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            ¿No tienes una cuenta?{' '}
+            <Link href="/signup" className="font-semibold text-primary hover:underline">
+              Crea una ahora
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
