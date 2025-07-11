@@ -1,21 +1,21 @@
 rules_version = '2';
 
-// Reglas para Cloud Storage
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Permite a cualquier usuario autenticado subir imágenes en la carpeta de productos.
-    // Esto es seguro porque nuestra aplicación solo permite a los administradores
-    // acceder a la funcionalidad de subida.
-    match /products/{productId}/{fileName} {
-      allow read: if true; // Cualquiera puede leer las imágenes de los productos
-      allow write: if request.auth != null; // Solo usuarios autenticados pueden escribir
+    // Función para verificar si un usuario tiene un rol de administrador
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['manager', 'designer'];
     }
 
-    // Opcional: Reglas para otras carpetas, como avatares de usuario.
-    // match /avatars/{userId}/{fileName} {
-    //   allow read;
-    //   allow write: if request.auth.uid == userId;
-    // }
+    // Permite que cualquiera lea archivos (necesario para mostrar imágenes de productos)
+    match /{allPaths=**} {
+      allow read;
+    }
+
+    // Solo los administradores pueden escribir (subir, actualizar, eliminar) en la carpeta de productos.
+    match /products/{allPaths=**} {
+      allow write: if isAdmin();
+    }
   }
 }
