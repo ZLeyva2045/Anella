@@ -101,7 +101,7 @@ export default function LoginPage() {
               />
             </div>
              <div className="flex items-center justify-end">
-                <Link href="/forgot-password" passHref>
+                <Link href="/forgot-password" passHref legacyBehavior>
                   <Button variant="link" size="sm" className="px-0 h-auto py-1 text-sm">¿Olvidaste tu contraseña?</Button>
                 </Link>
               </div>
