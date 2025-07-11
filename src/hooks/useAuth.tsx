@@ -13,10 +13,13 @@ import {
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   type UserCredential
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase/config';
+import type { User as FirestoreUser } from '@/types/firestore';
 
 interface AuthContextType {
   user: FirebaseUser | null;
+  firestoreUser: FirestoreUser | null;
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<UserCredential>;
   signUpWithEmail: (email: string, password: string) => Promise<UserCredential>;
@@ -44,15 +47,25 @@ function eraseCookie(name: string) {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [firestoreUser, setFirestoreUser] = useState<FirestoreUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
         setCookie('isLoggedIn', 'true', 7);
+        // Fetch user data from Firestore
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setFirestoreUser({ id: userDoc.id, ...userDoc.data() } as FirestoreUser);
+        } else {
+          setFirestoreUser(null);
+        }
       } else {
         eraseCookie('isLoggedIn');
+        setFirestoreUser(null);
       }
       setLoading(false);
     });
@@ -84,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await firebaseSignOut(auth);
     eraseCookie('isLoggedIn');
+    setFirestoreUser(null);
   };
   
   const sendPasswordResetEmail = (email: string) => {
@@ -92,6 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     user,
+    firestoreUser,
     loading,
     signInWithEmail,
     signUpWithEmail,

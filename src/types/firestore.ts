@@ -1,4 +1,5 @@
 // src/types/firestore.ts
+import type { Timestamp } from 'firebase/firestore';
 
 /**
  * Representa un producto en la colección 'products' de Firestore.
@@ -9,11 +10,10 @@ export interface Product {
   description: string; // Descripción detallada del producto
   price: number; // Precio del producto
   category: string; // ID de la categoría principal
-  subcategory?: string; // ID de la subcategoría (opcional)
   images: string[]; // Array de URLs de las imágenes del producto
   isPersonalizable: boolean; // Indica si el producto se puede personalizar
-  createdAt: Date; // Fecha de creación del producto
-  updatedAt: Date; // Fecha de la última actualización del producto
+  createdAt: Date | Timestamp; // Fecha de creación del producto
+  updatedAt: Date | Timestamp; // Fecha de la última actualización del producto
   rating?: number; // Valoración promedio del producto
   isNew?: boolean; // Para destacar productos nuevos
   themes?: string[]; // IDs de las temáticas asociadas
@@ -77,4 +77,5 @@ export interface User {
   address: string; // Dirección del usuario
   orders: string[]; // Array de IDs de los pedidos del usuario
   role?: 'customer' | 'manager' | 'sales' | 'designer' | 'manufacturing' | 'creative'; // Rol del usuario
+  photoURL?: string; // foto del usuario
 }

@@ -1,9 +1,7 @@
-
 // src/app/admin/layout.tsx
 "use client";
 import React from 'react';
 import {
-  Bell,
   Home,
   Package,
   ShoppingCart,
@@ -27,26 +25,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Header } from '@/components/anella/Header';
-
 
 const AdminNav = () => {
     const pathname = usePathname();
-    const { user, signOut } = useAuth();
-    const { state } = useSidebar();
+    const { firestoreUser } = useAuth();
     
     return (
         <Sidebar>
             <SidebarHeader>
                 <div className="flex items-center gap-2">
                     <Avatar className="h-10 w-10">
-                        <AvatarImage src={user?.photoURL ?? ''} alt={user?.displayName ?? 'Admin'} />
-                        <AvatarFallback>{user?.displayName?.charAt(0) ?? 'A'}</AvatarFallback>
+                        <AvatarImage src={firestoreUser?.photoURL ?? ''} alt={firestoreUser?.name ?? 'Admin'} />
+                        <AvatarFallback>{firestoreUser?.name?.charAt(0) ?? 'A'}</AvatarFallback>
                     </Avatar>
                      <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                        <span className="font-semibold text-sm">{user?.displayName ?? 'Admin'}</span>
-                        <span className="text-xs text-muted-foreground">{user?.email}</span>
+                        <span className="font-semibold text-sm">{firestoreUser?.name ?? 'Admin'}</span>
+                        <span className="text-xs text-muted-foreground">{firestoreUser?.email}</span>
                     </div>
                 </div>
             </SidebarHeader>
@@ -76,7 +70,7 @@ const AdminNav = () => {
                             isActive={pathname.startsWith('/admin/products')}
                             tooltip={{ children: "Productos" }}
                         >
-                             <Link href="#"><Package /><span>Productos</span></Link>
+                             <Link href="/admin/products"><Package /><span>Productos</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                      <SidebarMenuItem>
