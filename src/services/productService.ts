@@ -9,13 +9,21 @@ import {
   where,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase/config';
 import type { Product, Category, Theme } from '@/types/firestore';
 
 // Omit fields that are auto-generated or handled by the backend
 type ProductData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'rating'>;
 type CategoryData = Omit<Category, 'id'>;
 type ThemeData = Omit<Theme, 'id'>;
+
+export async function uploadImage(file: File, path: string): Promise<string> {
+  const storageRef = ref(storage, `${path}/${file.name}`);
+  await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(storageRef);
+  return downloadURL;
+}
 
 export async function saveProduct(
   productId: string | undefined,

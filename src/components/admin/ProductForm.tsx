@@ -27,19 +27,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Category, Theme } from '@/types/firestore';
-import { saveProduct, getCategories, getThemes, addCategory, addTheme } from '@/services/productService';
+import { saveProduct, addCategory, addTheme, uploadImage } from '@/services/productService';
 import { Loader2, ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from '@/lib/utils';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 const productSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
-  description: z
-    .string()
-    .min(10, 'La descripción debe tener al menos 10 caracteres.'),
+  description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres.'),
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
   themes: z.array(z.string()).optional(),
@@ -60,6 +58,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [themes, setThemes] = useState<Theme[]>([]);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -116,17 +115,30 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         isNew: true,
       });
     }
+    setSelectedImageFile(null);
   }, [product, form, isOpen]);
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
-    const productDataWithPlaceholders = {
-      ...data,
-      images: ['https://placehold.co/400x300.png']
-    };
 
     try {
-      await saveProduct(product?.id, productDataWithPlaceholders);
+      let imageUrls = data.images;
+
+      // Si se ha seleccionado un nuevo archivo de imagen
+      if (selectedImageFile) {
+        // Usamos el ID del producto si existe, o un timestamp para unicidad
+        const productIdForPath = product?.id || `new_${Date.now()}`;
+        const uploadedImageUrl = await uploadImage(selectedImageFile, `products/${productIdForPath}`);
+        imageUrls = [uploadedImageUrl]; // Reemplazamos la imagen con la nueva
+      }
+
+      const productData = {
+        ...data,
+        images: imageUrls,
+      };
+
+      await saveProduct(product?.id, productData);
+
       toast({
         title: `Producto ${product ? 'actualizado' : 'creado'}`,
         description: `El producto "${data.name}" se ha guardado correctamente.`,
@@ -298,7 +310,16 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
             <FormItem>
               <FormLabel>Imágenes</FormLabel>
               <FormControl>
-                <Input type="file" multiple onChange={(e) => console.log(e.target.files)} />
+                <Input 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSelectedImageFile(file);
+                    }
+                  }} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
