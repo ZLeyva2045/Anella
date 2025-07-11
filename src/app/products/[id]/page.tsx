@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
-import { ProductDetail, mockProductDetails, CustomizationOption } from '@/lib/mock-data';
+import { ProductDetail, getProductDetails, CustomizationOption } from '@/lib/mock-data';
 import { ProductImages } from '@/components/products/detail/ProductImages';
 import { ProductInfo } from '@/components/products/detail/ProductInfo';
 import { CustomizationOptions } from '@/components/products/detail/CustomizationOptions';
@@ -29,16 +29,15 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (id) {
-      const fetchedProduct = mockProductDetails.find(p => p.id === id);
-      
-      const timer = setTimeout(() => {
-          if (fetchedProduct) {
-              setProduct(fetchedProduct);
-          }
-          setLoading(false);
-      }, 500);
-
-      return () => clearTimeout(timer);
+        const fetchProduct = async () => {
+            setLoading(true);
+            const fetchedProduct = await getProductDetails(id);
+            if (fetchedProduct) {
+                setProduct(fetchedProduct);
+            }
+            setLoading(false);
+        };
+        fetchProduct();
     } else {
         setLoading(false);
     }

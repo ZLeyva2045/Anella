@@ -7,11 +7,14 @@ import { Footer } from '@/components/anella/Footer';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ProductFilters } from '@/components/products/ProductFilters';
 import { Toolbar } from '@/components/products/Toolbar';
-import { mockProducts, mockCategories, mockThemes } from '@/lib/mock-data';
-import type { Product } from '@/types/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import type { Product, Category, Theme } from '@/types/firestore';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [themes, setThemes] = useState<Theme[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,11 +25,28 @@ export default function ProductsPage() {
   const [rating, setRating] = useState(0);
 
   useEffect(() => {
-    // Simulate fetching products from Firestore
-    setProducts(mockProducts);
-    setFilteredProducts(mockProducts);
-    setLoading(false);
+    setLoading(true);
+    const unsubProducts = onSnapshot(collection(db, 'products'), snapshot => {
+      const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+      setProducts(prods);
+      setLoading(false);
+    });
+    const unsubCategories = onSnapshot(collection(db, 'categories'), snapshot => {
+      const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+      setCategories(cats);
+    });
+    const unsubThemes = onSnapshot(collection(db, 'themes'), snapshot => {
+      const thms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
+      setThemes(thms);
+    });
+
+    return () => {
+      unsubProducts();
+      unsubCategories();
+      unsubThemes();
+    };
   }, []);
+
 
   useEffect(() => {
     let tempProducts = [...products];
@@ -63,7 +83,12 @@ export default function ProductsPage() {
         tempProducts.sort((a, b) => b.price - a.price);
         break;
       case 'newest':
-        tempProducts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        // Firestore Timestamps need to be converted to Dates for sorting
+        tempProducts.sort((a, b) => {
+            const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : (a.createdAt as any)?.toDate().getTime() || 0;
+            const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : (b.createdAt as any)?.toDate().getTime() || 0;
+            return dateB - dateA;
+        });
         break;
       case 'rating':
          tempProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -80,8 +105,8 @@ export default function ProductsPage() {
         <main className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
              <ProductFilters
-                categories={mockCategories}
-                themes={mockThemes}
+                categories={categories}
+                themes={themes}
                 selectedCategories={selectedCategories}
                 setSelectedCategories={setSelectedCategories}
                 selectedThemes={selectedThemes}

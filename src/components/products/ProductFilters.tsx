@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { ListFilter, Star } from "lucide-react";
+import type { Category, Theme } from "@/types/firestore";
 
 interface ProductFiltersProps {
-  categories: { id: string, name: string }[];
-  themes: { id: string, name: string }[];
+  categories: Category[];
+  themes: Theme[];
   selectedCategories: string[];
   setSelectedCategories: (categories: string[]) => void;
   selectedThemes: string[];
@@ -33,17 +34,17 @@ export function ProductFilters({
   setRating,
 }: ProductFiltersProps) {
 
-  const handleCategoryChange = (categoryId: string) => {
-    const newSelection = selectedCategories.includes(categoryId)
-      ? selectedCategories.filter(id => id !== categoryId)
-      : [...selectedCategories, categoryId];
+  const handleCategoryChange = (categoryName: string) => {
+    const newSelection = selectedCategories.includes(categoryName)
+      ? selectedCategories.filter(name => name !== categoryName)
+      : [...selectedCategories, categoryName];
     setSelectedCategories(newSelection);
   };
 
-  const handleThemeChange = (themeId: string) => {
-    const newSelection = selectedThemes.includes(themeId)
-      ? selectedThemes.filter(id => id !== themeId)
-      : [...selectedThemes, themeId];
+  const handleThemeChange = (themeName: string) => {
+    const newSelection = selectedThemes.includes(themeName)
+      ? selectedThemes.filter(name => name !== themeName)
+      : [...selectedThemes, themeName];
     setSelectedThemes(newSelection);
   };
   
@@ -73,8 +74,8 @@ export function ProductFilters({
                 <div key={category.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`cat-${category.id}`}
-                    checked={selectedCategories.includes(category.id)}
-                    onCheckedChange={() => handleCategoryChange(category.id)}
+                    checked={selectedCategories.includes(category.name)}
+                    onCheckedChange={() => handleCategoryChange(category.name)}
                   />
                   <Label htmlFor={`cat-${category.id}`} className="font-normal cursor-pointer">{category.name}</Label>
                 </div>
@@ -105,8 +106,8 @@ export function ProductFilters({
                 <div key={theme.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`theme-${theme.id}`}
-                    checked={selectedThemes.includes(theme.id)}
-                    onCheckedChange={() => handleThemeChange(theme.id)}
+                    checked={selectedThemes.includes(theme.name)}
+                    onCheckedChange={() => handleThemeChange(theme.name)}
                   />
                   <Label htmlFor={`theme-${theme.id}`} className="font-normal cursor-pointer">{theme.name}</Label>
                 </div>
