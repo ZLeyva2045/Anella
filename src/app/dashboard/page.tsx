@@ -1,6 +1,7 @@
 // src/app/dashboard/page.tsx
 'use client';
 
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -12,23 +13,26 @@ export default function DashboardPage() {
   const { user, signOut, loading } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    // Si la carga ha terminado y no hay usuario, redirige.
+    // Esto se ejecuta después del renderizado, evitando el error.
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
   const handleSignOut = async () => {
     await signOut();
     router.push('/login');
   };
 
-  if (loading) {
+  if (loading || !user) {
+    // Muestra un loader mientras carga o mientras se redirige.
     return (
         <div className="flex items-center justify-center min-h-screen">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
-  }
-
-  if (!user) {
-    // Esto no debería suceder si el middleware funciona, pero es una buena práctica
-    router.push('/login');
-    return null;
   }
 
   return (
