@@ -17,23 +17,38 @@ export default function DashboardPage() {
     if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+    // Redirect based on role if firestoreUser is loaded
+    if (!loading && firestoreUser) {
+      if (firestoreUser.role === 'manager' || firestoreUser.role === 'designer') {
+        router.replace('/admin');
+      } else if (firestoreUser.role === 'sales') {
+        router.replace('/sales');
+      }
+    }
+  }, [user, firestoreUser, loading, router]);
 
   const handleSignOut = async () => {
     await signOut();
     router.push('/login');
   };
 
-  if (loading || !user) {
+  if (loading || !user || !firestoreUser) {
     return (
         <div className="flex items-center justify-center min-h-screen">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
   }
-
-  const isAdmin = firestoreUser?.role === 'manager' || firestoreUser?.role === 'designer';
-  const productsLink = isAdmin ? '/admin/products' : '/products';
+  
+  // This page is now primarily for customers
+  if (firestoreUser.role !== 'customer') {
+      // Render a loader while redirecting to avoid flashing content
+       return (
+        <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
+  }
 
 
   return (
@@ -42,7 +57,7 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle>Bienvenido a tu Panel, {firestoreUser?.name || user.displayName || user.email?.split('@')[0]}</CardTitle>
           <CardDescription>
-            {isAdmin ? 'Gestiona productos, pedidos y más.' : 'Aquí podrás gestionar tus pedidos y tu perfil.'}
+            Aquí podrás gestionar tus pedidos y tu perfil.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -63,7 +78,7 @@ export default function DashboardPage() {
         </CardContent>
         <CardFooter className="flex justify-between">
             <Button asChild variant="outline">
-                <Link href={productsLink}>Ver Productos</Link>
+                <Link href="/products">Ver Productos</Link>
             </Button>
             <Button onClick={handleSignOut} variant="destructive">
                 Cerrar Sesión

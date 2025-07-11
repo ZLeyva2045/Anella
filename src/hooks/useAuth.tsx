@@ -13,7 +13,7 @@ import {
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   type UserCredential
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import type { User as FirestoreUser } from '@/types/firestore';
 
@@ -26,6 +26,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<UserCredential>;
   signOut: () => Promise<void>;
   sendPasswordResetEmail: (email: string) => Promise<void>;
+  getUserRole: (userId: string) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,13 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (user) {
         setCookie('isLoggedIn', 'true', 7);
         // Fetch user data from Firestore
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setFirestoreUser({ id: userDoc.id, ...userDoc.data() } as FirestoreUser);
-        } else {
-          setFirestoreUser(null);
-        }
+        await getUserRole(user.uid);
       } else {
         eraseCookie('isLoggedIn');
         setFirestoreUser(null);
@@ -72,6 +67,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => unsubscribe();
   }, []);
+
+  const getUserRole = async (userId: string) => {
+    const userDocRef = doc(db, "users", userId);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+      const userData = { id: userDoc.id, ...userDoc.data() } as FirestoreUser;
+      setFirestoreUser(userData);
+      return userData.role || null;
+    }
+    setFirestoreUser(null);
+    return null;
+  };
 
   const signInWithEmail = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -88,8 +95,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
-    if(userCredential.user) {
+    const user = userCredential.user;
+    if (user) {
         setCookie('isLoggedIn', 'true', 7);
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        // If user doesn't exist in Firestore, create them
+        if (!userDoc.exists()) {
+            const newUser: FirestoreUser = {
+                id: user.uid,
+                email: user.email || '',
+                name: user.displayName || '',
+                phone: user.phoneNumber || '',
+                address: '',
+                orders: [],
+                role: 'customer',
+                photoURL: user.photoURL || '',
+            };
+            await setDoc(userDocRef, newUser);
+        }
     }
     return userCredential;
   };
@@ -113,6 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signInWithGoogle,
     signOut,
     sendPasswordResetEmail,
+    getUserRole,
   };
 
   return (

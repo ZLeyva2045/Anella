@@ -9,12 +9,13 @@ export function middleware(request: NextRequest) {
   const isLoggedIn = request.cookies.get('isLoggedIn')?.value === 'true';
 
   // Rutas protegidas que requieren autenticación
-  const protectedPaths = ['/dashboard', '/admin'];
+  const protectedPaths = ['/dashboard', '/admin', '/sales'];
   const isAdminPath = pathname.startsWith('/admin');
+  const isSalesPath = pathname.startsWith('/sales');
   const isDashboardPath = pathname.startsWith('/dashboard');
 
   // Si el usuario intenta acceder a una ruta protegida y no está logueado
-  if ((isAdminPath || isDashboardPath) && !isLoggedIn) {
+  if ((isAdminPath || isSalesPath || isDashboardPath) && !isLoggedIn) {
     // Redirigir a la página de login
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirectedFrom', pathname);
@@ -33,5 +34,5 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // Ejecutar el middleware en estas rutas
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/login', '/signup', '/forgot-password'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/sales/:path*', '/login', '/signup', '/forgot-password'],
 };

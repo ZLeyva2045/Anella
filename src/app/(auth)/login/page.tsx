@@ -22,21 +22,27 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const {signInWithEmail, signInWithGoogle} = useAuth();
+  const {signInWithEmail, signInWithGoogle, getUserRole} = useAuth();
   const router = useRouter();
+
+  const handleLoginSuccess = async (userId: string) => {
+    const role = await getUserRole(userId);
+    if (role === 'manager' || role === 'designer') {
+      router.push('/admin');
+    } else if (role === 'sales') {
+      router.push('/sales');
+    } else {
+      router.push('/dashboard');
+    }
+  };
 
   const handleEmailLogin = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     try {
-      await signInWithEmail(email, password);
-      // Redirigir a admin si el email es de un administrador, si no a dashboard
-      if (['gabriela@anella.pe', 'blanca@anella.pe', 'karen@anella.pe', 'mafer@anella.pe', 'andrea@anella.pe'].includes(email)) {
-          router.push('/admin');
-      } else {
-          router.push('/dashboard');
-      }
+      const userCredential = await signInWithEmail(email, password);
+      await handleLoginSuccess(userCredential.user.uid);
     } catch (error: any) {
       setError(error.message || 'Error al iniciar sesión. Verifica tus credenciales.');
     } finally {
@@ -49,12 +55,7 @@ export default function LoginPage() {
     setError(null);
     try {
       const userCredential = await signInWithGoogle();
-      const userEmail = userCredential.user.email;
-       if (userEmail && ['gabriela@anella.pe', 'blanca@anella.pe', 'karen@anella.pe', 'mafer@anella.pe', 'andrea@anella.pe'].includes(userEmail)) {
-          router.push('/admin');
-      } else {
-          router.push('/dashboard');
-      }
+      await handleLoginSuccess(userCredential.user.uid);
     } catch (error: any) {
       setError(error.message || 'Error al iniciar sesión con Google.');
     } finally {
