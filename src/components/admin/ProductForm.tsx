@@ -122,25 +122,19 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     setLoading(true);
 
     try {
-      let finalImageUrls = product?.images || [];
+      let finalImageUrls = data.images;
 
-      // Si se ha seleccionado un nuevo archivo de imagen
       if (selectedImageFile) {
-        // Usamos el ID del producto si existe, o un timestamp para unicidad
         const productIdForPath = product?.id || `new_${Date.now()}`;
         const uploadedImageUrl = await uploadImage(selectedImageFile, `products/${productIdForPath}`);
-        finalImageUrls = [uploadedImageUrl]; // Reemplazamos la imagen con la nueva
-      } else if (finalImageUrls.length === 0 || finalImageUrls[0].includes('placehold.co')) {
-        // Si no se selecciona archivo y no hay imagen previa, usa el placeholder
-        finalImageUrls = ['https://placehold.co/400x300.png'];
+        finalImageUrls = [uploadedImageUrl];
       }
-
-
+      
       const productData = {
         ...data,
         images: finalImageUrls,
       };
-
+      
       await saveProduct(product?.id, productData);
 
       toast({
@@ -236,7 +230,8 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !categories.some(c => c.name.toLowerCase() === (e.target as HTMLInputElement).value.toLowerCase())) {
+                          if (e.key === 'Enter' && (e.target as HTMLInputElement).value && !categories.some(c => c.name.toLowerCase() === (e.target as HTMLInputElement).value.toLowerCase())) {
+                            e.preventDefault();
                             handleCreateCategory((e.target as HTMLInputElement).value);
                             (document.activeElement as HTMLElement)?.blur();
                           }
@@ -279,7 +274,8 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                     </PopoverTrigger>
                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                        <Command onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
+                          if (e.key === 'Enter' && (e.target as HTMLInputElement).value) {
+                             e.preventDefault();
                             handleCreateTheme((e.target as HTMLInputElement).value);
                           }
                        }}>
