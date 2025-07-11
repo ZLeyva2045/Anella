@@ -26,32 +26,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import type { Product } from '@/types/firestore';
-import { saveProduct } from '@/services/productService';
-import { Loader2, Trash2 } from 'lucide-react';
-import { mockCategories, mockThemes } from '@/lib/mock-data';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { ChevronsUpDown, Check } from "lucide-react"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+import type { Product, Category, Theme } from '@/types/firestore';
+import { saveProduct, getCategories, getThemes, addCategory, addTheme } from '@/services/productService';
+import { Loader2, ChevronsUpDown, Check } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { cn } from '@/lib/utils';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 const productSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -76,7 +58,25 @@ interface ProductFormProps {
 
 export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [themes, setThemes] = useState<Theme[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const unsubCategories = onSnapshot(collection(db, 'categories'), snapshot => {
+      const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+      setCategories(cats);
+    });
+    const unsubThemes = onSnapshot(collection(db, 'themes'), snapshot => {
+      const thms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
+      setThemes(thms);
+    });
+
+    return () => {
+      unsubCategories();
+      unsubThemes();
+    };
+  }, []);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -86,15 +86,10 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       price: 0,
       category: '',
       themes: [],
-      images: ['https://placehold.co/400x300.png'], // Placeholder for now
+      images: ['https://placehold.co/400x300.png'],
       isPersonalizable: false,
       isNew: true,
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'images',
   });
 
   useEffect(() => {
@@ -125,11 +120,9 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
-    // NOTE: Image upload logic would go here. For now, we use placeholders.
-    // We'll replace the file names with uploaded URLs from Firebase Storage in a future step.
     const productDataWithPlaceholders = {
       ...data,
-      images: ['https://placehold.co/400x300.png'] // Using placeholder until upload is implemented
+      images: ['https://placehold.co/400x300.png']
     };
 
     try {
@@ -151,17 +144,28 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     }
   };
 
+  const handleCreateCategory = async (categoryName: string) => {
+    const existing = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
+    if (existing) return;
+    await addCategory({ name: categoryName });
+    form.setValue('category', categoryName);
+  }
+
+  const handleCreateTheme = async (themeName: string) => {
+    const existing = themes.find(t => t.name.toLowerCase() === themeName.toLowerCase());
+    const currentThemes = form.getValues('themes') || [];
+    if (existing || currentThemes.includes(themeName)) return;
+
+    await addTheme({ name: themeName });
+    form.setValue('themes', [...currentThemes, themeName]);
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {product ? 'Editar Producto' : 'Añadir Nuevo Producto'}
-          </DialogTitle>
-          <DialogDescription>
-            Completa la información del producto. Haz clic en guardar cuando
-            termines.
-          </DialogDescription>
+          <DialogTitle>{product ? 'Editar Producto' : 'Añadir Nuevo Producto'}</DialogTitle>
+          <DialogDescription>Completa la información del producto. Haz clic en guardar cuando termines.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -171,9 +175,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nombre del Producto</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Lámpara de Luna" {...field} />
-                  </FormControl>
+                  <FormControl><Input placeholder="Ej: Lámpara de Luna" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -184,12 +186,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe el producto..."
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormControl><Textarea placeholder="Describe el producto..." {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -201,9 +198,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Precio (S/)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} />
-                    </FormControl>
+                    <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -212,25 +207,39 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                 control={form.control}
                 name="category"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>Categoría</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona una categoría" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {mockCategories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                            {field.value ? categories.find(c => c.name === field.value)?.name : "Selecciona una categoría"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !categories.some(c => c.name.toLowerCase() === (e.target as HTMLInputElement).value.toLowerCase())) {
+                            handleCreateCategory((e.target as HTMLInputElement).value);
+                            (document.activeElement as HTMLElement)?.blur();
+                          }
+                        }}>
+                          <CommandInput placeholder="Buscar o crear categoría..." />
+                          <CommandList>
+                            <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
+                            <CommandGroup>
+                              {categories.map(cat => (
+                                <CommandItem key={cat.id} value={cat.name} onSelect={() => form.setValue("category", cat.name)}>
+                                  <Check className={cn("mr-2 h-4 w-4", cat.name === field.value ? "opacity-100" : "opacity-0")} />
+                                  {cat.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -243,53 +252,40 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Temáticas</FormLabel>
-                   <Popover>
+                  <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn(
-                            "w-full justify-between",
-                            !field.value?.length && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value?.length 
-                            ? `${field.value.length} seleccionada(s)`
-                            : "Selecciona temáticas"}
+                        <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value?.length && "text-muted-foreground")}>
+                          {field.value?.length ? `${field.value.length} seleccionada(s)` : "Selecciona temáticas"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                      <Command>
-                        <CommandInput placeholder="Buscar temática..." />
-                         <CommandList>
-                            <CommandEmpty>No se encontró la temática.</CommandEmpty>
-                            <CommandGroup>
-                            {mockThemes.map((theme) => (
-                                <CommandItem
+                       <Command onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleCreateTheme((e.target as HTMLInputElement).value);
+                          }
+                       }}>
+                        <CommandInput placeholder="Buscar o crear temática..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
+                          <CommandGroup>
+                            {themes.map(theme => (
+                              <CommandItem
                                 key={theme.id}
+                                value={theme.name}
                                 onSelect={() => {
-                                    const selected = field.value || [];
-                                    const newSelection = selected.includes(theme.id)
-                                    ? selected.filter((id) => id !== theme.id)
-                                    : [...selected, theme.id];
-                                    form.setValue("themes", newSelection);
+                                  const selected = field.value || [];
+                                  const newSelection = selected.includes(theme.name) ? selected.filter(t => t !== theme.name) : [...selected, theme.name];
+                                  form.setValue("themes", newSelection);
                                 }}
-                                >
-                                <Check
-                                    className={cn(
-                                    "mr-2 h-4 w-4",
-                                    (field.value || []).includes(theme.id)
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                />
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", (field.value || []).includes(theme.name) ? "opacity-100" : "opacity-0")} />
                                 {theme.name}
-                                </CommandItem>
+                              </CommandItem>
                             ))}
-                            </CommandGroup>
+                          </CommandGroup>
                         </CommandList>
                       </Command>
                     </PopoverContent>
@@ -301,63 +297,19 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
             
             <FormItem>
               <FormLabel>Imágenes</FormLabel>
-              {/* This is a temporary UI for local file selection.
-                  It does not yet handle uploading to Firebase Storage. */}
               <FormControl>
-                  <Input type="file" multiple onChange={(e) => {
-                      // This part would need to handle file objects and upload them.
-                      // For now, it doesn't set any value in the form state.
-                      console.log(e.target.files);
-                  }} />
+                <Input type="file" multiple onChange={(e) => console.log(e.target.files)} />
               </FormControl>
               <FormMessage />
             </FormItem>
 
             <div className="flex items-center space-x-4">
-                <FormField
-                control={form.control}
-                name="isPersonalizable"
-                render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                        <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                        <FormLabel>Es Personalizable</FormLabel>
-                    </div>
-                    </FormItem>
-                )}
-                />
-                 <FormField
-                control={form.control}
-                name="isNew"
-                render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                        <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                        <FormLabel>Marcar como Nuevo</FormLabel>
-                    </div>
-                    </FormItem>
-                )}
-                />
+              <FormField control={form.control} name="isPersonalizable" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Es Personalizable</FormLabel></div></FormItem>)} />
+              <FormField control={form.control} name="isNew" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Marcar como Nuevo</FormLabel></div></FormItem>)} />
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-              >
-                Cancelar
-              </Button>
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {product ? 'Guardar Cambios' : 'Crear Producto'}

@@ -43,35 +43,35 @@ export const mockProducts: Product[] = [
     name: 'Lámpara de Luna Personalizada',
     description: 'Ilumina tus noches con esta mágica lámpara de luna con tu foto y frase grabada.',
     price: 120.00,
-    category: 'lamparas',
+    category: 'Lámparas',
     images: ['https://placehold.co/400x300.png', 'https://placehold.co/400x301.png', 'https://placehold.co/400x302.png'],
     isPersonalizable: true,
     createdAt: new Date('2023-10-26T10:00:00Z'),
     updatedAt: new Date('2023-10-26T10:00:00Z'),
     rating: 4.8,
     isNew: true,
-    themes: ['romanticos']
+    themes: ['Románticos']
   },
   {
     id: '2',
     name: 'Botiquín de Amor de Emergencia',
     description: 'El kit perfecto para curar cualquier mal de amores con dulces y detalles románticos.',
     price: 85.50,
-    category: 'botiquines',
+    category: 'Botiquines',
     images: ['https://placehold.co/400x300.png'],
     isPersonalizable: true,
     createdAt: new Date('2023-10-25T11:30:00Z'),
     updatedAt: new Date('2023-10-25T11:30:00Z'),
     rating: 4.9,
     isNew: true,
-    themes: ['romanticos']
+    themes: ['Románticos']
   },
   {
     id: '3',
     name: 'Peluche de Stitch Gigante',
     description: 'Un adorable y gigante Stitch para abrazar. ¡El regalo perfecto para fans!',
     price: 250.00,
-    category: 'peluches',
+    category: 'Peluches',
     images: ['https://placehold.co/400x300.png'],
     isPersonalizable: false,
     createdAt: new Date('2023-10-24T09:00:00Z'),
@@ -84,7 +84,7 @@ export const mockProducts: Product[] = [
     name: 'Caja de Cumpleaños Sorpresa',
     description: 'Una caja llena de globos, dulces y un regalo personalizado para celebrar un día especial.',
     price: 150.00,
-    category: 'cumpleanos',
+    category: 'Cumpleaños',
     images: ['https://placehold.co/400x300.png'],
     isPersonalizable: true,
     createdAt: new Date('2023-10-22T14:00:00Z'),
@@ -97,21 +97,21 @@ export const mockProducts: Product[] = [
     name: 'Lámpara de Superhéroe 3D',
     description: 'Elige tu héroe favorito y ten una lámpara 3D que ilumine tu habitación con su símbolo.',
     price: 95.00,
-    category: 'lamparas',
+    category: 'Lámparas',
     images: ['https://placehold.co/400x300.png'],
     isPersonalizable: true,
     createdAt: new Date('2023-11-01T10:00:00Z'),
     updatedAt: new Date('2023-11-01T10:00:00Z'),
     rating: 4.9,
     isNew: true,
-    themes: ['superheroes']
+    themes: ['Superhéroes']
   },
   {
     id: '6',
     name: 'Kit de Graduación Exitoso',
     description: 'Celebra el logro con un kit que incluye un trofeo personalizado, dulces y más.',
     price: 180.00,
-    category: 'graduacion',
+    category: 'Graduación',
     images: ['https://placehold.co/400x300.png'],
     isPersonalizable: true,
     createdAt: new Date('2023-10-29T18:00:00Z'),
@@ -124,42 +124,42 @@ export const mockProducts: Product[] = [
     name: 'Mapa del Merodeador (Lámpara)',
     description: 'Juro solemnemente que mis intenciones no son buenas. Lámpara con el diseño del mapa.',
     price: 130.00,
-    category: 'lamparas',
+    category: 'Lámparas',
     images: ['https://placehold.co/400x300.png'],
     isPersonalizable: false,
     createdAt: new Date('2023-10-28T12:00:00Z'),
     updatedAt: new Date('2023-10-28T12:00:00Z'),
     rating: 5.0,
     isNew: false,
-    themes: ['harry-potter']
+    themes: ['Harry Potter']
   },
     {
     id: '8',
     name: 'Lámpara Noche Estrellada Van Gogh',
     description: 'Una pieza de arte que ilumina. Lámpara con la icónica pintura de Van Gogh.',
     price: 110.00,
-    category: 'lamparas',
+    category: 'Lámparas',
     images: ['https://placehold.co/400x300.png'],
     isPersonalizable: false,
     createdAt: new Date('2023-11-02T15:00:00Z'),
     updatedAt: new Date('2023-11-02T15:00:00Z'),
     rating: 4.9,
     isNew: true,
-    themes: ['van-gogh']
+    themes: ['Van Gogh']
   },
   {
     id: '9',
     name: 'Peluche Shenlong Dragon Ball',
     description: 'Convoca al dragón de los deseos con este increíble peluche de Shenlong.',
     price: 190.00,
-    category: 'peluches',
+    category: 'Peluches',
     images: ['https://placehold.co/400x300.png'],
     isPersonalizable: false,
     createdAt: new Date('2023-10-20T16:00:00Z'),
     updatedAt: new Date('2023-10-20T16:00:00Z'),
     rating: 4.8,
     isNew: false,
-    themes: ['dragon-ball']
+    themes: ['Dragon Ball']
   }
 ];
 

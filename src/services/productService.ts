@@ -4,13 +4,18 @@ import {
   doc,
   setDoc,
   addDoc,
+  getDocs,
+  query,
+  where,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { Product } from '@/types/firestore';
+import type { Product, Category, Theme } from '@/types/firestore';
 
 // Omit fields that are auto-generated or handled by the backend
 type ProductData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'rating'>;
+type CategoryData = Omit<Category, 'id'>;
+type ThemeData = Omit<Theme, 'id'>;
 
 export async function saveProduct(
   productId: string | undefined,
@@ -37,4 +42,46 @@ export async function saveProduct(
     const newDocRef = await addDoc(productsCollection, newProductData);
     return newDocRef.id;
   }
+}
+
+// --- Category Functions ---
+
+export async function getCategories(): Promise<Category[]> {
+  const categoriesCollection = collection(db, 'categories');
+  const snapshot = await getDocs(categoriesCollection);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+}
+
+export async function addCategory(data: CategoryData): Promise<string> {
+  // Check if category already exists to avoid duplicates
+  const q = query(collection(db, 'categories'), where("name", "==", data.name));
+  const querySnapshot = await getDocs(q);
+  if (!querySnapshot.empty) {
+    // Return existing category ID
+    return querySnapshot.docs[0].id;
+  }
+  // Add new category
+  const newDocRef = await addDoc(collection(db, 'categories'), data);
+  return newDocRef.id;
+}
+
+
+// --- Theme Functions ---
+
+export async function getThemes(): Promise<Theme[]> {
+  const themesCollection = collection(db, 'themes');
+  const snapshot = await getDocs(themesCollection);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
+}
+
+export async function addTheme(data: ThemeData): Promise<string> {
+   // Check if theme already exists
+  const q = query(collection(db, 'themes'), where("name", "==", data.name));
+  const querySnapshot = await getDocs(q);
+  if (!querySnapshot.empty) {
+    return querySnapshot.docs[0].id;
+  }
+  // Add new theme
+  const newDocRef = await addDoc(collection(db, 'themes'), data);
+  return newDocRef.id;
 }
