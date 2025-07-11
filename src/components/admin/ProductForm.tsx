@@ -27,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Category, Theme } from '@/types/firestore';
-import { saveProduct, addCategory, addTheme, uploadImage } from '@/services/productService';
+import { saveProduct, addCategory, addTheme } from '@/services/productService';
 import { Loader2, ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -58,7 +58,6 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [themes, setThemes] = useState<Theme[]>([]);
-  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,7 +84,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       price: 0,
       category: '',
       themes: [],
-      images: ['https://placehold.co/400x300.png'],
+      images: [],
       isPersonalizable: false,
       isNew: true,
     },
@@ -99,7 +98,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         price: product.price,
         category: product.category,
         themes: product.themes || [],
-        images: product.images.length > 0 ? product.images : ['https://placehold.co/400x300.png'],
+        images: product.images.length > 0 ? product.images : [],
         isPersonalizable: product.isPersonalizable,
         isNew: product.isNew,
       });
@@ -110,36 +109,19 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         price: 0,
         category: '',
         themes: [],
-        images: ['https://placehold.co/400x300.png'],
+        images: [],
         isPersonalizable: false,
         isNew: true,
       });
     }
-    setSelectedImageFile(null);
   }, [product, form, isOpen]);
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
 
     try {
-      let finalImageUrls = data.images;
-
-      // Step 1: Upload image if a new one is selected
-      if (selectedImageFile) {
-        const productIdForPath = product?.id || `new_${Date.now()}`;
-        const uploadedImageUrl = await uploadImage(selectedImageFile, `products/${productIdForPath}`);
-        finalImageUrls = [uploadedImageUrl];
-      }
+      await saveProduct(product?.id, data);
       
-      // Step 2: Prepare the final data object for Firestore
-      const finalData = { 
-        ...data,
-        images: finalImageUrls,
-      };
-
-      // Step 3: Save the product data to Firestore
-      await saveProduct(product?.id, finalData);
-
       toast({
         title: `Producto ${product ? 'actualizado' : 'creado'}`,
         description: `El producto "${data.name}" se ha guardado correctamente.`,
@@ -160,7 +142,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const handleCreateCategory = async (categoryName: string) => {
     const existing = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
     if (existing) return;
-    const newId = await addCategory({ name: categoryName });
+    await addCategory({ name: categoryName });
     form.setValue('category', categoryName);
   }
 
@@ -310,22 +292,19 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               )}
             />
             
-            <FormItem>
-              <FormLabel>Imagen Principal</FormLabel>
-              <FormControl>
-                <Input 
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setSelectedImageFile(file);
-                    }
-                  }} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+            <FormField
+              control={form.control}
+              name="images.0"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL de la Imagen Principal</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://ejemplo.com/imagen.png" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex items-center space-x-4">
               <FormField control={form.control} name="isPersonalizable" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Es Personalizable</FormLabel></div></FormItem>)} />
