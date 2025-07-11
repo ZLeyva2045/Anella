@@ -27,6 +27,21 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function setCookie(name: string, value: string, days: number) {
+  let expires = "";
+  if (days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    expires = "; expires=" + date.toUTCString();
+  }
+  document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+function eraseCookie(name: string) {
+  document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
+
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,27 +49,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      if (user) {
+        setCookie('isLoggedIn', 'true', 7);
+      } else {
+        eraseCookie('isLoggedIn');
+      }
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const signInWithEmail = (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password);
+  const signInWithEmail = async (email: string, password: string) => {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    if(userCredential.user) {
+        setCookie('isLoggedIn', 'true', 7);
+    }
+    return userCredential;
   };
 
   const signUpWithEmail = (email: string, password: string) => {
     return createUserWithEmailAndPassword(auth, email, password);
   };
 
-  const signInWithGoogle = () => {
+  const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    const userCredential = await signInWithPopup(auth, provider);
+    if(userCredential.user) {
+        setCookie('isLoggedIn', 'true', 7);
+    }
+    return userCredential;
   };
 
-  const signOut = () => {
-    return firebaseSignOut(auth);
+  const signOut = async () => {
+    await firebaseSignOut(auth);
+    eraseCookie('isLoggedIn');
   };
   
   const sendPasswordResetEmail = (email: string) => {
