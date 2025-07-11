@@ -59,7 +59,7 @@ const SalesNav = () => {
                             isActive={pathname.startsWith('/sales/orders')}
                             tooltip={{ children: "Pedidos" }}
                         >
-                             <Link href="#"><ShoppingCart /><span>Pedidos</span></Link>
+                             <Link href="/sales/orders"><ShoppingCart /><span>Pedidos</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                      <SidebarMenuItem>
@@ -68,7 +68,7 @@ const SalesNav = () => {
                             isActive={pathname.startsWith('/sales/customers')}
                             tooltip={{ children: "Clientes" }}
                         >
-                             <Link href="#"><Users /><span>Clientes</span></Link>
+                             <Link href="/sales/customers"><Users /><span>Clientes</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
