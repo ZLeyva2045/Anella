@@ -1,4 +1,3 @@
-
 // src/app/(auth)/login/page.tsx
 'use client';
 import {useState, type FormEvent} from 'react';
@@ -100,16 +99,16 @@ export default function LoginPage() {
                 disabled={isLoading}
               />
             </div>
-             <div className="flex items-center justify-end">
-                <Link href="/forgot-password">
-                  <Button variant="link" size="sm" className="px-0 h-auto py-1 text-sm">¿Olvidaste tu contraseña?</Button>
-                </Link>
-              </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin" /> : <LogIn />}
               Acceder
             </Button>
           </form>
+          <div className="mt-4 text-right text-sm">
+            <Link href="/forgot-password" className="text-primary hover:underline">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
           <Separator className="my-6" />
           <div className="space-y-4">
             <Button
@@ -139,19 +138,4 @@ export default function LoginPage() {
                 <path
                   fill="#EA4335"
                   d="M24 9.18c3.55 0 6.63 1.23 9.09 3.57l6.23-6.23C35.91 2.51 30.46 0 24 0 14.63 0 6.27 5.15 2.3 13.5l7.19 5.68C11.53 13.73 17.24 9.18 24 9.18z"
-                ></path>
-              </svg>
-              Continuar con Google
-            </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              ¿No tienes una cuenta?{' '}
-              <Link href="/signup" className="font-semibold text-primary hover:underline">
-                Regístrate
-              </Link>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+...
