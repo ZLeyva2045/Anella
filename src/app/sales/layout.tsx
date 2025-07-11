@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   Users,
   Settings,
+  Store,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -51,6 +52,15 @@ const SalesNav = () => {
                             tooltip={{ children: "Dashboard" }}
                          >
                             <Link href="/sales"><Home /><span>Dashboard</span></Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname.startsWith('/sales/pos')}
+                            tooltip={{ children: "Punto de Venta" }}
+                        >
+                             <Link href="/sales/pos"><Store /><span>Punto de Venta</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
