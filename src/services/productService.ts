@@ -20,8 +20,8 @@ type ThemeData = Omit<Theme, 'id'>;
 
 export async function uploadImage(file: File, path: string): Promise<string> {
   const storageRef = ref(storage, `${path}/${file.name}`);
-  await uploadBytes(storageRef, file);
-  const downloadURL = await getDownloadURL(storageRef);
+  const snapshot = await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(snapshot.ref);
   return downloadURL;
 }
 
@@ -29,21 +29,20 @@ export async function saveProduct(
   productId: string | undefined,
   data: ProductData
 ) {
-  const productData = {
-    ...data,
-    updatedAt: serverTimestamp(),
-  };
-
   if (productId) {
     // Actualizar producto existente
     const productRef = doc(db, 'products', productId);
-    await setDoc(productRef, productData, { merge: true });
-    return productRef.id;
+    await setDoc(productRef, {
+      ...data,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+    return productId;
   } else {
     // Crear nuevo producto
     const newProductData = {
-      ...productData,
+      ...data,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       rating: Math.floor(Math.random() * (50 - 40) + 40) / 10, // Default random rating 4.0-5.0
     };
     const productsCollection = collection(db, 'products');

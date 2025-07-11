@@ -122,19 +122,22 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     setLoading(true);
 
     try {
-      let imageUrls = data.images;
+      let finalImageUrls = data.images;
 
+      // Step 1: Upload image if a new one is selected
       if (selectedImageFile) {
         const productIdForPath = product?.id || `new_${Date.now()}`;
         const uploadedImageUrl = await uploadImage(selectedImageFile, `products/${productIdForPath}`);
-        imageUrls = [uploadedImageUrl];
+        finalImageUrls = [uploadedImageUrl];
       }
       
+      // Step 2: Prepare the final data object for Firestore
       const finalData = { 
         ...data,
-        images: imageUrls,
+        images: finalImageUrls,
       };
 
+      // Step 3: Save the product data to Firestore
       await saveProduct(product?.id, finalData);
 
       toast({
@@ -147,17 +150,17 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'No se pudo guardar el producto.',
+        description: 'No se pudo guardar el producto. Revisa la consola para más detalles.',
       });
     } finally {
       setLoading(false);
     }
   };
-
+  
   const handleCreateCategory = async (categoryName: string) => {
     const existing = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
     if (existing) return;
-    await addCategory({ name: categoryName });
+    const newId = await addCategory({ name: categoryName });
     form.setValue('category', categoryName);
   }
 
