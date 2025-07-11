@@ -9,6 +9,7 @@ import {
 import { db } from '@/lib/firebase/config';
 import type { Product } from '@/types/firestore';
 
+// Omit fields that are auto-generated or handled by the backend
 type ProductData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'rating'>;
 
 export async function saveProduct(

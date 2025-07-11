@@ -37,6 +37,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { ChevronsUpDown, Check } from "lucide-react"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import { cn } from '@/lib/utils';
 
 const productSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -71,7 +86,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       price: 0,
       category: '',
       themes: [],
-      images: [''],
+      images: ['https://placehold.co/400x300.png'], // Placeholder for now
       isPersonalizable: false,
       isNew: true,
     },
@@ -90,7 +105,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         price: product.price,
         category: product.category,
         themes: product.themes || [],
-        images: product.images.length > 0 ? product.images : [''],
+        images: product.images.length > 0 ? product.images : ['https://placehold.co/400x300.png'],
         isPersonalizable: product.isPersonalizable,
         isNew: product.isNew,
       });
@@ -101,7 +116,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         price: 0,
         category: '',
         themes: [],
-        images: [''],
+        images: ['https://placehold.co/400x300.png'],
         isPersonalizable: false,
         isNew: true,
       });
@@ -110,8 +125,15 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
+    // NOTE: Image upload logic would go here. For now, we use placeholders.
+    // We'll replace the file names with uploaded URLs from Firebase Storage in a future step.
+    const productDataWithPlaceholders = {
+      ...data,
+      images: ['https://placehold.co/400x300.png'] // Using placeholder until upload is implemented
+    };
+
     try {
-      await saveProduct(product?.id, data);
+      await saveProduct(product?.id, productDataWithPlaceholders);
       toast({
         title: `Producto ${product ? 'actualizado' : 'creado'}`,
         description: `El producto "${data.name}" se ha guardado correctamente.`,
@@ -214,32 +236,81 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="themes"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Temáticas</FormLabel>
+                   <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn(
+                            "w-full justify-between",
+                            !field.value?.length && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value?.length 
+                            ? `${field.value.length} seleccionada(s)`
+                            : "Selecciona temáticas"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                      <Command>
+                        <CommandInput placeholder="Buscar temática..." />
+                         <CommandList>
+                            <CommandEmpty>No se encontró la temática.</CommandEmpty>
+                            <CommandGroup>
+                            {mockThemes.map((theme) => (
+                                <CommandItem
+                                key={theme.id}
+                                onSelect={() => {
+                                    const selected = field.value || [];
+                                    const newSelection = selected.includes(theme.id)
+                                    ? selected.filter((id) => id !== theme.id)
+                                    : [...selected, theme.id];
+                                    form.setValue("themes", newSelection);
+                                }}
+                                >
+                                <Check
+                                    className={cn(
+                                    "mr-2 h-4 w-4",
+                                    (field.value || []).includes(theme.id)
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                />
+                                {theme.name}
+                                </CommandItem>
+                            ))}
+                            </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormItem>
-              <FormLabel>URLs de Imágenes</FormLabel>
-              {fields.map((field, index) => (
-                 <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={`images.${index}`}
-                    render={({ field }) => (
-                        <FormItem>
-                            <div className="flex items-center gap-2">
-                                <FormControl>
-                                    <Input placeholder="https://placehold.co/400x300.png" {...field} />
-                                </FormControl>
-                                {fields.length > 1 && (
-                                    <Button variant="ghost" size="icon" onClick={() => remove(index)}>
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                )}
-                            </div>
-                             <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => append('')}>Añadir Imagen</Button>
+              <FormLabel>Imágenes</FormLabel>
+              {/* This is a temporary UI for local file selection.
+                  It does not yet handle uploading to Firebase Storage. */}
+              <FormControl>
+                  <Input type="file" multiple onChange={(e) => {
+                      // This part would need to handle file objects and upload them.
+                      // For now, it doesn't set any value in the form state.
+                      console.log(e.target.files);
+                  }} />
+              </FormControl>
+              <FormMessage />
             </FormItem>
 
             <div className="flex items-center space-x-4">
