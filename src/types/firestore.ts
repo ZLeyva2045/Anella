@@ -76,4 +76,5 @@ export interface User {
   phone: string; // Teléfono del usuario
   address: string; // Dirección del usuario
   orders: string[]; // Array de IDs de los pedidos del usuario
+  role?: 'customer' | 'manager' | 'sales' | 'designer' | 'manufacturing' | 'creative'; // Rol del usuario
 }

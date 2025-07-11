@@ -3,107 +3,74 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // --- Helper Functions for Role-Based Access ---
-    
-    // Checks if the user's email is in the list of Managers
+    // Helper functions to check user roles from their Firestore document
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function isManager() {
-      return request.auth.token.email in [
-        'gabriela@anella.pe'
-      ];
+      return getUserData().role == 'manager';
     }
-    
-    // Checks if the user's email is in the list of Sales
+
     function isSales() {
-      return request.auth.token.email in [
-        'blanca@anella.pe'
-      ];
+      return getUserData().role == 'sales';
     }
-    
-    // Checks if the user's email is in the list of Designers
+
     function isDesigner() {
-      return request.auth.token.email in [
-        'karen@anella.pe'
-      ];
+      return getUserData().role == 'designer';
     }
     
-    // Checks if the user's email is in the list of Manufacturing
     function isManufacturing() {
-      return request.auth.token.email in [
-        'mafer@anella.pe'
-      ];
+      return getUserData().role == 'manufacturing';
     }
-    
-    // Checks if the user's email is in the list of Creative
+
     function isCreative() {
-        return request.auth.token.email in [
-            'andrea@anella.pe'
-        ];
+      return getUserData().role == 'creative';
     }
 
-    // Checks if the user is any kind of admin
-    function isAdmin() {
-      return isManager() || isSales() || isDesigner() || isManufacturing() || isCreative();
-    }
-    
-    // Checks if the user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Checks if the request is from the user who owns the document
-    function isOwner(userId) {
-      return request.auth.uid == userId;
+    function isStaff() {
+      return getUserData().role in ['manager', 'sales', 'designer', 'manufacturing', 'creative'];
     }
 
-    // --- Collection Rules ---
-
-    // Users Collection
-    // Users can see and edit their own profile.
-    // Admins have broader access based on their roles.
     match /users/{userId} {
-      // Allow read/write access to the owner of the document
-      allow read, update: if isAuthenticated() && isOwner(userId);
+      // Un usuario puede crear su propio documento (al registrarse)
+      allow create: if request.auth.uid == userId;
       
-      // Allow Managers and Sales to read any user's profile
-      allow get: if isAuthenticated() && (isManager() || isSales());
+      // Un usuario puede leer y actualizar su propia información
+      allow read, update: if request.auth.uid == userId;
       
-      // Allow new users to create their own document during sign up
-      allow create: if isAuthenticated() && isOwner(userId);
+      // El manager y el equipo de ventas pueden ver todos los perfiles de usuario
+      allow list: if isManager() || isSales();
       
-      // Allow Managers to list all users
-      allow list: if isAuthenticated() && isManager();
+      // El manager puede actualizar los datos de cualquier usuario (para asignar roles, etc.)
+      allow update: if isManager();
     }
 
-    // Products Collection
-    // Publicly readable by anyone.
-    // Writable only by Managers and Designers.
     match /products/{productId} {
-      // Anyone can view products
-      allow read: if true;
+      // Cualquiera puede ver los productos
+      allow list, read: if true;
       
-      // Only Managers and Designers can create, update, or delete products
-      allow write: if isAuthenticated() && (isManager() || isDesigner());
+      // Solo diseñadores y managers pueden crear, actualizar o eliminar productos
+      allow create, update, delete: if isDesigner() || isManager();
     }
 
-    // Orders Collection
-    // Accessible only by authenticated users, with specific admin roles.
     match /orders/{orderId} {
-      // Users can read their own orders.
-      // Admins (Manager, Sales, Manufacturing, Creative) can read any order.
-      allow get: if isAuthenticated() && (isOwner(resource.data.userId) || isManager() || isSales() || isManufacturing() || isCreative());
+      // Un usuario puede leer sus propios pedidos
+      allow read: if request.auth.uid == resource.data.userId;
       
-      // Users can create their own orders.
-      // Sales and Managers can create orders.
-      allow create: if isAuthenticated() && (isOwner(request.resource.data.userId) || isSales() || isManager());
-
-      // Only Managers, Sales, or Manufacturing can update orders (e.g., change status)
-      allow update: if isAuthenticated() && (isManager() || isSales() || isManufacturing());
-
-      // Only Managers can list all orders. Sales can also list for their needs.
-      allow list: if isAuthenticated() && (isManager() || isSales());
+      // Un usuario puede crear un nuevo pedido
+      allow create: if request.auth.uid == request.resource.data.userId;
       
-      // Only a Manager can delete an order.
-      allow delete: if isAuthenticated() && isManager();
+      // Ventas, manufactura y managers pueden ver todos los pedidos
+      allow list: if isSales() || isManufacturing() || isManager();
+      
+      // Ventas, manufactura y managers pueden actualizar el estado de los pedidos
+      allow update: if isSales() || isManufacturing() || isManager();
+    }
+    
+    // Reglas para colecciones futuras o no especificadas
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

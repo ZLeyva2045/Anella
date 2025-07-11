@@ -44,6 +44,7 @@ export default function SignUpPage() {
         phone: '',
         address: '',
         orders: [],
+        role: 'customer', // Asignar rol por defecto
       };
 
       await setDoc(doc(db, 'users', user.uid), newUser);
