@@ -3,78 +3,54 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper Functions
-    function isManager() {
-      return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
-    }
-    function isSales() {
-      return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'sales';
-    }
-    function isDesigner() {
-      return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'designer';
-    }
-    function isManufacturing() {
-      return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manufacturing';
-    }
-    function isCreative() {
-      return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'creative';
-    }
-    function isCustomer() {
-      return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'customer';
-    }
-    function isSignedIn() {
-      return request.auth.uid != null;
-    }
-    function isAdmin() {
-        return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['manager', 'sales', 'designer', 'manufacturing', 'creative'];
+    // Helper function to check user role from the 'users' collection
+    function getUserRole(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role;
     }
 
-    // Collection Rules
+    // Helper function to check if the user is an admin
+    function isAdmin(userId) {
+      if (userId == null) {
+        return false;
+      }
+      let userRole = getUserRole(userId);
+      return userRole in ['manager', 'designer', 'sales', 'creative', 'manufacturing'];
+    }
 
+    // Rules for the 'users' collection
     match /users/{userId} {
-      // Un usuario puede crear su propio documento (al registrarse)
-      allow create: if isSignedIn();
-      // Un usuario solo puede leer y actualizar su propia información
-      allow read, update: if request.auth.uid == userId || isManager();
-      // Solo un manager puede eliminar usuarios
-      allow delete: if isManager();
-      // Solo un manager puede listar todos los usuarios
-      allow list: if isManager();
+      // A user can read their own data.
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // A user can create their own user document upon signup.
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Only the user themselves or an admin can update user data.
+      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin(request.auth.uid));
+      // Only admins can delete users.
+      allow delete: if request.auth != null && isAdmin(request.auth.uid);
     }
 
+    // Rules for the 'products' collection
     match /products/{productId} {
-      // Cualquiera puede leer los productos
-      allow read, list: if true;
-      // Solo managers y designers pueden crear, actualizar y eliminar productos
-      allow create, update, delete: if isManager() || isDesigner();
+      // Anyone can read products.
+      allow read: if true;
+      // Only admins can create, update, or delete products.
+      allow write: if request.auth != null && isAdmin(request.auth.uid);
     }
 
-    match /orders/{orderId} {
-      // El dueño del pedido, managers, y personal de ventas/manufactura pueden leer el pedido
-      allow read: if (isManager() || isSales() || isManufacturing()) || resource.data.userId == request.auth.uid;
-      // Clientes pueden crear pedidos
-      allow create: if isCustomer();
-      // Solo managers, ventas y manufactura pueden actualizar pedidos
-      allow update: if isManager() || isSales() || isManufacturing();
-      // Solo managers pueden eliminar pedidos
-      allow delete: if isManager();
-      // Managers y ventas pueden listar todos los pedidos
-      allow list: if isManager() || isSales();
-    }
-
+    // Rules for the 'categories' collection
     match /categories/{categoryId} {
-        // Permitir lectura a todos los usuarios administradores
-        allow read, list: if isAdmin();
-        // Solo managers o designers pueden crear, actualizar, eliminar
-        allow write: if isManager() || isDesigner();
+        // Anyone can read categories
+        allow read: if true;
+        // Only admins can write to categories
+        allow write: if request.auth != null && isAdmin(request.auth.uid);
     }
 
+    // Rules for the 'themes' collection
     match /themes/{themeId} {
-        // Permitir lectura a todos los usuarios administradores
-        allow read, list: if isAdmin();
-        // Solo managers o designers pueden crear, actualizar, eliminar
-        allow write: if isManager() || isDesigner();
+        // Anyone can read themes
+        allow read: if true;
+        // Only admins can write to themes
+        allow write: if request.auth != null && isAdmin(request.auth.uid);
     }
   }
 }
