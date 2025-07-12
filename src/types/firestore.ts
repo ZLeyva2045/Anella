@@ -75,7 +75,10 @@ export interface User {
   name: string; // Nombre del usuario
   phone: string; // Teléfono del usuario
   address: string; // Dirección del usuario
+  dni_ruc?: string; // DNI o RUC del cliente
+  birthDate?: Date | Timestamp; // Fecha de nacimiento
   orders: string[]; // Array de IDs de los pedidos del usuario
   role?: 'customer' | 'manager' | 'sales' | 'designer' | 'manufacturing' | 'creative'; // Rol del usuario
   photoURL?: string; // foto del usuario
+  loyaltyPoints?: number; // Puntos de fidelidad
 }
