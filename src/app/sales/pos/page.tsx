@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, PlusCircle, Search, Trash2, XCircle, UserPlus } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, XCircle, UserPlus, ClipboardCheck } from 'lucide-react';
 import Image from 'next/image';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -32,6 +33,7 @@ export default function PosPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'products'), (snapshot) => {
@@ -87,6 +89,20 @@ export default function PosPage() {
       description: `Venta por un total de S/${total.toFixed(2)} registrada.`,
     });
     clearCart();
+  };
+  
+  const handleCreateOrder = () => {
+    if (cart.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "El carrito está vacío",
+        description: "Añade productos antes de crear un pedido.",
+      });
+      return;
+    }
+    // Guardar en localStorage y redirigir
+    localStorage.setItem('pendingOrderCart', JSON.stringify(cart));
+    router.push('/sales/orders/create'); // Asumiendo que esta será la ruta para crear pedidos
   };
 
   return (
@@ -188,10 +204,16 @@ export default function PosPage() {
                           <div className="w-full flex justify-between text-sm"><span>Subtotal</span><span>S/{subtotal.toFixed(2)}</span></div>
                           <div className="w-full flex justify-between text-sm"><span>IGV (18%)</span><span>S/{igv.toFixed(2)}</span></div>
                           <div className="w-full flex justify-between text-lg font-bold pt-2 border-t"><span>Total</span><span>S/{total.toFixed(2)}</span></div>
-                          <Button size="lg" className="w-full mt-2" disabled={cart.length === 0} onClick={handleCompleteSale}>
-                              <PlusCircle className="mr-2" />
-                              Completar Venta
-                          </Button>
+                          <div className="grid grid-cols-2 gap-2 w-full mt-2">
+                            <Button size="lg" disabled={cart.length === 0} onClick={handleCreateOrder} variant="outline">
+                                <ClipboardCheck className="mr-2" />
+                                Crear Pedido
+                            </Button>
+                            <Button size="lg" disabled={cart.length === 0} onClick={handleCompleteSale}>
+                                <PlusCircle className="mr-2" />
+                                Completar Venta
+                            </Button>
+                          </div>
                       </CardFooter>
                   </Card>
               </div>
