@@ -43,7 +43,8 @@ import {
   Briefcase,
   PlusCircle,
   Package,
-  UserPlus
+  UserPlus,
+  Wand2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
@@ -142,6 +143,11 @@ export function Header() {
             </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
+           <NavigationMenuLink href="/#personalization" className={navigationMenuTriggerStyle()}>
+              Personalizar
+            </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
           <NavigationMenuTrigger>Categorías</NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
@@ -190,6 +196,7 @@ export function Header() {
           <div className="flex-grow p-4 space-y-2 overflow-y-auto">
              <Link href="/" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Inicio</Link>
              <Link href="/products" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Regalos</Link>
+             <Link href="/#personalization" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Personalizar</Link>
              <p className="py-2 text-lg font-semibold">Categorías</p>
              {categories.map((item) => (
               <Link
