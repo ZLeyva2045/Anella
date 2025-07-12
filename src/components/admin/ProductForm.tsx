@@ -21,6 +21,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription as FormDesc
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -44,6 +45,7 @@ const productSchema = z.object({
   images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
   isPersonalizable: z.boolean().default(false),
   isNew: z.boolean().default(true),
+  showInWebsite: z.boolean().default(true),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -84,9 +86,10 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       price: 0,
       category: '',
       themes: [],
-      images: [],
+      images: [''],
       isPersonalizable: false,
       isNew: true,
+      showInWebsite: true,
     },
   });
 
@@ -98,9 +101,10 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         price: product.price,
         category: product.category,
         themes: product.themes || [],
-        images: product.images.length > 0 ? product.images : [],
+        images: product.images.length > 0 ? product.images : [''],
         isPersonalizable: product.isPersonalizable,
-        isNew: product.isNew,
+        isNew: product.isNew ?? true,
+        showInWebsite: product.showInWebsite ?? true,
       });
     } else {
       form.reset({
@@ -109,9 +113,10 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         price: 0,
         category: '',
         themes: [],
-        images: [],
+        images: [''],
         isPersonalizable: false,
         isNew: true,
+        showInWebsite: true,
       });
     }
   }, [product, form, isOpen]);
@@ -306,9 +311,21 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               )}
             />
 
-            <div className="flex items-center space-x-4">
-              <FormField control={form.control} name="isPersonalizable" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Es Personalizable</FormLabel></div></FormItem>)} />
-              <FormField control={form.control} name="isNew" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Marcar como Nuevo</FormLabel></div></FormItem>)} />
+            <div className="flex flex-wrap gap-4">
+              <FormField control={form.control} name="isPersonalizable" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Es Personalizable</FormLabel></div></FormItem>)} />
+              <FormField control={form.control} name="isNew" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Marcar como Nuevo</FormLabel></div></FormItem>)} />
+              <FormField control={form.control} name="showInWebsite" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Mostrar en la web</FormLabel>
+                      <FormDesc className="text-xs">
+                        Si se desmarca, solo aparecerá en el Punto de Venta.
+                      </FormDesc>
+                    </div>
+                  </FormItem>
+                )} 
+              />
             </div>
 
             <DialogFooter>

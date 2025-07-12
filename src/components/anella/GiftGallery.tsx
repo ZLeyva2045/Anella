@@ -11,7 +11,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { collection, onSnapshot, query, limit } from "firebase/firestore";
+import { collection, onSnapshot, query, limit, where } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import type { Product } from "@/types/firestore";
 import { Skeleton } from "../ui/skeleton";
@@ -24,8 +24,12 @@ export function GiftGallery() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Limitamos a 6 para la galería de la página principal
-    const productsQuery = query(collection(db, "products"), limit(6));
+    // Limitamos a 6 para la galería y solo los que se muestran en la web
+    const productsQuery = query(
+      collection(db, "products"), 
+      where('showInWebsite', '!=', false),
+      limit(6)
+    );
 
     const unsubscribe = onSnapshot(productsQuery, (snapshot) => {
       const productsData = snapshot.docs.map(

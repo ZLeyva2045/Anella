@@ -7,7 +7,7 @@ import { Footer } from '@/components/anella/Footer';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ProductFilters } from '@/components/products/ProductFilters';
 import { Toolbar } from '@/components/products/Toolbar';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Product, Category, Theme } from '@/types/firestore';
 
@@ -26,7 +26,9 @@ export default function ProductsPage() {
 
   useEffect(() => {
     setLoading(true);
-    const unsubProducts = onSnapshot(collection(db, 'products'), snapshot => {
+    // Solo mostramos productos que están marcados para la web
+    const productsQuery = query(collection(db, 'products'), where('showInWebsite', '!=', false));
+    const unsubProducts = onSnapshot(productsQuery, snapshot => {
       const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
       setProducts(prods);
       setLoading(false);

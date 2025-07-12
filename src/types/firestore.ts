@@ -17,6 +17,7 @@ export interface Product {
   rating?: number; // Valoración promedio del producto
   isNew?: boolean; // Para destacar productos nuevos
   themes?: string[]; // Array de nombres de las temáticas asociadas
+  showInWebsite?: boolean; // Para mostrar/ocultar en la web pero mantener en POS/inventario
 }
 
 /**
