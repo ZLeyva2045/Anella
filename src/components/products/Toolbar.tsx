@@ -24,14 +24,14 @@ export function Toolbar({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Buscar por nombre..."
+          placeholder="Buscar regalos..."
           className="pl-9 w-full"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
       <div className="flex items-center gap-4 w-full md:w-auto">
-        <span className="text-sm text-muted-foreground whitespace-nowrap">{productCount} productos</span>
+        <span className="text-sm text-muted-foreground whitespace-nowrap">{productCount} regalos</span>
         <Select value={sortOption} onValueChange={setSortOption}>
           <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Ordenar por" />
