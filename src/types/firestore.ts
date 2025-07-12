@@ -43,6 +43,7 @@ export interface Theme {
 export interface Order {
   id: string; // ID único del pedido
   userId: string; // ID del usuario que realizó el pedido
+  sellerId?: string; // ID del vendedor que gestionó el pedido (opcional)
   products: OrderProduct[]; // Array de productos en el pedido
   customerInfo: { // Información del cliente
     name: string;
@@ -53,7 +54,7 @@ export interface Order {
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'; // Estado del pedido
   paymentMethod: 'creditCard' | 'paypal' | 'bankTransfer'; // Método de pago
   deliveryMethod: 'storePickup' | 'homeDelivery'; // Método de entrega
-  createdAt: Date; // Fecha de creación del pedido
+  createdAt: Date | Timestamp; // Fecha de creación del pedido
   totalAmount: number; // Monto total del pedido
 }
 
