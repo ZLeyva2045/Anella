@@ -78,7 +78,7 @@ export default function DashboardPage() {
         </CardContent>
         <CardFooter className="flex justify-between">
             <Button asChild variant="outline">
-                <Link href="/products">Ver Productos</Link>
+                <Link href="/products">Ver Regalos</Link>
             </Button>
             <Button onClick={handleSignOut} variant="destructive">
                 Cerrar Sesión

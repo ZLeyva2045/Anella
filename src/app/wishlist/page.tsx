@@ -31,7 +31,7 @@ export default function WishlistPage() {
         <div className="text-center mb-12">
             <h1 className="text-4xl font-bold tracking-tight">Tu Lista de Deseos</h1>
             <p className="mt-2 text-lg text-muted-foreground">
-                Los productos que has guardado para más tarde.
+                Los regalos que has guardado para más tarde.
             </p>
         </div>
 
@@ -42,10 +42,10 @@ export default function WishlistPage() {
             <Heart className="mx-auto h-24 w-24 text-muted-foreground" />
             <h2 className="mt-6 text-2xl font-bold">Tu lista de deseos está vacía</h2>
             <p className="mt-2 text-muted-foreground">
-              Haz clic en el corazón de los productos que te gustan para guardarlos aquí.
+              Haz clic en el corazón de los regalos que te gustan para guardarlos aquí.
             </p>
             <Button asChild className="mt-6">
-              <Link href="/products">Explorar productos</Link>
+              <Link href="/products">Explorar regalos</Link>
             </Button>
           </div>
         )}

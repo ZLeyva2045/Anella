@@ -156,10 +156,10 @@ export default function CartPage() {
             <ShoppingCart className="mx-auto h-24 w-24 text-muted-foreground" />
             <h2 className="mt-6 text-2xl font-bold">Tu carrito está vacío</h2>
             <p className="mt-2 text-muted-foreground">
-              Parece que aún no has añadido ningún producto.
+              Parece que aún no has añadido ningún regalo.
             </p>
             <Button asChild className="mt-6">
-              <Link href="/products">Explorar productos</Link>
+              <Link href="/products">Explorar regalos</Link>
             </Button>
           </div>
         )}
