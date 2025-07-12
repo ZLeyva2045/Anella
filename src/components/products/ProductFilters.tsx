@@ -6,13 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { ListFilter, Star } from "lucide-react";
-import type { Category, Theme } from "@/types/firestore";
+import type { Theme } from "@/types/firestore";
 
 interface ProductFiltersProps {
-  categories: Category[];
   themes: Theme[];
-  selectedCategories: string[];
-  setSelectedCategories: (categories: string[]) => void;
   selectedThemes: string[];
   setSelectedThemes: (themes: string[]) => void;
   priceRange: [number];
@@ -22,10 +19,7 @@ interface ProductFiltersProps {
 }
 
 export function ProductFilters({
-  categories,
   themes,
-  selectedCategories,
-  setSelectedCategories,
   selectedThemes,
   setSelectedThemes,
   priceRange,
@@ -33,13 +27,6 @@ export function ProductFilters({
   rating,
   setRating,
 }: ProductFiltersProps) {
-
-  const handleCategoryChange = (categoryName: string) => {
-    const newSelection = selectedCategories.includes(categoryName)
-      ? selectedCategories.filter(name => name !== categoryName)
-      : [...selectedCategories, categoryName];
-    setSelectedCategories(newSelection);
-  };
 
   const handleThemeChange = (themeName: string) => {
     const newSelection = selectedThemes.includes(themeName)
@@ -49,7 +36,6 @@ export function ProductFilters({
   };
   
   const handleClearFilters = () => {
-    setSelectedCategories([]);
     setSelectedThemes([]);
     setPriceRange([500]);
     setRating(0);
@@ -65,19 +51,19 @@ export function ProductFilters({
         <Button variant="ghost" size="sm" onClick={handleClearFilters}>Limpiar</Button>
       </CardHeader>
       <CardContent className="p-4">
-        <Accordion type="multiple" defaultValue={["category", "price", "themes", "rating"]} className="w-full">
+        <Accordion type="multiple" defaultValue={["price", "themes", "rating"]} className="w-full">
           
-          <AccordionItem value="category">
-            <AccordionTrigger className="text-base font-semibold">Categoría</AccordionTrigger>
+          <AccordionItem value="themes">
+            <AccordionTrigger className="text-base font-semibold">Temática</AccordionTrigger>
             <AccordionContent className="pt-2 space-y-2">
-              {categories.map(category => (
-                <div key={category.id} className="flex items-center space-x-2">
+              {themes.map(theme => (
+                <div key={theme.id} className="flex items-center space-x-2">
                   <Checkbox
-                    id={`cat-${category.id}`}
-                    checked={selectedCategories.includes(category.name)}
-                    onCheckedChange={() => handleCategoryChange(category.name)}
+                    id={`theme-${theme.id}`}
+                    checked={selectedThemes.includes(theme.name)}
+                    onCheckedChange={() => handleThemeChange(theme.name)}
                   />
-                  <Label htmlFor={`cat-${category.id}`} className="font-normal cursor-pointer">{category.name}</Label>
+                  <Label htmlFor={`theme-${theme.id}`} className="font-normal cursor-pointer">{theme.name}</Label>
                 </div>
               ))}
             </AccordionContent>
@@ -96,22 +82,6 @@ export function ProductFilters({
                 value={priceRange}
                 onValueChange={(value) => setPriceRange(value as [number])}
               />
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="themes">
-            <AccordionTrigger className="text-base font-semibold">Temática</AccordionTrigger>
-            <AccordionContent className="pt-2 space-y-2">
-              {themes.map(theme => (
-                <div key={theme.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`theme-${theme.id}`}
-                    checked={selectedThemes.includes(theme.name)}
-                    onCheckedChange={() => handleThemeChange(theme.name)}
-                  />
-                  <Label htmlFor={`theme-${theme.id}`} className="font-normal cursor-pointer">{theme.name}</Label>
-                </div>
-              ))}
             </AccordionContent>
           </AccordionItem>
 

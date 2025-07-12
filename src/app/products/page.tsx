@@ -9,17 +9,15 @@ import { ProductFilters } from '@/components/products/ProductFilters';
 import { Toolbar } from '@/components/products/Toolbar';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { Product, Category, Theme } from '@/types/firestore';
+import type { Product, Theme } from '@/types/firestore';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('newest');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number]>([500]);
   const [rating, setRating] = useState(0);
@@ -33,10 +31,7 @@ export default function ProductsPage() {
       setProducts(prods);
       setLoading(false);
     });
-    const unsubCategories = onSnapshot(collection(db, 'categories'), snapshot => {
-      const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
-      setCategories(cats);
-    });
+    
     const unsubThemes = onSnapshot(collection(db, 'themes'), snapshot => {
       const thms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
       setThemes(thms);
@@ -44,7 +39,6 @@ export default function ProductsPage() {
 
     return () => {
       unsubProducts();
-      unsubCategories();
       unsubThemes();
     };
   }, []);
@@ -56,11 +50,6 @@ export default function ProductsPage() {
     // Search filter
     if (searchQuery) {
       tempProducts = tempProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-
-    // Category filter
-    if (selectedCategories.length > 0) {
-      tempProducts = tempProducts.filter(p => selectedCategories.includes(p.category));
     }
     
     // Theme filter
@@ -98,7 +87,7 @@ export default function ProductsPage() {
     }
 
     setFilteredProducts(tempProducts);
-  }, [searchQuery, sortOption, products, selectedCategories, selectedThemes, priceRange, rating]);
+  }, [searchQuery, sortOption, products, selectedThemes, priceRange, rating]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -107,10 +96,7 @@ export default function ProductsPage() {
         <main className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
              <ProductFilters
-                categories={categories}
                 themes={themes}
-                selectedCategories={selectedCategories}
-                setSelectedCategories={setSelectedCategories}
                 selectedThemes={selectedThemes}
                 setSelectedThemes={setSelectedThemes}
                 priceRange={priceRange}
