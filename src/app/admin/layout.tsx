@@ -9,6 +9,7 @@ import {
   LineChart,
   Settings,
   Store,
+  FileText,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -90,6 +91,15 @@ const AdminNav = () => {
                             tooltip={{ children: "Clientes" }}
                         >
                              <Link href="/admin/customers"><Users /><span>Clientes</span></Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname.startsWith('/admin/reports')}
+                            tooltip={{ children: "Reportes" }}
+                        >
+                            <Link href="/admin/reports"><FileText /><span>Reportes</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
