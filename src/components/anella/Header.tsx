@@ -143,7 +143,7 @@ export function Header() {
             </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-           <NavigationMenuLink href="/#personalization" className={navigationMenuTriggerStyle()}>
+           <NavigationMenuLink href="/personalize" className={navigationMenuTriggerStyle()}>
               Personalizar
             </NavigationMenuLink>
         </NavigationMenuItem>
@@ -196,7 +196,7 @@ export function Header() {
           <div className="flex-grow p-4 space-y-2 overflow-y-auto">
              <Link href="/" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Inicio</Link>
              <Link href="/products" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Regalos</Link>
-             <Link href="/#personalization" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Personalizar</Link>
+             <Link href="/personalize" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Personalizar</Link>
              <p className="py-2 text-lg font-semibold">Categorías</p>
              {categories.map((item) => (
               <Link
