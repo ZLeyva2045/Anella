@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Category, Theme } from '@/types/firestore';
 import { saveProduct, addCategory, addTheme } from '@/services/productService';
@@ -43,8 +42,6 @@ const productSchema = z.object({
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
   themes: z.array(z.string()).optional(),
   images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
-  isNew: z.boolean().default(true),
-  showInWebsite: z.boolean().default(true),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -86,8 +83,6 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       category: '',
       themes: [],
       images: [''],
-      isNew: true,
-      showInWebsite: true,
     },
   });
 
@@ -100,8 +95,6 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         category: product.category,
         themes: product.themes || [],
         images: product.images.length > 0 ? product.images : [''],
-        isNew: product.isNew ?? true,
-        showInWebsite: product.showInWebsite ?? true,
       });
     } else {
       form.reset({
@@ -111,8 +104,6 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         category: '',
         themes: [],
         images: [''],
-        isNew: true,
-        showInWebsite: true,
       });
     }
   }, [product, form, isOpen]);
@@ -306,22 +297,6 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                 </FormItem>
               )}
             />
-
-            <div className="flex flex-wrap gap-4">
-              <FormField control={form.control} name="isNew" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Marcar como Nuevo</FormLabel></div></FormItem>)} />
-              <FormField control={form.control} name="showInWebsite" render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Mostrar en la web</FormLabel>
-                      <FormDesc className="text-xs">
-                        Si se desmarca, solo aparecerá en el Punto de Venta.
-                      </FormDesc>
-                    </div>
-                  </FormItem>
-                )} 
-              />
-            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>

@@ -15,9 +15,7 @@ export interface Product {
   createdAt: Date | Timestamp; 
   updatedAt: Date | Timestamp; 
   rating?: number; 
-  isNew?: boolean; 
   themes?: string[]; 
-  showInWebsite?: boolean;
 }
 
 /**
