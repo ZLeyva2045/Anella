@@ -12,7 +12,6 @@ export interface Product {
   price: number; 
   category: string; 
   images: string[]; 
-  isPersonalizable: boolean; 
   createdAt: Date | Timestamp; 
   updatedAt: Date | Timestamp; 
   rating?: number; 
@@ -33,6 +32,7 @@ export interface Gift {
   images: string[]; // Fotos del regalo ya ensamblado
   themes?: string[]; // Temáticas asociadas
   products: GiftProduct[]; // Array de productos que componen el regalo
+  isPersonalizable: boolean;
   isNew?: boolean;
   rating?: number;
   showInWebsite?: boolean;

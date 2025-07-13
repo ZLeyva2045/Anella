@@ -49,6 +49,7 @@ const giftSchema = z.object({
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   themes: z.array(z.string()).min(1, 'Debes seleccionar al menos una temática.'),
   images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
+  isPersonalizable: z.boolean().default(false),
   isNew: z.boolean().default(true),
   showInWebsite: z.boolean().default(true),
   products: z.array(giftProductSchema).min(1, 'El regalo debe tener al menos un producto.'),
@@ -86,6 +87,7 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
       price: 0,
       themes: [],
       images: [''],
+      isPersonalizable: false,
       isNew: true,
       showInWebsite: true,
       products: [],
@@ -106,7 +108,7 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
     } else {
       form.reset({
         name: '', description: '', price: 0, 
-        themes: [], images: [''], isNew: true, showInWebsite: true, products: [],
+        themes: [], images: [''], isPersonalizable: false, isNew: true, showInWebsite: true, products: [],
       });
     }
   }, [gift, form, isOpen]);
@@ -253,6 +255,7 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
             </div>
             
             <div className="flex flex-wrap gap-4">
+              <FormField control={form.control} name="isPersonalizable" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Es Personalizable</FormLabel></div></FormItem>)} />
               <FormField control={form.control} name="isNew" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Marcar como Nuevo</FormLabel></div></FormItem>)} />
               <FormField control={form.control} name="showInWebsite" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Mostrar en Web</FormLabel></div></FormItem>)} />
             </div>
