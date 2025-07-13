@@ -21,13 +21,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription as FormDesc
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import type { Product, Category, Theme } from '@/types/firestore';
-import { saveProduct, addCategory, addTheme } from '@/services/productService';
+import type { Product, Category } from '@/types/firestore';
+import { saveProduct, addCategory } from '@/services/productService';
 import { Loader2, ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -40,8 +39,9 @@ const productSchema = z.object({
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres.'),
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
-  themes: z.array(z.string()).optional(),
   images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
+  stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.'),
+  supplier: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -55,7 +55,6 @@ interface ProductFormProps {
 export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [themes, setThemes] = useState<Theme[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -63,14 +62,9 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
       setCategories(cats);
     });
-    const unsubThemes = onSnapshot(collection(db, 'themes'), snapshot => {
-      const thms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
-      setThemes(thms);
-    });
-
+    
     return () => {
       unsubCategories();
-      unsubThemes();
     };
   }, []);
 
@@ -81,19 +75,16 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       description: '',
       price: 0,
       category: '',
-      themes: [],
       images: [''],
+      stock: 0,
+      supplier: '',
     },
   });
 
   useEffect(() => {
     if (product) {
       form.reset({
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        category: product.category,
-        themes: product.themes || [],
+        ...product,
         images: product.images.length > 0 ? product.images : [''],
       });
     } else {
@@ -102,8 +93,9 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         description: '',
         price: 0,
         category: '',
-        themes: [],
         images: [''],
+        stock: 0,
+        supplier: '',
       });
     }
   }, [product, form, isOpen]);
@@ -136,15 +128,6 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     if (existing) return;
     await addCategory({ name: categoryName });
     form.setValue('category', categoryName);
-  }
-
-  const handleCreateTheme = async (themeName: string) => {
-    const existing = themes.find(t => t.name.toLowerCase() === themeName.toLowerCase());
-    const currentThemes = form.getValues('themes') || [];
-    if (existing || currentThemes.includes(themeName)) return;
-
-    await addTheme({ name: themeName });
-    form.setValue('themes', [...currentThemes, themeName]);
   }
 
   return (
@@ -234,55 +217,30 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="themes"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Temáticas</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value?.length && "text-muted-foreground")}>
-                          {field.value?.length ? `${field.value.length} seleccionada(s)` : "Selecciona temáticas"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                       <Command onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (e.target as HTMLInputElement).value) {
-                             e.preventDefault();
-                            handleCreateTheme((e.target as HTMLInputElement).value);
-                          }
-                       }}>
-                        <CommandInput placeholder="Buscar o crear temática..." />
-                        <CommandList>
-                          <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
-                          <CommandGroup>
-                            {themes.map(theme => (
-                              <CommandItem
-                                key={theme.id}
-                                value={theme.name}
-                                onSelect={() => {
-                                  const selected = field.value || [];
-                                  const newSelection = selected.includes(theme.name) ? selected.filter(t => t !== theme.name) : [...selected, theme.name];
-                                  form.setValue("themes", newSelection);
-                                }}
-                              >
-                                <Check className={cn("mr-2 h-4 w-4", (field.value || []).includes(theme.name) ? "opacity-100" : "opacity-0")} />
-                                {theme.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="stock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stock</FormLabel>
+                    <FormControl><Input type="number" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="supplier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Proveedor (Opcional)</FormLabel>
+                    <FormControl><Input placeholder="Nombre del proveedor" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <FormField
               control={form.control}

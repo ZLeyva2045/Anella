@@ -53,6 +53,7 @@ import {
 import { db } from '@/lib/firebase/config';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -147,7 +148,7 @@ export default function AdminProductsPage() {
                       <span className="sr-only">Imagen</span>
                     </TableHead>
                     <TableHead>Nombre</TableHead>
-                    <TableHead>Categoría</TableHead>
+                    <TableHead>Stock</TableHead>
                     <TableHead className="hidden md:table-cell">Precio</TableHead>
                     <TableHead>
                       <span className="sr-only">Acciones</span>
@@ -168,7 +169,10 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{product.category}</Badge>
+                        <Badge variant={product.stock > 10 ? "secondary" : "outline"}
+                         className={cn(product.stock <= 5 && 'bg-destructive/20 border-destructive/50 text-destructive-foreground')}>
+                          {product.stock} en stock
+                        </Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         S/{product.price.toFixed(2)}

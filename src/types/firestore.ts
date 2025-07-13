@@ -15,7 +15,9 @@ export interface Product {
   createdAt: Date | Timestamp; 
   updatedAt: Date | Timestamp; 
   rating?: number; 
-  themes?: string[]; 
+  isPersonalizable: boolean;
+  stock: number; // Cantidad en inventario
+  supplier?: string; // Proveedor del producto (opcional)
 }
 
 /**

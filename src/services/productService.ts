@@ -27,7 +27,7 @@ export async function uploadImage(file: File, path: string): Promise<string> {
 
 export async function saveProduct(
   productId: string | undefined,
-  data: ProductData
+  data: Partial<ProductData> // Partial because some fields might not be sent every time
 ) {
   if (productId) {
     // Actualizar producto existente
