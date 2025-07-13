@@ -1,6 +1,6 @@
 // src/app/sales/page.tsx
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -17,8 +17,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, Users, CreditCard, Activity } from 'lucide-react';
+import { DollarSign, Users, CreditCard, Activity, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import type { Order } from '@/types/firestore';
+import Link from 'next/link';
 
 const MetricCard = ({ title, value, icon, description }: { title: string, value: string, icon: React.ElementType, description: string }) => {
   const Icon = icon;
@@ -36,91 +41,125 @@ const MetricCard = ({ title, value, icon, description }: { title: string, value:
   );
 };
 
-const recentOrders = [
-    { id: 'ORD001', customer: 'Liam Johnson', date: '2023-11-23', total: '$250.00', status: 'Delivered', payment: 'Paid' },
-    { id: 'ORD002', customer: 'Olivia Smith', date: '2023-11-22', total: '$150.75', status: 'Shipped', payment: 'Paid' },
-    { id: 'ORD003', customer: 'Noah Williams', date: '2023-11-21', total: '$350.00', status: 'Processing', payment: 'Pending' },
-    { id: 'ORD004', customer: 'Emma Brown', date: '2023-11-20', total: '$450.50', status: 'Delivered', payment: 'Paid' },
-    { id: 'ORD005', customer: 'Ava Jones', date: '2023-11-19', total: '$55.00', status: 'Cancelled', payment: 'Refunded' },
-];
+const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
 
-const RecentOrdersTable = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle>Mis Pedidos Recientes</CardTitle>
-            <CardDescription>Un resumen de los pedidos que has gestionado.</CardDescription>
-        </CardHeader>
-        <CardContent>
-             <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Pedido</TableHead>
-                        <TableHead>Cliente</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Fecha</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {recentOrders.map((order) => (
-                    <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.id}</TableCell>
-                        <TableCell>{order.customer}</TableCell>
-                        <TableCell>{order.total}</TableCell>
-                        <TableCell>
-                            <Badge variant={
-                                order.status === 'Delivered' ? 'default' :
-                                order.status === 'Processing' ? 'secondary' :
-                                order.status === 'Cancelled' ? 'destructive' : 'outline'
-                            }>{order.status}</Badge>
-                        </TableCell>
-                        <TableCell>{order.date}</TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-)
+    useEffect(() => {
+        if (!sellerId) return;
+
+        const q = query(
+            collection(db, "orders"), 
+            where("sellerId", "==", sellerId),
+            orderBy("createdAt", "desc"), 
+            limit(5)
+        );
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+            setOrders(ordersData);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [sellerId]);
+    
+     const getStatusVariant = (status: Order['status']) => {
+        switch (status) {
+        case 'delivered': return 'default';
+        case 'processing': return 'secondary';
+        case 'shipped': return 'outline';
+        case 'cancelled': return 'destructive';
+        case 'pending': return 'secondary';
+        default: return 'outline';
+        }
+    };
+    
+    if (loading) {
+        return <div className="flex justify-center items-center h-40"><Loader2 className="animate-spin" /></div>;
+    }
+
+    if (orders.length === 0) {
+        return <p className="text-center text-muted-foreground py-4">No has gestionado pedidos recientes.</p>;
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Mis Pedidos Recientes</CardTitle>
+                <CardDescription>Un resumen de los pedidos que has gestionado.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Pedido</TableHead>
+                            <TableHead>Cliente</TableHead>
+                            <TableHead>Total</TableHead>
+                            <TableHead>Estado</TableHead>
+                            <TableHead>Fecha</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {orders.map((order) => (
+                        <TableRow key={order.id}>
+                            <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
+                            <TableCell>{order.customerInfo.name}</TableCell>
+                            <TableCell>S/{order.totalAmount.toFixed(2)}</TableCell>
+                            <TableCell>
+                                <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                            </TableCell>
+                            <TableCell>{new Date((order.createdAt as any).seconds * 1000).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    )
+}
 
 export default function SalesDashboardPage() {
+    const { user } = useAuth();
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard de Ventas</h1>
          <div className="flex items-center space-x-2">
-            <Button>+ Crear Pedido</Button>
+            <Button asChild>
+                <Link href="/sales/orders/create">+ Crear Pedido</Link>
+            </Button>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Mis Ingresos (Mes)"
-          value="S/4,523.18"
+          value="S/0.00"
           icon={DollarSign}
-          description="+15.3% desde el mes pasado"
+          description="Calculando..."
         />
         <MetricCard
           title="Nuevos Clientes (Mes)"
-          value="+12"
+          value="0"
           icon={Users}
           description="Asignados a tu cartera"
         />
         <MetricCard
           title="Mis Ventas (Mes)"
-          value="+54"
+          value="0"
           icon={CreditCard}
-          description="+21% desde el mes pasado"
+          description="Calculando..."
         />
         <MetricCard
           title="Mi Tasa de Cierre"
-          value="25.5%"
+          value="0%"
           icon={Activity}
-          description="+1.1% desde el mes pasado"
+          description="Calculando..."
         />
       </div>
 
-      <RecentOrdersTable />
+      {user && <RecentOrdersTable sellerId={user.uid} />}
     </div>
   );
 }

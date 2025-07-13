@@ -1,7 +1,7 @@
 // src/app/admin/reports/page.tsx
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -30,21 +30,14 @@ import {
   Banknote,
   ShoppingCart,
   CalendarIcon,
+  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { Order } from '@/types/firestore';
-
-// Datos de ejemplo para el reporte
-const mockTransactions: (Order & { time: string })[] = [
-  { id: 'ORD101', userId: 'usr1', customerInfo: { name: 'Liam Johnson', email: 'liam@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 75.50, time: '09:15 AM' },
-  { id: 'ORD102', userId: 'usr2', customerInfo: { name: 'Olivia Smith', email: 'olivia@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 120.00, time: '10:30 AM' },
-  { id: 'ORD103', userId: 'usr3', customerInfo: { name: 'Noah Williams', email: 'noah@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 210.25, time: '11:45 AM' },
-  { id: 'ORD104', userId: 'usr4', customerInfo: { name: 'Emma Brown', email: 'emma@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 50.00, time: '02:00 PM' },
-  { id: 'ORD105', userId: 'usr5', customerInfo: { name: 'Ava Jones', email: 'ava@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 350.00, time: '04:20 PM' },
-];
-
+import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 const MetricCard = ({ title, value, icon }: { title: string, value: string, icon: React.ElementType }) => {
   const Icon = icon;
@@ -63,17 +56,47 @@ const MetricCard = ({ title, value, icon }: { title: string, value: string, icon
 
 export default function DailyCashReportPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [transactions, setTransactions] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!date) return;
+    setLoading(true);
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const startTimestamp = Timestamp.fromDate(startOfDay);
+    const endTimestamp = Timestamp.fromDate(endOfDay);
+    
+    const q = query(
+      collection(db, "orders"), 
+      where("createdAt", ">=", startTimestamp),
+      where("createdAt", "<=", endTimestamp)
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const transactionsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+      setTransactions(transactionsData);
+      setLoading(false);
+    }, (error) => {
+        console.error("Error fetching transactions: ", error);
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [date]);
 
   const reportData = useMemo(() => {
-    // En una aplicación real, aquí se filtrarían las transacciones por la fecha seleccionada
-    const transactions = mockTransactions;
     const totalSales = transactions.reduce((acc, t) => acc + t.totalAmount, 0);
     const cashSales = transactions.filter(t => t.paymentMethod === 'bankTransfer').reduce((acc, t) => acc + t.totalAmount, 0);
     const cardSales = transactions.filter(t => t.paymentMethod === 'creditCard').reduce((acc, t) => acc + t.totalAmount, 0);
     const totalOrders = transactions.length;
 
-    return { transactions, totalSales, cashSales, cardSales, totalOrders };
-  }, [date]);
+    return { totalSales, cashSales, cardSales, totalOrders };
+  }, [transactions]);
 
 
   return (
@@ -125,30 +148,36 @@ export default function DailyCashReportPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID Pedido</TableHead>
-                <TableHead>Hora</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Método de Pago</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reportData.transactions.map((tx) => (
-                <TableRow key={tx.id}>
-                  <TableCell className="font-medium">{tx.id}</TableCell>
-                  <TableCell>{tx.time}</TableCell>
-                  <TableCell>{tx.customerInfo.name}</TableCell>
-                  <TableCell>
-                    {tx.paymentMethod === 'creditCard' ? 'Tarjeta' : 'Efectivo/Transf.'}
-                  </TableCell>
-                  <TableCell className="text-right">S/{tx.totalAmount.toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            {loading ? (
+                 <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            ) : (
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>ID Pedido</TableHead>
+                        <TableHead>Hora</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Método de Pago</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {transactions.map((tx) => (
+                        <TableRow key={tx.id}>
+                        <TableCell className="font-medium">{tx.id.substring(0, 7)}...</TableCell>
+                        <TableCell>{new Date((tx.createdAt as any).seconds * 1000).toLocaleTimeString()}</TableCell>
+                        <TableCell>{tx.customerInfo.name}</TableCell>
+                        <TableCell>
+                            {tx.paymentMethod === 'creditCard' ? 'Tarjeta' : 'Efectivo/Transf.'}
+                        </TableCell>
+                        <TableCell className="text-right">S/{tx.totalAmount.toFixed(2)}</TableCell>
+                        </TableRow>
+                    ))}
+                    </TableBody>
+                </Table>
+            )}
         </CardContent>
       </Card>
     </div>

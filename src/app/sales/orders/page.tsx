@@ -24,6 +24,7 @@ import {
   PlusCircle,
   Truck,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -34,37 +35,56 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Order } from '@/types/firestore';
-// En una implementación real, se obtendrían de Firestore
-// import { collection, onSnapshot } from 'firebase/firestore';
-// import { db } from '@/lib/firebase/config';
-
-// Datos de ejemplo
-const mockOrders: Order[] = [
-  { id: 'ORD001', userId: 'usr1', customerInfo: { name: 'Liam Johnson', email: 'liam@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-23'), totalAmount: 250.00 },
-  { id: 'ORD002', userId: 'usr2', customerInfo: { name: 'Olivia Smith', email: 'olivia@test.com', phone: '123', address: '123 Main' }, items: [], status: 'shipped', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-22'), totalAmount: 150.75 },
-  { id: 'ORD003', userId: 'usr3', customerInfo: { name: 'Noah Williams', email: 'noah@test.com', phone: '123', address: '123 Main' }, items: [], status: 'processing', paymentMethod: 'paypal', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-21'), totalAmount: 350.00 },
-  { id: 'ORD004', userId: 'usr4', customerInfo: { name: 'Emma Brown', email: 'emma@test.com', phone: '123', address: '123 Main' }, items: [], status: 'pending', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date('2023-11-20'), totalAmount: 450.50 },
-  { id: 'ORD005', userId: 'usr5', customerInfo: { name: 'Ava Jones', email: 'ava@test.com', phone: '123', address: '123 Main' }, items: [], status: 'cancelled', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-19'), totalAmount: 55.00 },
-];
+import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function SalesOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
-  const [loading, setLoading] = useState(false); // Cambiar a true al usar Firestore
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  // Lógica de Firestore (descomentar para usar)
-  /*
   useEffect(() => {
+    if (!user) return;
     setLoading(true);
+    
     const ordersCollection = collection(db, 'orders');
-    const unsubscribe = onSnapshot(ordersCollection, (snapshot) => {
+    // Sales users can see all orders, but could be filtered by sellerId if needed
+    // const q = query(ordersCollection, where("sellerId", "==", user.uid));
+    const q = query(ordersCollection);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
       setOrders(ordersData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching orders: ", error);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
-  */
+  }, [user]);
+
+  const updateOrderStatus = async (orderId: string, status: Order['status']) => {
+    const orderRef = doc(db, 'orders', orderId);
+    try {
+      await updateDoc(orderRef, { status });
+      toast({
+        title: 'Estado Actualizado',
+        description: `El pedido ${orderId.substring(0, 6)}... ahora está ${status}.`
+      });
+    } catch (error) {
+      console.error("Error updating status: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo actualizar el estado del pedido.',
+      });
+    }
+  };
 
   const getStatusVariant = (status: Order['status']) => {
     switch (status) {
@@ -87,9 +107,11 @@ export default function SalesOrdersPage() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Crear Pedido
+          <Button asChild>
+            <Link href="/sales/orders/create">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Crear Pedido
+            </Link>
           </Button>
         </div>
       </div>
@@ -102,64 +124,70 @@ export default function SalesOrdersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Pedido</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead className="hidden md:table-cell">Fecha</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>
-                  <span className="sr-only">Acciones</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.customerInfo.name}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {new Intl.DateTimeFormat('es-PE').format(order.createdAt as Date)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    S/{order.totalAmount.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Truck className="mr-2 h-4 w-4" />
-                          Marcar como Enviado
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Marcar como Entregado
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading ? (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Pedido</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell">Fecha</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Acciones</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id.substring(0, 7)}...</TableCell>
+                    <TableCell>{order.customerInfo.name}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {new Intl.DateTimeFormat('es-PE').format((order.createdAt as any)?.toDate() ?? new Date())}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      S/{order.totalAmount.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => updateOrderStatus(order.id, 'shipped')}>
+                            <Truck className="mr-2 h-4 w-4" />
+                            Marcar como Enviado
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => updateOrderStatus(order.id, 'delivered')}>
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Marcar como Entregado
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

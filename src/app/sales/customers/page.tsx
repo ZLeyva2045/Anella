@@ -24,6 +24,7 @@ import {
   PlusCircle,
   Edit,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,28 +34,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/types/firestore';
 import { CustomerForm } from '@/components/shared/CustomerForm';
-// En una implementación real, se obtendrían de Firestore
-// import { collection, onSnapshot, query, where } from 'firebase/firestore';
-// import { db } from '@/lib/firebase/config';
-
-// Datos de ejemplo
-const mockCustomers: (User & { joined: Date })[] = [
-  { id: 'usr1', name: 'Liam Johnson', email: 'liam@test.com', phone: '', address: '', orders: [], role: 'customer', photoURL: 'https://i.ibb.co/L8vT5s5/avatar-1.png', joined: new Date('2023-10-15') },
-  { id: 'usr2', name: 'Olivia Smith', email: 'olivia@test.com', phone: '', address: '', orders: [], role: 'customer', photoURL: 'https://i.ibb.co/JqgV1D5/avatar-2.png', joined: new Date('2023-10-20') },
-  { id: 'usr3', name: 'Noah Williams', email: 'noah@test.com', phone: '', address: '', orders: [], role: 'customer', photoURL: 'https://i.ibb.co/vYd9d9B/avatar-3.png', joined: new Date('2023-11-01') },
-  { id: 'usr4', name: 'Emma Brown', email: 'emma@test.com', phone: '', address: '', orders: [], role: 'customer', photoURL: 'https://i.ibb.co/d2cfM2R/avatar-4.png', joined: new Date('2023-11-05') },
-  { id: 'usr5', name: 'Ava Jones', email: 'ava@test.com', phone: '', address: '', orders: [], role: 'customer', photoURL: 'https://i.ibb.co/Fny8g1F/avatar-5.png', joined: new Date('2023-11-12') },
-];
-
+import { collection, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SalesCustomersPage() {
-  const [customers, setCustomers] = useState<any[]>(mockCustomers);
-  const [loading, setLoading] = useState(false); // Cambiar a true al usar Firestore
+  const [customers, setCustomers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
+  const { toast } = useToast();
 
-  // Lógica de Firestore (descomentar para usar)
-  /*
+
   useEffect(() => {
     setLoading(true);
     const usersCollection = collection(db, 'users');
@@ -64,11 +55,14 @@ export default function SalesCustomersPage() {
       const customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
       setCustomers(customersData);
       setLoading(false);
+    }, (error) => {
+        console.error("Error fetching customers: ", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los clientes.' });
+        setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
-  */
+  }, [toast]);
   
   const handleAddCustomer = () => {
     setSelectedCustomer(null);
@@ -78,6 +72,16 @@ export default function SalesCustomersPage() {
   const handleEditCustomer = (customer: User) => {
     setSelectedCustomer(customer);
     setIsFormOpen(true);
+  };
+  
+  const handleDeleteCustomer = async (customerId: string) => {
+    try {
+      await deleteDoc(doc(db, "users", customerId));
+      toast({ title: "Cliente eliminado", description: "El cliente ha sido eliminado correctamente." });
+    } catch (error) {
+      console.error("Error deleting customer: ", error);
+      toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar el cliente." });
+    }
   };
 
   return (
@@ -106,66 +110,72 @@ export default function SalesCustomersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead className="hidden lg:table-cell">Fecha de registro</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Acciones</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="hidden h-9 w-9 sm:flex">
-                          <AvatarImage src={customer.photoURL} alt={customer.name} />
-                          <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="grid gap-0.5">
-                          <span className="font-medium">{customer.name}</span>
-                          <span className="text-muted-foreground text-xs md:hidden">{customer.email}</span>
+            {loading ? (
+                <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            ) : (
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead className="hidden md:table-cell">Email</TableHead>
+                    <TableHead className="hidden lg:table-cell">Fecha de registro</TableHead>
+                    <TableHead>
+                        <span className="sr-only">Acciones</span>
+                    </TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {customers.map((customer) => (
+                    <TableRow key={customer.id}>
+                        <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                            <Avatar className="hidden h-9 w-9 sm:flex">
+                            <AvatarImage src={customer.photoURL} alt={customer.name} />
+                            <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="grid gap-0.5">
+                            <span className="font-medium">{customer.name}</span>
+                            <span className="text-muted-foreground text-xs md:hidden">{customer.email}</span>
+                            </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{customer.email}</TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {new Intl.DateTimeFormat('es-PE').format(customer.joined)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end">
-                          <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                              <Button
-                              aria-haspopup="true"
-                              size="icon"
-                              variant="ghost"
-                              >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                              </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditCustomer(customer)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar
-                              </DropdownMenuItem>
-                          </DropdownMenuContent>
-                          </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{customer.email}</TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {customer.birthDate ? new Intl.DateTimeFormat('es-PE').format((customer.birthDate as any).toDate()) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                        <div className="flex justify-end">
+                            <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                aria-haspopup="true"
+                                size="icon"
+                                variant="ghost"
+                                >
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditCustomer(customer)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCustomer(customer.id)}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Eliminar
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            )}
           </CardContent>
         </Card>
       </div>
