@@ -9,7 +9,7 @@ import {
 import { db } from '@/lib/firebase/config';
 import type { Gift } from '@/types/firestore';
 
-type GiftData = Omit<Gift, 'id' | 'createdAt' | 'updatedAt' | 'rating'>;
+type GiftData = Omit<Gift, 'id' | 'createdAt' | 'updatedAt' | 'rating' | 'category'>;
 
 export async function saveGift(
   giftId: string | undefined,

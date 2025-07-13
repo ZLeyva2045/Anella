@@ -24,22 +24,22 @@ export default function ProductsPage() {
 
   useEffect(() => {
     setLoading(true);
-    const giftsQuery = collection(db, 'gifts');
-    const unsubGifts = onSnapshot(giftsQuery, snapshot => {
-      const giftsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Gift));
+    const giftsUnsub = onSnapshot(collection(db, 'gifts'), (snapshot) => {
+      const giftsData = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() } as Gift))
+        .filter((gift) => gift.showInWebsite !== false); // Filtramos aquí
       setGifts(giftsData);
-      setFilteredGifts(giftsData); // Initialize filtered list
       setLoading(false);
     });
     
-    const unsubThemes = onSnapshot(collection(db, 'themes'), snapshot => {
-      const thms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
-      setThemes(thms);
+    const themesUnsub = onSnapshot(collection(db, 'themes'), (snapshot) => {
+      const themesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
+      setThemes(themesData);
     });
 
     return () => {
-      unsubGifts();
-      unsubThemes();
+      giftsUnsub();
+      themesUnsub();
     };
   }, []);
 

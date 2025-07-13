@@ -31,11 +31,11 @@ export interface Gift {
   description: string; // Descripción del regalo
   price: number; // Precio final del regalo (puede ser la suma de productos o un precio especial)
   images: string[]; // Fotos del regalo ya ensamblado
-  category: string; // Categoría del regalo
   themes?: string[]; // Temáticas asociadas
   products: GiftProduct[]; // Array de productos que componen el regalo
   isNew?: boolean;
   rating?: number;
+  showInWebsite?: boolean;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
 }

@@ -11,24 +11,42 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { collection, onSnapshot, query, limit } from "firebase/firestore";
+import { collection, onSnapshot, query, limit, where } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import type { Gift } from "@/types/firestore";
+import type { Gift, Theme } from "@/types/firestore";
 import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
 
-const filters = ["Todos", "Cumpleaños", "Aniversarios", "Lámparas"];
-
 export function GiftGallery() {
-  const [activeFilter, setActiveFilter] = useState("Todos");
+  const [activeTheme, setActiveTheme] = useState("Todos");
   const [gifts, setGifts] = useState<Gift[]>([]);
+  const [themes, setThemes] = useState<Theme[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Limitamos a 6 para la galería
-    const giftsQuery = query(collection(db, "gifts"), limit(6));
+    setLoading(true);
 
-    const unsubscribe = onSnapshot(giftsQuery, (snapshot) => {
+    const themesUnsub = onSnapshot(collection(db, "themes"), (snapshot) => {
+      const themesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
+      setThemes(themesData);
+    });
+
+    // We create a listener that changes based on the active theme
+    const giftsQuery =
+      activeTheme === "Todos"
+        ? query(
+            collection(db, "gifts"),
+            where("showInWebsite", "!=", false),
+            limit(6)
+          )
+        : query(
+            collection(db, "gifts"),
+            where("showInWebsite", "!=", false),
+            where("themes", "array-contains", activeTheme),
+            limit(6)
+          );
+
+    const giftsUnsub = onSnapshot(giftsQuery, (snapshot) => {
       const giftsData = snapshot.docs.map(
         (doc) => ({ id: doc.id, ...doc.data() } as Gift)
       );
@@ -36,13 +54,11 @@ export function GiftGallery() {
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
-
-  const filteredGifts =
-    activeFilter === "Todos"
-      ? gifts
-      : gifts.filter((gift) => gift.category === activeFilter);
+    return () => {
+      themesUnsub();
+      giftsUnsub();
+    };
+  }, [activeTheme]);
 
   return (
     <section id="gallery" className="bg-background py-16">
@@ -56,14 +72,21 @@ export function GiftGallery() {
           </p>
         </div>
 
-        <div className="flex justify-center gap-2 mb-8">
-          {filters.map((filter) => (
+        <div className="flex justify-center flex-wrap gap-2 mb-8">
+          <Button
+            key="Todos"
+            variant={activeTheme === "Todos" ? "default" : "secondary"}
+            onClick={() => setActiveTheme("Todos")}
+          >
+            Todos
+          </Button>
+          {themes.map((theme) => (
             <Button
-              key={filter}
-              variant={activeFilter === filter ? "default" : "secondary"}
-              onClick={() => setActiveFilter(filter)}
+              key={theme.id}
+              variant={activeTheme === theme.name ? "default" : "secondary"}
+              onClick={() => setActiveTheme(theme.name)}
             >
-              {filter}
+              {theme.name}
             </Button>
           ))}
         </div>
@@ -82,7 +105,7 @@ export function GiftGallery() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredGifts.map((gift) => (
+            {gifts.map((gift) => (
               <Link href={`/products/${gift.id}`} key={gift.id} className="group">
                 <Card
                   className="overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 h-full"
