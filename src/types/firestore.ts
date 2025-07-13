@@ -9,13 +9,13 @@ export interface Product {
   id: string; 
   name: string; 
   description: string; 
-  price: number; 
+  price: number;
+  costPrice?: number; // Precio de costo del producto
   category: string; 
   images: string[]; 
   createdAt: Date | Timestamp; 
   updatedAt: Date | Timestamp; 
   rating?: number; 
-  isPersonalizable: boolean;
   stock: number; // Cantidad en inventario
   supplier?: string; // Proveedor del producto (opcional)
 }

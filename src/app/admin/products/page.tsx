@@ -25,6 +25,7 @@ import {
   Trash2,
   Edit,
   Loader2,
+  TrendingUp,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -109,6 +110,13 @@ export default function AdminProductsPage() {
       setProductToDelete(null);
     }
   };
+  
+  const calculateMargin = (price: number, costPrice?: number) => {
+    if (!costPrice || price <= costPrice) return { percentage: 0, color: 'text-destructive' };
+    const margin = ((price - costPrice) / price) * 100;
+    const color = margin < 20 ? 'text-destructive' : margin < 40 ? 'text-amber-500' : 'text-green-500';
+    return { percentage: margin, color };
+  };
 
   return (
     <>
@@ -149,65 +157,79 @@ export default function AdminProductsPage() {
                     </TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Stock</TableHead>
+                    <TableHead className="hidden md:table-cell">Costo</TableHead>
                     <TableHead className="hidden md:table-cell">Precio</TableHead>
+                    <TableHead className="hidden lg:table-cell">Margen</TableHead>
                     <TableHead>
                       <span className="sr-only">Acciones</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="hidden sm:table-cell">
-                        <Image
-                          alt={product.name}
-                          className="aspect-square rounded-md object-cover"
-                          height="64"
-                          src={product.images[0] || '/placeholder.svg'}
-                          width="64"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>
-                        <Badge variant={product.stock > 10 ? "secondary" : "outline"}
-                         className={cn(product.stock <= 5 && 'bg-destructive/20 border-destructive/50 text-destructive-foreground')}>
-                          {product.stock} en stock
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        S/{product.price.toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              aria-haspopup="true"
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleEditProduct(product)}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteClick(product)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Eliminar
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {products.map((product) => {
+                    const margin = calculateMargin(product.price, product.costPrice);
+                    return (
+                        <TableRow key={product.id}>
+                          <TableCell className="hidden sm:table-cell">
+                            <Image
+                              alt={product.name}
+                              className="aspect-square rounded-md object-cover"
+                              height="64"
+                              src={product.images[0] || '/placeholder.svg'}
+                              width="64"
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell>
+                            <Badge variant={product.stock > 10 ? "secondary" : "outline"}
+                             className={cn(product.stock <= 5 && 'bg-destructive/20 border-destructive/50 text-destructive-foreground')}>
+                              {product.stock} en stock
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {product.costPrice ? `S/${product.costPrice.toFixed(2)}` : 'N/A'}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            S/{product.price.toFixed(2)}
+                          </TableCell>
+                           <TableCell className={cn("hidden lg:table-cell", margin.color)}>
+                              <div className="flex items-center gap-1">
+                                <TrendingUp className="h-4 w-4" />
+                                <span>{margin.percentage.toFixed(1)}%</span>
+                              </div>
+                           </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  aria-haspopup="true"
+                                  size="icon"
+                                  variant="ghost"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Toggle menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleEditProduct(product)}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteClick(product)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}

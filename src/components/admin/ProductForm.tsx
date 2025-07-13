@@ -37,6 +37,7 @@ import { db } from '@/lib/firebase/config';
 const productSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres.'),
+  costPrice: z.coerce.number().min(0, 'El costo no puede ser negativo.').optional(),
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
   images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
@@ -73,6 +74,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     defaultValues: {
       name: '',
       description: '',
+      costPrice: 0,
       price: 0,
       category: '',
       images: [''],
@@ -91,6 +93,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       form.reset({
         name: '',
         description: '',
+        costPrice: 0,
         price: 0,
         category: '',
         images: [''],
@@ -164,10 +167,10 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="price"
+                name="costPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Precio (S/)</FormLabel>
+                    <FormLabel>Precio de Costo (S/)</FormLabel>
                     <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -175,47 +178,59 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               />
               <FormField
                 control={form.control}
-                name="category"
+                name="price"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Categoría</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
-                            {field.value ? categories.find(c => c.name === field.value)?.name : "Selecciona una categoría"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (e.target as HTMLInputElement).value && !categories.some(c => c.name.toLowerCase() === (e.target as HTMLInputElement).value.toLowerCase())) {
-                            e.preventDefault();
-                            handleCreateCategory((e.target as HTMLInputElement).value);
-                            (document.activeElement as HTMLElement)?.blur();
-                          }
-                        }}>
-                          <CommandInput placeholder="Buscar o crear categoría..." />
-                          <CommandList>
-                            <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
-                            <CommandGroup>
-                              {categories.map(cat => (
-                                <CommandItem key={cat.id} value={cat.name} onSelect={() => form.setValue("category", cat.name)}>
-                                  <Check className={cn("mr-2 h-4 w-4", cat.name === field.value ? "opacity-100" : "opacity-0")} />
-                                  {cat.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>Precio de Venta (S/)</FormLabel>
+                    <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoría</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                          {field.value ? categories.find(c => c.name === field.value)?.name : "Selecciona una categoría"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                      <Command onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.target as HTMLInputElement).value && !categories.some(c => c.name.toLowerCase() === (e.target as HTMLInputElement).value.toLowerCase())) {
+                          e.preventDefault();
+                          handleCreateCategory((e.target as HTMLInputElement).value);
+                          (document.activeElement as HTMLElement)?.blur();
+                        }
+                      }}>
+                        <CommandInput placeholder="Buscar o crear categoría..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
+                          <CommandGroup>
+                            {categories.map(cat => (
+                              <CommandItem key={cat.id} value={cat.name} onSelect={() => form.setValue("category", cat.name)}>
+                                <Check className={cn("mr-2 h-4 w-4", cat.name === field.value ? "opacity-100" : "opacity-0")} />
+                                {cat.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
