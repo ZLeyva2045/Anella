@@ -1,0 +1,18 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "gifts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "themes",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "showInWebsite",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ]
+}
