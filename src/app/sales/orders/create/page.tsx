@@ -14,6 +14,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -21,15 +22,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, UserPlus, CalendarIcon } from 'lucide-react';
+import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
 
@@ -69,6 +71,9 @@ export default function CreateOrderPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [inventory, setInventory] = useState<Product[]>([]);
+  const [searchPopoverOpen, setSearchPopoverOpen] = useState(false);
+
 
   const { toast } = useToast();
   const router = useRouter();
@@ -86,10 +91,26 @@ export default function CreateOrderPage() {
     },
   });
 
-  const { fields, remove } = useFieldArray({
+  const { fields, remove, append } = useFieldArray({
     control: form.control,
     name: "items",
   });
+  
+  const addProductToOrder = (product: Product) => {
+    const existingItem = fields.find(item => item.itemId === product.id);
+    if (existingItem) {
+        toast({ variant: 'destructive', title: 'Producto ya añadido', description: 'Este producto ya está en el pedido.'})
+        return;
+    }
+    append({
+        itemId: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        image: product.images[0],
+    });
+    setSearchPopoverOpen(false);
+  }
 
   useEffect(() => {
     // Load cart from localStorage
@@ -107,6 +128,13 @@ export default function CreateOrderPage() {
       setCustomers(customersData);
     };
     fetchCustomers();
+    
+    // Load inventory
+    const unsubInventory = onSnapshot(collection(db, 'products'), (snapshot) => {
+        setInventory(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Product)));
+    });
+
+    return () => unsubInventory();
   }, [form]);
 
   useEffect(() => {
@@ -171,8 +199,37 @@ export default function CreateOrderPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Productos del Pedido</CardTitle>
+                        <CardDescription>Busca y añade productos del inventario al pedido.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        <Popover open={searchPopoverOpen} onOpenChange={setSearchPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start">
+                                    <Search className="mr-2 h-4 w-4" />
+                                    Buscar producto para añadir...
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Buscar por nombre..." />
+                                    <CommandList>
+                                        <CommandEmpty>No se encontraron productos.</CommandEmpty>
+                                        <CommandGroup>
+                                            {inventory.map(product => (
+                                                <CommandItem
+                                                    key={product.id}
+                                                    value={product.name}
+                                                    onSelect={() => addProductToOrder(product)}
+                                                >
+                                                    {product.name}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                        <Separator className="my-4" />
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -183,6 +240,13 @@ export default function CreateOrderPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
+                                {fields.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                            Añade productos para empezar
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                                 {fields.map((field, index) => (
                                     <TableRow key={field.id}>
                                         <TableCell className="flex items-center gap-2">
@@ -195,6 +259,7 @@ export default function CreateOrderPage() {
                                         <TableCell>
                                             <Input 
                                                 type="number" 
+                                                min={1}
                                                 className="w-20"
                                                 {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
                                             />
