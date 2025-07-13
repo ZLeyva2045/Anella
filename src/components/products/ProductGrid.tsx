@@ -3,23 +3,23 @@ import { useState } from 'react';
 import { ProductCard } from './ProductCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import type { Product } from '@/types/firestore';
+import type { Gift } from '@/types/firestore';
 
 interface ProductGridProps {
-  products: Product[];
+  gifts: Gift[];
   loading: boolean;
 }
 
 const ITEMS_PER_PAGE = 9;
 
-export function ProductGrid({ products, loading }: ProductGridProps) {
+export function ProductGrid({ gifts, loading }: ProductGridProps) {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   const handleLoadMore = () => {
     setVisibleCount(prevCount => prevCount + ITEMS_PER_PAGE);
   };
 
-  const hasMoreProducts = visibleCount < products.length;
+  const hasMoreGifts = visibleCount < gifts.length;
 
   if (loading) {
     return (
@@ -37,10 +37,10 @@ export function ProductGrid({ products, loading }: ProductGridProps) {
     );
   }
 
-  if (products.length === 0) {
+  if (gifts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-16">
-        <h3 className="text-2xl font-semibold">No se encontraron productos</h3>
+        <h3 className="text-2xl font-semibold">No se encontraron regalos</h3>
         <p className="text-muted-foreground mt-2">Intenta ajustar tus filtros o búsqueda.</p>
       </div>
     )
@@ -49,14 +49,14 @@ export function ProductGrid({ products, loading }: ProductGridProps) {
   return (
     <div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.slice(0, visibleCount).map(product => (
-                <ProductCard key={product.id} product={product} />
+            {gifts.slice(0, visibleCount).map(gift => (
+                <ProductCard key={gift.id} gift={gift} />
             ))}
         </div>
-        {hasMoreProducts && (
+        {hasMoreGifts && (
             <div className="mt-8 text-center">
                 <Button onClick={handleLoadMore} size="lg">
-                    Cargar más productos
+                    Cargar más regalos
                 </Button>
             </div>
         )}

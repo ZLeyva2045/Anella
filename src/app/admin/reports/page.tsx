@@ -38,11 +38,11 @@ import type { Order } from '@/types/firestore';
 
 // Datos de ejemplo para el reporte
 const mockTransactions: (Order & { time: string })[] = [
-  { id: 'ORD101', userId: 'usr1', customerInfo: { name: 'Liam Johnson', email: 'liam@test.com', phone: '123', address: '123 Main' }, products: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 75.50, time: '09:15 AM' },
-  { id: 'ORD102', userId: 'usr2', customerInfo: { name: 'Olivia Smith', email: 'olivia@test.com', phone: '123', address: '123 Main' }, products: [], status: 'delivered', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 120.00, time: '10:30 AM' },
-  { id: 'ORD103', userId: 'usr3', customerInfo: { name: 'Noah Williams', email: 'noah@test.com', phone: '123', address: '123 Main' }, products: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 210.25, time: '11:45 AM' },
-  { id: 'ORD104', userId: 'usr4', customerInfo: { name: 'Emma Brown', email: 'emma@test.com', phone: '123', address: '123 Main' }, products: [], status: 'delivered', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 50.00, time: '02:00 PM' },
-  { id: 'ORD105', userId: 'usr5', customerInfo: { name: 'Ava Jones', email: 'ava@test.com', phone: '123', address: '123 Main' }, products: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 350.00, time: '04:20 PM' },
+  { id: 'ORD101', userId: 'usr1', customerInfo: { name: 'Liam Johnson', email: 'liam@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 75.50, time: '09:15 AM' },
+  { id: 'ORD102', userId: 'usr2', customerInfo: { name: 'Olivia Smith', email: 'olivia@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 120.00, time: '10:30 AM' },
+  { id: 'ORD103', userId: 'usr3', customerInfo: { name: 'Noah Williams', email: 'noah@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 210.25, time: '11:45 AM' },
+  { id: 'ORD104', userId: 'usr4', customerInfo: { name: 'Emma Brown', email: 'emma@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 50.00, time: '02:00 PM' },
+  { id: 'ORD105', userId: 'usr5', customerInfo: { name: 'Ava Jones', email: 'ava@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'storePickup', createdAt: new Date(), totalAmount: 350.00, time: '04:20 PM' },
 ];
 
 

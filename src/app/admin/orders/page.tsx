@@ -40,11 +40,11 @@ import type { Order } from '@/types/firestore';
 
 // Datos de ejemplo
 const mockOrders: Order[] = [
-  { id: 'ORD001', userId: 'usr1', customerInfo: { name: 'Liam Johnson', email: 'liam@test.com', phone: '123', address: '123 Main' }, products: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-23'), totalAmount: 250.00 },
-  { id: 'ORD002', userId: 'usr2', customerInfo: { name: 'Olivia Smith', email: 'olivia@test.com', phone: '123', address: '123 Main' }, products: [], status: 'shipped', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-22'), totalAmount: 150.75 },
-  { id: 'ORD003', userId: 'usr3', customerInfo: { name: 'Noah Williams', email: 'noah@test.com', phone: '123', address: '123 Main' }, products: [], status: 'processing', paymentMethod: 'paypal', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-21'), totalAmount: 350.00 },
-  { id: 'ORD004', userId: 'usr4', customerInfo: { name: 'Emma Brown', email: 'emma@test.com', phone: '123', address: '123 Main' }, products: [], status: 'pending', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date('2023-11-20'), totalAmount: 450.50 },
-  { id: 'ORD005', userId: 'usr5', customerInfo: { name: 'Ava Jones', email: 'ava@test.com', phone: '123', address: '123 Main' }, products: [], status: 'cancelled', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-19'), totalAmount: 55.00 },
+  { id: 'ORD001', userId: 'usr1', customerInfo: { name: 'Liam Johnson', email: 'liam@test.com', phone: '123', address: '123 Main' }, items: [], status: 'delivered', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-23'), totalAmount: 250.00 },
+  { id: 'ORD002', userId: 'usr2', customerInfo: { name: 'Olivia Smith', email: 'olivia@test.com', phone: '123', address: '123 Main' }, items: [], status: 'shipped', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-22'), totalAmount: 150.75 },
+  { id: 'ORD003', userId: 'usr3', customerInfo: { name: 'Noah Williams', email: 'noah@test.com', phone: '123', address: '123 Main' }, items: [], status: 'processing', paymentMethod: 'paypal', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-21'), totalAmount: 350.00 },
+  { id: 'ORD004', userId: 'usr4', customerInfo: { name: 'Emma Brown', email: 'emma@test.com', phone: '123', address: '123 Main' }, items: [], status: 'pending', paymentMethod: 'bankTransfer', deliveryMethod: 'storePickup', createdAt: new Date('2023-11-20'), totalAmount: 450.50 },
+  { id: 'ORD005', userId: 'usr5', customerInfo: { name: 'Ava Jones', email: 'ava@test.com', phone: '123', address: '123 Main' }, items: [], status: 'cancelled', paymentMethod: 'creditCard', deliveryMethod: 'homeDelivery', createdAt: new Date('2023-11-19'), totalAmount: 55.00 },
 ];
 
 export default function AdminOrdersPage() {
@@ -121,7 +121,7 @@ export default function AdminOrdersPage() {
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell>{order.customerInfo.name}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {new Intl.DateTimeFormat('es-PE').format(order.createdAt)}
+                    {new Intl.DateTimeFormat('es-PE').format(order.createdAt as Date)}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>

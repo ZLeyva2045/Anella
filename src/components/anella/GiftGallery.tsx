@@ -11,31 +11,28 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { collection, onSnapshot, query, limit, where } from "firebase/firestore";
+import { collection, onSnapshot, query, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import type { Product } from "@/types/firestore";
+import type { Gift } from "@/types/firestore";
 import { Skeleton } from "../ui/skeleton";
+import Link from "next/link";
 
 const filters = ["Todos", "Cumpleaños", "Aniversarios", "Lámparas"];
 
 export function GiftGallery() {
   const [activeFilter, setActiveFilter] = useState("Todos");
-  const [products, setProducts] = useState<Product[]>([]);
+  const [gifts, setGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Limitamos a 6 para la galería y solo los que se muestran en la web
-    const productsQuery = query(
-      collection(db, "products"), 
-      where('showInWebsite', '!=', false),
-      limit(6)
-    );
+    // Limitamos a 6 para la galería
+    const giftsQuery = query(collection(db, "gifts"), limit(6));
 
-    const unsubscribe = onSnapshot(productsQuery, (snapshot) => {
-      const productsData = snapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Product)
+    const unsubscribe = onSnapshot(giftsQuery, (snapshot) => {
+      const giftsData = snapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Gift)
       );
-      setProducts(productsData);
+      setGifts(giftsData);
       setLoading(false);
     });
 
@@ -44,8 +41,8 @@ export function GiftGallery() {
 
   const filteredGifts =
     activeFilter === "Todos"
-      ? products
-      : products.filter((product) => product.category === activeFilter);
+      ? gifts
+      : gifts.filter((gift) => gift.category === activeFilter);
 
   return (
     <section id="gallery" className="bg-background py-16">
@@ -86,25 +83,26 @@ export function GiftGallery() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredGifts.map((gift) => (
-              <Card
-                key={gift.id}
-                className="overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300"
-              >
-                <CardHeader className="p-0">
-                  <Image
-                    src={gift.images[0] || "https://placehold.co/600x400.png"}
-                    alt={gift.name}
-                    width={600}
-                    height={400}
-                    className="w-full h-48 object-cover"
-                    data-ai-hint={gift.name.split(" ").slice(0, 2).join(" ")}
-                  />
-                </CardHeader>
-                <CardContent className="p-6">
-                  <CardTitle className="mb-2">{gift.name}</CardTitle>
-                  <CardDescription>{gift.description}</CardDescription>
-                </CardContent>
-              </Card>
+              <Link href={`/products/${gift.id}`} key={gift.id} className="group">
+                <Card
+                  className="overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 h-full"
+                >
+                  <CardHeader className="p-0">
+                    <Image
+                      src={gift.images[0] || "https://placehold.co/600x400.png"}
+                      alt={gift.name}
+                      width={600}
+                      height={400}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                      data-ai-hint={gift.name.split(" ").slice(0, 2).join(" ")}
+                    />
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <CardTitle className="mb-2">{gift.name}</CardTitle>
+                    <CardDescription>{gift.description}</CardDescription>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}

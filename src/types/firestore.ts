@@ -3,21 +3,50 @@ import type { Timestamp } from 'firebase/firestore';
 
 /**
  * Representa un producto en la colección 'products' de Firestore.
+ * Esto funciona como el inventario base.
  */
 export interface Product {
-  id: string; // ID único del producto
-  name: string; // Nombre del producto
-  description: string; // Descripción detallada del producto
-  price: number; // Precio del producto
-  category: string; // Nombre de la categoría principal (no el ID)
-  images: string[]; // Array de URLs de las imágenes del producto
-  isPersonalizable: boolean; // Indica si el producto se puede personalizar
-  createdAt: Date | Timestamp; // Fecha de creación del producto
-  updatedAt: Date | Timestamp; // Fecha de la última actualización del producto
-  rating?: number; // Valoración promedio del producto
-  isNew?: boolean; // Para destacar productos nuevos
-  themes?: string[]; // Array de nombres de las temáticas asociadas
-  showInWebsite?: boolean; // Para mostrar/ocultar en la web pero mantener en POS/inventario
+  id: string; 
+  name: string; 
+  description: string; 
+  price: number; 
+  category: string; 
+  images: string[]; 
+  isPersonalizable: boolean; 
+  createdAt: Date | Timestamp; 
+  updatedAt: Date | Timestamp; 
+  rating?: number; 
+  isNew?: boolean; 
+  themes?: string[]; 
+  showInWebsite?: boolean;
+}
+
+/**
+ * Representa un regalo compuesto, que es lo que se vende en la web.
+ * Un regalo está hecho de uno o más productos.
+ */
+export interface Gift {
+  id: string; // ID único del regalo
+  name: string; // Nombre del regalo, ej: "Cesta de Cumpleaños Deluxe"
+  description: string; // Descripción del regalo
+  price: number; // Precio final del regalo (puede ser la suma de productos o un precio especial)
+  images: string[]; // Fotos del regalo ya ensamblado
+  category: string; // Categoría del regalo
+  themes?: string[]; // Temáticas asociadas
+  products: GiftProduct[]; // Array de productos que componen el regalo
+  isNew?: boolean;
+  rating?: number;
+  createdAt: Date | Timestamp;
+  updatedAt: Date | Timestamp;
+}
+
+/**
+ * Representa un producto dentro de un regalo, con su cantidad.
+ */
+export interface GiftProduct {
+  productId: string; // ID del producto del inventario
+  name: string; // Nombre del producto para referencia
+  quantity: number; // Cantidad de este producto en el regalo
 }
 
 /**
@@ -44,7 +73,7 @@ export interface Order {
   id: string; // ID único del pedido
   userId: string; // ID del usuario que realizó el pedido
   sellerId?: string; // ID del vendedor que gestionó el pedido (opcional)
-  products: OrderProduct[]; // Array de productos en el pedido
+  items: OrderItem[]; // Array de productos o regalos en el pedido
   customerInfo: { // Información del cliente
     name: string;
     email: string;
@@ -59,11 +88,14 @@ export interface Order {
 }
 
 /**
- * Representa un producto dentro de un pedido, con cantidad y posible personalización.
+ * Representa un item (producto o regalo) dentro de un pedido.
  */
-export interface OrderProduct {
-  productId: string; // ID del producto
-  quantity: number; // Cantidad del producto
+export interface OrderItem {
+  itemId: string; // ID del producto o regalo
+  name: string;
+  price: number;
+  quantity: number; 
+  image: string;
   personalization?: { [key: string]: any }; // Detalles de personalización (opcional)
 }
 

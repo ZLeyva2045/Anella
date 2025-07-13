@@ -12,7 +12,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -33,8 +32,8 @@ interface CartItem extends Product {
   quantity: number;
 }
 
-const orderProductSchema = z.object({
-  productId: z.string(),
+const orderItemSchema = z.object({
+  itemId: z.string(),
   name: z.string(),
   price: z.number(),
   quantity: z.number().min(1),
@@ -49,7 +48,7 @@ const orderSchema = z.object({
     phone: z.string(),
     address: z.string(),
   }),
-  products: z.array(orderProductSchema).min(1, 'El pedido debe tener al menos un producto.'),
+  items: z.array(orderItemSchema).min(1, 'El pedido debe tener al menos un producto.'),
   paymentMethod: z.enum(['creditCard', 'paypal', 'bankTransfer']),
   deliveryMethod: z.enum(['storePickup', 'homeDelivery']),
   status: z.enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled']),
@@ -58,7 +57,6 @@ const orderSchema = z.object({
 type OrderFormValues = z.infer<typeof orderSchema>;
 
 export default function CreateOrderPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [customers, setCustomers] = useState<User[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
@@ -72,7 +70,7 @@ export default function CreateOrderPage() {
     resolver: zodResolver(orderSchema),
     defaultValues: {
       customer: { id: '', name: '', email: '', phone: '', address: '' },
-      products: [],
+      items: [],
       paymentMethod: 'creditCard',
       deliveryMethod: 'storePickup',
       status: 'processing',
@@ -81,7 +79,7 @@ export default function CreateOrderPage() {
 
   const { fields, remove } = useFieldArray({
     control: form.control,
-    name: "products",
+    name: "items",
   });
 
   useEffect(() => {
@@ -89,8 +87,7 @@ export default function CreateOrderPage() {
     const savedCart = localStorage.getItem('pendingOrderCart');
     if (savedCart) {
       const parsedCart: CartItem[] = JSON.parse(savedCart);
-      setCartItems(parsedCart);
-      form.setValue('products', parsedCart.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: p.quantity, image: p.images[0] })));
+      form.setValue('items', parsedCart.map(p => ({ itemId: p.id, name: p.name, price: p.price, quantity: p.quantity, image: p.images[0] })));
       localStorage.removeItem('pendingOrderCart');
     }
 
@@ -116,8 +113,8 @@ export default function CreateOrderPage() {
   }, [selectedCustomer, form]);
 
   const totalAmount = useMemo(() => {
-    return form.watch('products').reduce((acc, p) => acc + p.price * p.quantity, 0);
-  }, [form.watch('products')]);
+    return form.watch('items').reduce((acc, p) => acc + p.price * p.quantity, 0);
+  }, [form.watch('items')]);
 
   const onSubmit = async (data: OrderFormValues) => {
     if (!user) {
@@ -137,7 +134,6 @@ export default function CreateOrderPage() {
                 phone: data.customer.phone,
                 address: data.customer.address,
             },
-            products: data.products.map(p => ({ productId: p.productId, quantity: p.quantity })),
         });
         toast({ title: 'Pedido Creado', description: 'El nuevo pedido se ha guardado correctamente.' });
         router.push('/sales/orders');
@@ -191,10 +187,10 @@ export default function CreateOrderPage() {
                                             <Input 
                                                 type="number" 
                                                 className="w-20"
-                                                {...form.register(`products.${index}.quantity`, { valueAsNumber: true })}
+                                                {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
                                             />
                                         </TableCell>
-                                        <TableCell className="text-right">S/{(field.price * form.watch(`products.${index}.quantity`)).toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">S/{(field.price * form.watch(`items.${index}.quantity`)).toFixed(2)}</TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="icon" onClick={() => remove(index)}>
                                                 <Trash2 className="h-4 w-4 text-destructive"/>
@@ -204,7 +200,7 @@ export default function CreateOrderPage() {
                                 ))}
                             </TableBody>
                         </Table>
-                         <FormMessage>{form.formState.errors.products?.message}</FormMessage>
+                         <FormMessage>{form.formState.errors.items?.message}</FormMessage>
                     </CardContent>
                 </Card>
             </div>

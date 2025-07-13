@@ -7,14 +7,14 @@ import { Footer } from '@/components/anella/Footer';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ProductFilters } from '@/components/products/ProductFilters';
 import { Toolbar } from '@/components/products/Toolbar';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { Product, Theme } from '@/types/firestore';
+import type { Gift, Theme } from '@/types/firestore';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [gifts, setGifts] = useState<Gift[]>([]);
   const [themes, setThemes] = useState<Theme[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredGifts, setFilteredGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('newest');
@@ -24,11 +24,11 @@ export default function ProductsPage() {
 
   useEffect(() => {
     setLoading(true);
-    // Solo mostramos productos que están marcados para la web
-    const productsQuery = query(collection(db, 'products'), where('showInWebsite', '!=', false));
-    const unsubProducts = onSnapshot(productsQuery, snapshot => {
-      const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-      setProducts(prods);
+    const giftsQuery = collection(db, 'gifts');
+    const unsubGifts = onSnapshot(giftsQuery, snapshot => {
+      const giftsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Gift));
+      setGifts(giftsData);
+      setFilteredGifts(giftsData); // Initialize filtered list
       setLoading(false);
     });
     
@@ -38,56 +38,55 @@ export default function ProductsPage() {
     });
 
     return () => {
-      unsubProducts();
+      unsubGifts();
       unsubThemes();
     };
   }, []);
 
 
   useEffect(() => {
-    let tempProducts = [...products];
+    let tempGifts = [...gifts];
 
     // Search filter
     if (searchQuery) {
-      tempProducts = tempProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      tempGifts = tempGifts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
     }
     
     // Theme filter
     if (selectedThemes.length > 0) {
-        tempProducts = tempProducts.filter(p => p.themes && p.themes.some(theme => selectedThemes.includes(theme)));
+        tempGifts = tempGifts.filter(p => p.themes && p.themes.some(theme => selectedThemes.includes(theme)));
     }
 
     // Price filter
-    tempProducts = tempProducts.filter(p => p.price <= priceRange[0]);
+    tempGifts = tempGifts.filter(p => p.price <= priceRange[0]);
     
     // Rating filter
     if (rating > 0) {
-        tempProducts = tempProducts.filter(p => p.rating && p.rating >= rating);
+        tempGifts = tempGifts.filter(p => p.rating && p.rating >= rating);
     }
 
     // Sorting
     switch (sortOption) {
       case 'price-asc':
-        tempProducts.sort((a, b) => a.price - b.price);
+        tempGifts.sort((a, b) => a.price - b.price);
         break;
       case 'price-desc':
-        tempProducts.sort((a, b) => b.price - a.price);
+        tempGifts.sort((a, b) => b.price - a.price);
         break;
       case 'newest':
-        // Firestore Timestamps need to be converted to Dates for sorting
-        tempProducts.sort((a, b) => {
-            const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : (a.createdAt as any)?.toDate().getTime() || 0;
-            const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : (b.createdAt as any)?.toDate().getTime() || 0;
+        tempGifts.sort((a, b) => {
+            const dateA = (a.createdAt as any)?.toDate()?.getTime() || 0;
+            const dateB = (b.createdAt as any)?.toDate()?.getTime() || 0;
             return dateB - dateA;
         });
         break;
       case 'rating':
-         tempProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+         tempGifts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
     }
 
-    setFilteredProducts(tempProducts);
-  }, [searchQuery, sortOption, products, selectedThemes, priceRange, rating]);
+    setFilteredGifts(tempGifts);
+  }, [searchQuery, sortOption, gifts, selectedThemes, priceRange, rating]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -111,9 +110,9 @@ export default function ProductsPage() {
               setSearchQuery={setSearchQuery}
               sortOption={sortOption}
               setSortOption={setSortOption}
-              productCount={filteredProducts.length}
+              productCount={filteredGifts.length}
             />
-            <ProductGrid products={filteredProducts} loading={loading} />
+            <ProductGrid gifts={filteredGifts} loading={loading} />
           </div>
         </main>
       </div>

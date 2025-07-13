@@ -10,6 +10,7 @@ import {
   Settings,
   Store,
   FileText,
+  Gift,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -78,10 +79,19 @@ const AdminNav = () => {
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
-                            isActive={pathname.startsWith('/admin/products')}
-                            tooltip={{ children: "Productos" }}
+                            isActive={pathname.startsWith('/admin/gifts')}
+                            tooltip={{ children: "Regalos" }}
                         >
-                             <Link href="/admin/products"><Package /><span>Productos</span></Link>
+                             <Link href="/admin/gifts"><Gift /><span>Regalos</span></Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname.startsWith('/admin/products')}
+                            tooltip={{ children: "Inventario" }}
+                        >
+                             <Link href="/admin/products"><Package /><span>Inventario</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                      <SidebarMenuItem>

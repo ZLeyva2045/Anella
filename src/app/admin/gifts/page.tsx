@@ -1,4 +1,4 @@
-// src/app/admin/products/page.tsx
+// src/app/admin/gifts/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -43,7 +43,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import Image from 'next/image';
-import type { Product } from '@/types/firestore';
+import type { Gift } from '@/types/firestore';
 import {
   collection,
   onSnapshot,
@@ -51,61 +51,61 @@ import {
   doc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { ProductForm } from '@/components/admin/ProductForm';
+import { GiftForm } from '@/components/admin/GiftForm';
 import { useToast } from '@/hooks/use-toast';
 
-export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+export default function AdminGiftsPage() {
+  const [gifts, setGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
+  const [giftToDelete, setGiftToDelete] = useState<Gift | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    const productsCollection = collection(db, 'products');
-    const unsubscribe = onSnapshot(productsCollection, (snapshot) => {
-      const productsData = snapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Product)
+    const giftsCollection = collection(db, 'gifts');
+    const unsubscribe = onSnapshot(giftsCollection, (snapshot) => {
+      const giftsData = snapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Gift)
       );
-      setProducts(productsData);
+      setGifts(giftsData);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const handleAddProduct = () => {
-    setSelectedProduct(null);
+  const handleAddGift = () => {
+    setSelectedGift(null);
     setIsFormOpen(true);
   };
 
-  const handleEditProduct = (product: Product) => {
-    setSelectedProduct(product);
+  const handleEditGift = (gift: Gift) => {
+    setSelectedGift(gift);
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = (product: Product) => {
-    setProductToDelete(product);
+  const handleDeleteClick = (gift: Gift) => {
+    setGiftToDelete(gift);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!productToDelete) return;
+    if (!giftToDelete) return;
     try {
-      await deleteDoc(doc(db, 'products', productToDelete.id));
+      await deleteDoc(doc(db, 'gifts', giftToDelete.id));
       toast({
-        title: 'Producto eliminado',
-        description: `El producto "${productToDelete.name}" ha sido eliminado del inventario.`,
+        title: 'Regalo eliminado',
+        description: `El regalo "${giftToDelete.name}" ha sido eliminado.`,
       });
     } catch (error) {
-      console.error('Error deleting product: ', error);
+      console.error('Error deleting gift: ', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'No se pudo eliminar el producto.',
+        description: 'No se pudo eliminar el regalo.',
       });
     } finally {
-      setProductToDelete(null);
+      setGiftToDelete(null);
     }
   };
 
@@ -114,24 +114,24 @@ export default function AdminProductsPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Inventario de Productos</h1>
+            <h1 className="text-3xl font-bold">Gestión de Regalos</h1>
             <p className="text-muted-foreground">
-              Gestiona los componentes individuales para crear regalos.
+              Crea, edita o elimina los regalos que se mostrarán en la tienda.
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button onClick={handleAddProduct}>
+            <Button onClick={handleAddGift}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Añadir Producto
+              Añadir Regalo
             </Button>
           </div>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Todos los Productos</CardTitle>
+            <CardTitle>Todos los Regalos</CardTitle>
             <CardDescription>
-              Listado de productos base en el inventario.
+              Un listado completo de los regalos disponibles en la tienda online.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -155,23 +155,23 @@ export default function AdminProductsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id}>
+                  {gifts.map((gift) => (
+                    <TableRow key={gift.id}>
                       <TableCell className="hidden sm:table-cell">
                         <Image
-                          alt={product.name}
+                          alt={gift.name}
                           className="aspect-square rounded-md object-cover"
                           height="64"
-                          src={product.images[0] || '/placeholder.svg'}
+                          src={gift.images[0] || '/placeholder.svg'}
                           width="64"
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell className="font-medium">{gift.name}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{product.category}</Badge>
+                        <Badge variant="outline">{gift.category}</Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        S/{product.price.toFixed(2)}
+                        S/{gift.price.toFixed(2)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -187,13 +187,13 @@ export default function AdminProductsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() => handleEditProduct(product)}
+                              onClick={() => handleEditGift(gift)}
                             >
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleDeleteClick(product)}
+                              onClick={() => handleDeleteClick(gift)}
                               className="text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
@@ -211,22 +211,23 @@ export default function AdminProductsPage() {
         </Card>
       </div>
 
-      <ProductForm
+      <GiftForm
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
-        product={selectedProduct}
+        gift={selectedGift}
       />
 
       <AlertDialog
-        open={!!productToDelete}
-        onOpenChange={(open) => !open && setProductToDelete(null)}
+        open={!!giftToDelete}
+        onOpenChange={(open) => !open && setGiftToDelete(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Esto eliminará permanentemente
-              el producto &quot;{productToDelete?.name}&quot; del inventario.
+              el regalo &quot;{giftToDelete?.name}&quot; de la base de
+              datos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
