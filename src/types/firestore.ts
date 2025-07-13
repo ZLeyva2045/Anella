@@ -18,6 +18,7 @@ export interface Product {
   rating?: number; 
   stock: number; // Cantidad en inventario
   supplier?: string; // Proveedor del producto (opcional)
+  isPersonalizable: boolean;
 }
 
 /**

@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/types/firestore';
 import { CustomerForm } from '@/components/shared/CustomerForm';
-import { collection, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 
@@ -75,6 +75,9 @@ export default function SalesCustomersPage() {
   };
   
   const handleDeleteCustomer = async (customerId: string) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este cliente? Esta acción no se puede deshacer.')) {
+      return;
+    }
     try {
       await deleteDoc(doc(db, "users", customerId));
       toast({ title: "Cliente eliminado", description: "El cliente ha sido eliminado correctamente." });
@@ -83,6 +86,24 @@ export default function SalesCustomersPage() {
       toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar el cliente." });
     }
   };
+
+  const handleFormSubmit = async (data: Partial<User>) => {
+    try {
+      if (selectedCustomer?.id) {
+        const docRef = doc(db, 'users', selectedCustomer.id);
+        await setDoc(docRef, data, { merge: true });
+        toast({ title: 'Cliente actualizado', description: 'Los datos del cliente se han actualizado.' });
+      } else {
+        const newDocRef = doc(collection(db, 'users'));
+        await setDoc(newDocRef, { ...data, role: 'customer', createdAt: new Date() });
+        toast({ title: 'Cliente añadido', description: 'El nuevo cliente ha sido creado.' });
+      }
+      setIsFormOpen(false);
+    } catch (error) {
+       console.error("Error saving customer: ", error);
+       toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el cliente." });
+    }
+  }
 
   return (
     <>
@@ -184,6 +205,7 @@ export default function SalesCustomersPage() {
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
         customer={selectedCustomer}
+        onSubmit={handleFormSubmit}
       />
     </>
   );

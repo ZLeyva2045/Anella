@@ -25,6 +25,7 @@ import {
   Clock,
   Sparkles,
   CheckCircle2,
+  XCircle,
   Loader2,
 } from 'lucide-react';
 import {
@@ -36,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Order } from '@/types/firestore';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -56,7 +57,7 @@ export default function SalesOrdersPage() {
     const ordersCollection = collection(db, 'orders');
     // Sales users can see all orders, but could be filtered by sellerId if needed
     // const q = query(ordersCollection, where("sellerId", "==", user.uid));
-    const q = query(ordersCollection);
+    const q = query(ordersCollection, orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
@@ -75,7 +76,7 @@ export default function SalesOrdersPage() {
       await updateOrderStatus(orderId, status);
       toast({
         title: 'Estado Actualizado',
-        description: `El pedido ${orderId.substring(0, 6)}... ha sido actualizado.`
+        description: `El pedido ha sido actualizado.`
       });
     } catch (error) {
       console.error("Error updating status: ", error);
@@ -87,14 +88,15 @@ export default function SalesOrdersPage() {
     }
   };
 
-  const getStatusInfo = (status: Order['status']) => {
+  const getStatusInfo = (status?: Order['status']) => {
     switch (status) {
-      case 'completed': return { variant: 'default', text: 'Terminado' };
-      case 'processing': return { variant: 'secondary', text: 'En Curso' };
-      case 'finishing': return { variant: 'outline', text: 'Por Terminar' };
-      case 'cancelled': return { variant: 'destructive', text: 'Cancelado' };
-      case 'pending': return { variant: 'secondary', text: 'Pendiente' };
-      default: return { variant: 'outline', text: 'Desconocido' };
+      case 'completed': return { variant: 'default', text: 'Terminado', icon: CheckCircle2 };
+      case 'processing': return { variant: 'secondary', text: 'En Curso', icon: Clock };
+      case 'finishing': return { variant: 'outline', text: 'Por Terminar', icon: Sparkles };
+      case 'cancelled': return { variant: 'destructive', text: 'Cancelado', icon: XCircle };
+      case 'pending':
+      default:
+        return { variant: 'secondary', text: 'Pendiente', icon: Clock };
     }
   };
 
@@ -175,6 +177,10 @@ export default function SalesOrdersPage() {
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
                             <DropdownMenuSeparator />
+                             <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'pending')}>
+                              <Clock className="mr-2 h-4 w-4" />
+                              Marcar como Pendiente
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'processing')}>
                               <Clock className="mr-2 h-4 w-4" />
                               Marcar como En Curso
@@ -186,6 +192,11 @@ export default function SalesOrdersPage() {
                             <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'completed')}>
                               <CheckCircle2 className="mr-2 h-4 w-4" />
                               Marcar como Terminado
+                            </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateStatus(order.id, 'cancelled')}>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Cancelar Pedido
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

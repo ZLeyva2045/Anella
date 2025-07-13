@@ -1,7 +1,7 @@
 // src/components/shared/CustomerForm.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,23 +25,19 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/types/firestore';
 import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
-// import { saveCustomer } from '@/services/customerService'; // This service would handle Firestore logic
 
 const customerSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
   email: z.string().email('Por favor, ingresa un correo electrónico válido.'),
   phone: z.string().optional(),
   address: z.string().optional(),
-  dni_ruc: z.string().min(8, 'Debe tener entre 8 y 11 caracteres.').max(11, 'Debe tener entre 8 y 11 caracteres.'),
-  birthDate: z.date({
-    required_error: "La fecha de nacimiento es requerida.",
-  }),
+  dni_ruc: z.string().min(8, 'Debe tener entre 8 y 11 caracteres.').max(11, 'Debe tener entre 8 y 11 caracteres.').optional(),
+  birthDate: z.date().optional(),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -50,11 +46,11 @@ interface CustomerFormProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   customer?: User | null;
+  onSubmit: (data: Partial<User>) => Promise<void>;
 }
 
-export function CustomerForm({ isOpen, setIsOpen, customer }: CustomerFormProps) {
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: CustomerFormProps) {
+  const [loading, setLoading] = React.useState(false);
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -80,39 +76,15 @@ export function CustomerForm({ isOpen, setIsOpen, customer }: CustomerFormProps)
       });
     } else {
       form.reset({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        dni_ruc: '',
-        birthDate: undefined,
+        name: '', email: '', phone: '', address: '', dni_ruc: '', birthDate: undefined,
       });
     }
   }, [customer, form, isOpen]);
 
-  const onSubmit = async (data: CustomerFormValues) => {
+  const handleFormSubmit = async (data: CustomerFormValues) => {
     setLoading(true);
-    try {
-      // In a real app, you would call a service to save the customer to Firestore
-      // await saveCustomer(customer?.id, data);
-      console.log("Saving customer:", data);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-
-      toast({
-        title: `Cliente ${customer ? 'actualizado' : 'creado'}`,
-        description: `El cliente "${data.name}" se ha guardado correctamente.`,
-      });
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Error saving customer: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudo guardar el cliente.',
-      });
-    } finally {
-      setLoading(false);
-    }
+    await onSubmit(data);
+    setLoading(false);
   };
 
   return (
@@ -123,7 +95,7 @@ export function CustomerForm({ isOpen, setIsOpen, customer }: CustomerFormProps)
           <DialogDescription>Completa la información del cliente. Haz clic en guardar cuando termines.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
                 <FormLabel>Nombre Completo</FormLabel>

@@ -30,6 +30,7 @@ export async function saveOrder(
     const newOrderData = {
       ...data,
       createdAt: serverTimestamp(),
+      pointsAwarded: false, // Ensure new orders haven't awarded points yet
     };
     const ordersCollection = collection(db, 'orders');
     const newDocRef = await addDoc(ordersCollection, newOrderData);
