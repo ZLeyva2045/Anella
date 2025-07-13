@@ -31,6 +31,8 @@ import {
   ShoppingCart,
   CalendarIcon,
   Loader2,
+  Smartphone,
+  Landmark,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -48,11 +50,23 @@ const MetricCard = ({ title, value, icon }: { title: string, value: string, icon
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );
 };
+
+const getPaymentMethodInfo = (method: Order['paymentMethod']) => {
+    switch (method) {
+        case 'yapePlin': return { text: 'Yape/Plin', icon: Smartphone };
+        case 'bankTransfer': return { text: 'Transferencia', icon: Landmark };
+        case 'card': return { text: 'Tarjeta', icon: CreditCard };
+        case 'mercadoPago': return { text: 'Mercado Pago', icon: DollarSign };
+        case 'paypal': return { text: 'PayPal', icon: DollarSign };
+        default: return { text: 'Otro', icon: Banknote };
+    }
+}
+
 
 export default function DailyCashReportPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -91,11 +105,14 @@ export default function DailyCashReportPage() {
 
   const reportData = useMemo(() => {
     const totalSales = transactions.reduce((acc, t) => acc + t.totalAmount, 0);
-    const cashSales = transactions.filter(t => t.paymentMethod === 'bankTransfer').reduce((acc, t) => acc + t.totalAmount, 0);
-    const cardSales = transactions.filter(t => t.paymentMethod === 'creditCard').reduce((acc, t) => acc + t.totalAmount, 0);
+    const yapePlinSales = transactions.filter(t => t.paymentMethod === 'yapePlin').reduce((acc, t) => acc + t.totalAmount, 0);
+    const transferSales = transactions.filter(t => t.paymentMethod === 'bankTransfer').reduce((acc, t) => acc + t.totalAmount, 0);
+    const cardSales = transactions.filter(t => t.paymentMethod === 'card').reduce((acc, t) => acc + t.totalAmount, 0);
+    const mercadoPagoSales = transactions.filter(t => t.paymentMethod === 'mercadoPago').reduce((acc, t) => acc + t.totalAmount, 0);
+    const paypalSales = transactions.filter(t => t.paymentMethod === 'paypal').reduce((acc, t) => acc + t.totalAmount, 0);
     const totalOrders = transactions.length;
 
-    return { totalSales, cashSales, cardSales, totalOrders };
+    return { totalSales, yapePlinSales, transferSales, cardSales, mercadoPagoSales, paypalSales, totalOrders };
   }, [transactions]);
 
 
@@ -133,11 +150,13 @@ export default function DailyCashReportPage() {
         </Popover>
       </div>
 
-       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <MetricCard title="Ventas Totales" value={`S/${reportData.totalSales.toFixed(2)}`} icon={DollarSign} />
-        <MetricCard title="Ventas en Efectivo" value={`S/${reportData.cashSales.toFixed(2)}`} icon={Banknote} />
-        <MetricCard title="Ventas con Tarjeta" value={`S/${reportData.cardSales.toFixed(2)}`} icon={CreditCard} />
         <MetricCard title="Pedidos Totales" value={reportData.totalOrders.toString()} icon={ShoppingCart} />
+        <MetricCard title="Yape/Plin" value={`S/${reportData.yapePlinSales.toFixed(2)}`} icon={Smartphone} />
+        <MetricCard title="Transferencia" value={`S/${reportData.transferSales.toFixed(2)}`} icon={Landmark} />
+        <MetricCard title="Tarjeta" value={`S/${reportData.cardSales.toFixed(2)}`} icon={CreditCard} />
+        <MetricCard title="MercadoPago" value={`S/${reportData.mercadoPagoSales.toFixed(2)}`} icon={DollarSign} />
       </div>
 
       <Card>
@@ -164,17 +183,21 @@ export default function DailyCashReportPage() {
                     </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {transactions.map((tx) => (
+                    {transactions.map((tx) => {
+                       const paymentInfo = getPaymentMethodInfo(tx.paymentMethod);
+                       return (
                         <TableRow key={tx.id}>
-                        <TableCell className="font-medium">{tx.id.substring(0, 7)}...</TableCell>
-                        <TableCell>{new Date((tx.createdAt as any).seconds * 1000).toLocaleTimeString()}</TableCell>
-                        <TableCell>{tx.customerInfo.name}</TableCell>
-                        <TableCell>
-                            {tx.paymentMethod === 'creditCard' ? 'Tarjeta' : 'Efectivo/Transf.'}
-                        </TableCell>
-                        <TableCell className="text-right">S/{tx.totalAmount.toFixed(2)}</TableCell>
+                            <TableCell className="font-medium">{tx.id.substring(0, 7)}...</TableCell>
+                            <TableCell>{new Date((tx.createdAt as any).seconds * 1000).toLocaleTimeString()}</TableCell>
+                            <TableCell>{tx.customerInfo.name}</TableCell>
+                            <TableCell className="flex items-center gap-2">
+                                <paymentInfo.icon className="h-4 w-4 text-muted-foreground" />
+                                {paymentInfo.text}
+                            </TableCell>
+                            <TableCell className="text-right">S/{tx.totalAmount.toFixed(2)}</TableCell>
                         </TableRow>
-                    ))}
+                       );
+                    })}
                     </TableBody>
                 </Table>
             )}

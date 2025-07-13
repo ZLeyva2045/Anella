@@ -6,7 +6,6 @@ import {
   addDoc,
   serverTimestamp,
   runTransaction,
-  getDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Order, User } from '@/types/firestore';
@@ -39,7 +38,7 @@ export async function saveOrder(
 }
 
 /**
- * Updates an order's status and, if the status is 'delivered',
+ * Updates an order's status and, if the status is 'completed',
  * adds loyalty points to the customer.
  * @param orderId The ID of the order to update.
  * @param status The new status for the order.
@@ -55,9 +54,9 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 
     const order = orderDoc.data() as Order;
 
-    // Solo se otorgan puntos si el pedido se marca como entregado
+    // Solo se otorgan puntos si el pedido se marca como completado
     // y si no se han otorgado puntos previamente por este pedido.
-    if (status === 'delivered' && !order.pointsAwarded) {
+    if (status === 'completed' && !order.pointsAwarded) {
       const customerId = order.userId;
       if (customerId) {
         const userRef = doc(db, 'users', customerId);
@@ -76,7 +75,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
       transaction.update(orderRef, { status, pointsAwarded: true });
 
     } else {
-        // Si no es para entrega, solo actualiza el estado
+        // Si no es para completar, solo actualiza el estado
         transaction.update(orderRef, { status });
     }
   });

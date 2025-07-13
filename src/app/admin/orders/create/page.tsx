@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -18,6 +20,8 @@ import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,8 +29,9 @@ import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, UserPlus } from 'lucide-react';
+import { Loader2, Save, Trash2, UserPlus, CalendarIcon } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
+import { cn } from '@/lib/utils';
 
 interface CartItem extends Product {
   quantity: number;
@@ -49,9 +54,12 @@ const orderSchema = z.object({
     address: z.string(),
   }),
   items: z.array(orderItemSchema).min(1, 'El pedido debe tener al menos un producto.'),
-  paymentMethod: z.enum(['creditCard', 'paypal', 'bankTransfer']),
-  deliveryMethod: z.enum(['storePickup', 'homeDelivery']),
-  status: z.enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled']),
+  paymentMethod: z.enum(['yapePlin', 'bankTransfer', 'card', 'mercadoPago', 'paypal']),
+  deliveryMethod: z.enum(['localPickup', 'delivery']),
+  status: z.enum(['pending', 'processing', 'finishing', 'completed', 'cancelled']),
+  deliveryDate: z.date({
+    required_error: "La fecha de entrega es requerida.",
+  }),
 });
 
 type OrderFormValues = z.infer<typeof orderSchema>;
@@ -71,9 +79,10 @@ export default function CreateOrderPage() {
     defaultValues: {
       customer: { id: '', name: '', email: '', phone: '', address: '' },
       items: [],
-      paymentMethod: 'creditCard',
-      deliveryMethod: 'storePickup',
-      status: 'processing',
+      paymentMethod: 'yapePlin',
+      deliveryMethod: 'localPickup',
+      status: 'pending',
+      deliveryDate: new Date(),
     },
   });
 
@@ -250,8 +259,28 @@ export default function CreateOrderPage() {
                         <CardTitle>Detalles del Pedido</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                         <FormField control={form.control} name="paymentMethod" render={({ field }) => ( <FormItem><FormLabel>Método de Pago</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="creditCard">Tarjeta</SelectItem><SelectItem value="bankTransfer">Transferencia</SelectItem><SelectItem value="paypal">Paypal</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                         <FormField control={form.control} name="deliveryMethod" render={({ field }) => ( <FormItem><FormLabel>Método de Entrega</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="storePickup">Recojo en tienda</SelectItem><SelectItem value="homeDelivery">Delivery</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                        <FormField control={form.control} name="deliveryDate" render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                                <FormLabel>Fecha de Entrega</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                                {field.value ? format(field.value, "PPP", { locale: es }) : <span>Selecciona una fecha</span>}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus locale={es} />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField control={form.control} name="paymentMethod" render={({ field }) => ( <FormItem><FormLabel>Método de Pago</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="yapePlin">Yape/Plin</SelectItem><SelectItem value="bankTransfer">Transferencia</SelectItem><SelectItem value="card">Tarjeta (Comisión)</SelectItem><SelectItem value="mercadoPago">Mercado Pago</SelectItem><SelectItem value="paypal">Paypal</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                        <FormField control={form.control} name="deliveryMethod" render={({ field }) => ( <FormItem><FormLabel>Método de Entrega</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="localPickup">Recojo en Local</SelectItem><SelectItem value="delivery">Delivery</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                        <FormField control={form.control} name="status" render={({ field }) => ( <FormItem><FormLabel>Estado del Pedido</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="pending">Pendiente</SelectItem><SelectItem value="processing">En Curso</SelectItem><SelectItem value="finishing">Por Terminar</SelectItem><SelectItem value="completed">Terminado</SelectItem><SelectItem value="cancelled">Cancelado</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
                     </CardContent>
                 </Card>
 

@@ -22,7 +22,8 @@ import { Badge } from '@/components/ui/badge';
 import {
   MoreHorizontal,
   PlusCircle,
-  Truck,
+  Clock,
+  Sparkles,
   CheckCircle2,
   Loader2,
 } from 'lucide-react';
@@ -35,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Order } from '@/types/firestore';
-import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -74,7 +75,7 @@ export default function SalesOrdersPage() {
       await updateOrderStatus(orderId, status);
       toast({
         title: 'Estado Actualizado',
-        description: `El pedido ${orderId.substring(0, 6)}... ahora está ${status}.`
+        description: `El pedido ${orderId.substring(0, 6)}... ha sido actualizado.`
       });
     } catch (error) {
       console.error("Error updating status: ", error);
@@ -86,14 +87,14 @@ export default function SalesOrdersPage() {
     }
   };
 
-  const getStatusVariant = (status: Order['status']) => {
+  const getStatusInfo = (status: Order['status']) => {
     switch (status) {
-      case 'delivered': return 'default';
-      case 'processing': return 'secondary';
-      case 'shipped': return 'outline';
-      case 'cancelled': return 'destructive';
-      case 'pending': return 'secondary';
-      default: return 'outline';
+      case 'completed': return { variant: 'default', text: 'Terminado' };
+      case 'processing': return { variant: 'secondary', text: 'En Curso' };
+      case 'finishing': return { variant: 'outline', text: 'Por Terminar' };
+      case 'cancelled': return { variant: 'destructive', text: 'Cancelado' };
+      case 'pending': return { variant: 'secondary', text: 'Pendiente' };
+      default: return { variant: 'outline', text: 'Desconocido' };
     }
   };
 
@@ -134,7 +135,7 @@ export default function SalesOrdersPage() {
                 <TableRow>
                   <TableHead>Pedido</TableHead>
                   <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell">Fecha</TableHead>
+                  <TableHead className="hidden md:table-cell">F. Entrega</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead>
@@ -143,48 +144,55 @@ export default function SalesOrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id.substring(0, 7)}...</TableCell>
-                    <TableCell>{order.customerInfo.name}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {new Intl.DateTimeFormat('es-PE').format((order.createdAt as any)?.toDate() ?? new Date())}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      S/{order.totalAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'shipped')}>
-                            <Truck className="mr-2 h-4 w-4" />
-                            Marcar como Enviado
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'delivered')}>
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Marcar como Entregado
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {orders.map((order) => {
+                  const statusInfo = getStatusInfo(order.status);
+                  return (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.id.substring(0, 7)}...</TableCell>
+                      <TableCell>{order.customerInfo.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {new Intl.DateTimeFormat('es-PE').format((order.deliveryDate as any)?.toDate() ?? new Date())}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusInfo.variant} className="capitalize">{statusInfo.text}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        S/{order.totalAmount.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                            <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'processing')}>
+                              <Clock className="mr-2 h-4 w-4" />
+                              Marcar como En Curso
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'finishing')}>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              Marcar como Por Terminar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'completed')}>
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              Marcar como Terminado
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

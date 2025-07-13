@@ -18,7 +18,6 @@ export interface Product {
   rating?: number; 
   stock: number; // Cantidad en inventario
   supplier?: string; // Proveedor del producto (opcional)
-  isPersonalizable: boolean;
 }
 
 /**
@@ -81,10 +80,11 @@ export interface Order {
     phone: string;
     address: string;
   };
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'; // Estado del pedido
-  paymentMethod: 'creditCard' | 'paypal' | 'bankTransfer'; // Método de pago
-  deliveryMethod: 'storePickup' | 'homeDelivery'; // Método de entrega
+  status: 'pending' | 'processing' | 'finishing' | 'completed' | 'cancelled';
+  paymentMethod: 'yapePlin' | 'bankTransfer' | 'card' | 'mercadoPago' | 'paypal';
+  deliveryMethod: 'localPickup' | 'delivery'; // Método de entrega
   createdAt: Date | Timestamp; // Fecha de creación del pedido
+  deliveryDate: Date | Timestamp; // Fecha de entrega acordada
   totalAmount: number; // Monto total del pedido
   pointsAwarded?: boolean; // Flag para saber si ya se otorgaron los puntos de este pedido
 }
