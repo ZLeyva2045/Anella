@@ -18,6 +18,7 @@ export interface Product {
   rating?: number; 
   stock: number; // Cantidad en inventario
   supplier?: string; // Proveedor del producto (opcional)
+  isPersonalizable: boolean;
 }
 
 /**
@@ -85,6 +86,7 @@ export interface Order {
   deliveryMethod: 'storePickup' | 'homeDelivery'; // Método de entrega
   createdAt: Date | Timestamp; // Fecha de creación del pedido
   totalAmount: number; // Monto total del pedido
+  pointsAwarded?: boolean; // Flag para saber si ya se otorgaron los puntos de este pedido
 }
 
 /**

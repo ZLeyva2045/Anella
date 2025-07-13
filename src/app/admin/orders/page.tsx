@@ -39,6 +39,8 @@ import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { updateOrderStatus } from '@/services/orderService';
+
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -65,10 +67,9 @@ export default function AdminOrdersPage() {
     return () => unsubscribe();
   }, [toast]);
 
-  const updateOrderStatus = async (orderId: string, status: Order['status']) => {
-    const orderRef = doc(db, 'orders', orderId);
+  const handleUpdateStatus = async (orderId: string, status: Order['status']) => {
     try {
-      await updateDoc(orderRef, { status });
+      await updateOrderStatus(orderId, status);
       toast({
         title: 'Estado Actualizado',
         description: `El pedido ${orderId.substring(0, 6)}... ahora está ${status}.`
@@ -82,6 +83,7 @@ export default function AdminOrdersPage() {
       });
     }
   };
+
 
   const getStatusVariant = (status: Order['status']) => {
     switch (status) {
@@ -169,11 +171,11 @@ export default function AdminOrdersPage() {
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                           <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => updateOrderStatus(order.id, 'shipped')}>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'shipped')}>
                             <Truck className="mr-2 h-4 w-4" />
                             Marcar como Enviado
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => updateOrderStatus(order.id, 'delivered')}>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'delivered')}>
                             <CheckCircle2 className="mr-2 h-4 w-4" />
                             Marcar como Entregado
                           </DropdownMenuItem>

@@ -5,9 +5,11 @@ import {
   setDoc,
   addDoc,
   serverTimestamp,
+  runTransaction,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { Order } from '@/types/firestore';
+import type { Order, User } from '@/types/firestore';
 
 // Omit fields that are auto-generated or handled by the backend
 type OrderData = Omit<Order, 'id' | 'createdAt'>;
@@ -34,4 +36,48 @@ export async function saveOrder(
     const newDocRef = await addDoc(ordersCollection, newOrderData);
     return newDocRef.id;
   }
+}
+
+/**
+ * Updates an order's status and, if the status is 'delivered',
+ * adds loyalty points to the customer.
+ * @param orderId The ID of the order to update.
+ * @param status The new status for the order.
+ */
+export async function updateOrderStatus(orderId: string, status: Order['status']) {
+  const orderRef = doc(db, 'orders', orderId);
+
+  await runTransaction(db, async (transaction) => {
+    const orderDoc = await transaction.get(orderRef);
+    if (!orderDoc.exists()) {
+      throw "El pedido no existe.";
+    }
+
+    const order = orderDoc.data() as Order;
+
+    // Solo se otorgan puntos si el pedido se marca como entregado
+    // y si no se han otorgado puntos previamente por este pedido.
+    if (status === 'delivered' && !order.pointsAwarded) {
+      const customerId = order.userId;
+      if (customerId) {
+        const userRef = doc(db, 'users', customerId);
+        const userDoc = await transaction.get(userRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as User;
+          const currentPoints = userData.loyaltyPoints || 0;
+          // 1 punto por cada Sol gastado
+          const newPoints = Math.floor(order.totalAmount);
+          transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
+        }
+      }
+      
+      // Marcar que los puntos ya fueron otorgados para este pedido
+      transaction.update(orderRef, { status, pointsAwarded: true });
+
+    } else {
+        // Si no es para entrega, solo actualiza el estado
+        transaction.update(orderRef, { status });
+    }
+  });
 }
