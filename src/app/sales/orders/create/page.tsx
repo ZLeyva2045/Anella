@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
-import { collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
@@ -107,7 +107,7 @@ export default function CreateOrderPage() {
         name: product.name,
         price: product.price,
         quantity: 1,
-        image: product.images[0],
+        image: product.images[0] || '',
     });
     setSearchPopoverOpen(false);
   }
@@ -117,24 +117,25 @@ export default function CreateOrderPage() {
     const savedCart = localStorage.getItem('pendingOrderCart');
     if (savedCart) {
       const parsedCart: CartItem[] = JSON.parse(savedCart);
-      form.setValue('items', parsedCart.map(p => ({ itemId: p.id, name: p.name, price: p.price, quantity: p.quantity, image: p.images[0] })));
+      form.setValue('items', parsedCart.map(p => ({ itemId: p.id, name: p.name, price: p.price, quantity: p.quantity, image: p.images[0] || '' })));
       localStorage.removeItem('pendingOrderCart');
     }
 
     // Load customers
-    const fetchCustomers = async () => {
-      const querySnapshot = await getDocs(collection(db, "users"));
-      const customersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+    const unsubCustomers = onSnapshot(collection(db, "users"), (snapshot) => {
+      const customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
       setCustomers(customersData);
-    };
-    fetchCustomers();
+    });
     
     // Load inventory
     const unsubInventory = onSnapshot(collection(db, 'products'), (snapshot) => {
         setInventory(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Product)));
     });
 
-    return () => unsubInventory();
+    return () => {
+      unsubCustomers();
+      unsubInventory();
+    };
   }, [form]);
 
   useEffect(() => {
@@ -163,8 +164,8 @@ export default function CreateOrderPage() {
         await saveOrder(undefined, {
             ...data,
             totalAmount: totalAmount,
-            userId: user.uid,
-            sellerId: user.uid, // Assuming the creator is the seller
+            userId: data.customer.id,
+            sellerId: user.uid,
             customerInfo: {
                 name: data.customer.name,
                 email: data.customer.email,
@@ -181,6 +182,28 @@ export default function CreateOrderPage() {
         setLoading(false);
     }
   };
+
+  const handleCustomerFormSubmit = async (data: Partial<User>) => {
+    try {
+        const usersCollection = collection(db, 'users');
+        const newDocRef = await addDoc(usersCollection, { 
+          ...data, 
+          role: 'customer', 
+          createdAt: new Date(),
+          orders: [],
+          loyaltyPoints: 0,
+        });
+        
+        const newCustomer = {id: newDocRef.id, ...data} as User
+        setSelectedCustomer(newCustomer)
+
+        toast({ title: 'Cliente añadido', description: 'El nuevo cliente ha sido creado y seleccionado.' });
+        setIsCustomerFormOpen(false);
+    } catch (error) {
+       console.error("Error saving customer: ", error);
+       toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el cliente." });
+    }
+  }
   
   return (
     <>
@@ -250,7 +273,7 @@ export default function CreateOrderPage() {
                                 {fields.map((field, index) => (
                                     <TableRow key={field.id}>
                                         <TableCell className="flex items-center gap-2">
-                                            <Image src={field.image} alt={field.name} width={40} height={40} className="rounded-md" />
+                                            <Image src={field.image || '/placeholder.svg'} alt={field.name} width={40} height={40} className="rounded-md" />
                                             <div>
                                                 <p className="font-medium">{field.name}</p>
                                                 <p className="text-sm text-muted-foreground">S/{field.price.toFixed(2)}</p>
@@ -292,10 +315,12 @@ export default function CreateOrderPage() {
                                 <FormItem>
                                 <FormLabel>Seleccionar Cliente</FormLabel>
                                 <Select onValueChange={(value) => {
-                                    field.onChange(value);
                                     const customer = customers.find(c => c.id === value);
-                                    setSelectedCustomer(customer || null);
-                                }}>
+                                    if(customer) {
+                                      setSelectedCustomer(customer);
+                                      field.onChange(value);
+                                    }
+                                }} value={field.value}>
                                     <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Busca o selecciona un cliente" />
@@ -314,8 +339,8 @@ export default function CreateOrderPage() {
                             Añadir Nuevo Cliente
                         </Button>
                         <Separator />
-                         <FormField control={form.control} name="customer.name" render={({ field }) => ( <FormItem><FormLabel>Nombre</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem> )} />
-                         <FormField control={form.control} name="customer.email" render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem> )} />
+                         <FormField control={form.control} name="customer.name" render={({ field }) => ( <FormItem><FormLabel>Nombre</FormLabel><FormControl><Input {...field} readOnly /></FormControl></FormItem> )} />
+                         <FormField control={form.control} name="customer.email" render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} readOnly /></FormControl></FormItem> )} />
                          <FormField control={form.control} name="customer.address" render={({ field }) => ( <FormItem><FormLabel>Dirección</FormLabel><FormControl><Input {...field} /></FormControl></FormItem> )} />
                     </CardContent>
                 </Card>
@@ -369,7 +394,7 @@ export default function CreateOrderPage() {
           </form>
         </Form>
       </div>
-      <CustomerForm isOpen={isCustomerFormOpen} setIsOpen={setIsCustomerFormOpen} />
+      <CustomerForm isOpen={isCustomerFormOpen} setIsOpen={setIsCustomerFormOpen} onSubmit={handleCustomerFormSubmit} />
     </>
   );
 }

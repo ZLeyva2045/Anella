@@ -33,7 +33,7 @@ import { cn } from '@/lib/utils';
 
 const customerSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
-  email: z.string().email('Por favor, ingresa un correo electrónico válido.'),
+  email: z.string().email('Por favor, ingresa un correo electrónico válido.').optional().or(z.literal('')),
   phone: z.string().optional(),
   address: z.string().optional(),
   dni_ruc: z.string().min(8, 'Debe tener entre 8 y 11 caracteres.').max(11, 'Debe tener entre 8 y 11 caracteres.').optional(),
@@ -65,19 +65,21 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
   });
 
   useEffect(() => {
-    if (customer) {
-      form.reset({
-        name: customer.name || '',
-        email: customer.email || '',
-        phone: customer.phone || '',
-        address: customer.address || '',
-        dni_ruc: customer.dni_ruc || '',
-        birthDate: customer.birthDate ? (customer.birthDate as any).toDate() : undefined,
-      });
-    } else {
-      form.reset({
-        name: '', email: '', phone: '', address: '', dni_ruc: '', birthDate: undefined,
-      });
+    if (isOpen) {
+      if (customer) {
+        form.reset({
+          name: customer.name || '',
+          email: customer.email || '',
+          phone: customer.phone || '',
+          address: customer.address || '',
+          dni_ruc: customer.dni_ruc || '',
+          birthDate: customer.birthDate ? (customer.birthDate as any).toDate() : undefined,
+        });
+      } else {
+        form.reset({
+          name: '', email: '', phone: '', address: '', dni_ruc: '', birthDate: undefined,
+        });
+      }
     }
   }, [customer, form, isOpen]);
 
@@ -105,7 +107,7 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
             )} />
             <FormField control={form.control} name="email" render={({ field }) => (
               <FormItem>
-                <FormLabel>Correo Electrónico</FormLabel>
+                <FormLabel>Correo Electrónico (Opcional)</FormLabel>
                 <FormControl><Input placeholder="cliente@correo.com" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -119,7 +121,7 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
             )} />
              <FormField control={form.control} name="dni_ruc" render={({ field }) => (
               <FormItem>
-                <FormLabel>DNI o RUC</FormLabel>
+                <FormLabel>DNI o RUC (Opcional)</FormLabel>
                 <FormControl><Input placeholder="12345678" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -129,7 +131,7 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
               name="birthDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Fecha de Nacimiento</FormLabel>
+                  <FormLabel>Fecha de Nacimiento (Opcional)</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -168,7 +170,7 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
             />
             <FormField control={form.control} name="address" render={({ field }) => (
               <FormItem>
-                <FormLabel>Dirección</FormLabel>
+                <FormLabel>Dirección (Opcional)</FormLabel>
                 <FormControl><Input placeholder="Av. Principal 123" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>

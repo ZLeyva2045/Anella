@@ -35,13 +35,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/types/firestore';
 import { CustomerForm } from '@/components/shared/CustomerForm';
-import { collection, onSnapshot, query, where, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, deleteDoc, doc, setDoc, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
-
-const customerSchema = {
-  // Define a schema if you have complex validation, or handle it in the form.
-};
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<User[]>([]);
@@ -93,19 +89,27 @@ export default function AdminCustomersPage() {
 
   const handleFormSubmit = async (data: Partial<User>) => {
     try {
-      let docRef;
       if (selectedCustomer?.id) {
-        docRef = doc(db, 'users', selectedCustomer.id);
+        // Actualizar cliente existente
+        const docRef = doc(db, 'users', selectedCustomer.id);
         await setDoc(docRef, data, { merge: true });
         toast({ title: 'Cliente actualizado', description: 'Los datos del cliente se han actualizado.' });
       } else {
-         // This logic is for adding a customer directly, may need adjustment
-         // if account creation is handled elsewhere (e.g. signup page)
-        const newDocRef = doc(collection(db, 'users'));
-        await setDoc(newDocRef, { ...data, role: 'customer', createdAt: new Date() });
+        // Crear nuevo cliente
+        // Esta lógica es para añadir clientes que no se registran por sí mismos (ej. por teléfono)
+        // Por eso no tienen una cuenta de autenticación, pero sí un registro en la BD.
+        const usersCollection = collection(db, 'users');
+        await addDoc(usersCollection, { 
+          ...data, 
+          role: 'customer', 
+          createdAt: new Date(),
+          orders: [],
+          loyaltyPoints: 0,
+        });
         toast({ title: 'Cliente añadido', description: 'El nuevo cliente ha sido creado.' });
       }
       setIsFormOpen(false);
+      setSelectedCustomer(null);
     } catch (error) {
        console.error("Error saving customer: ", error);
        toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el cliente." });
