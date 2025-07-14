@@ -5,15 +5,16 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import type { ProductDetail } from '@/lib/mock-data';
+import type { GiftDetail } from '@/lib/mock-data';
 import type { SelectedCustomization } from '@/app/products/[id]/page';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { Heart, Share2, ShoppingCart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { Gift } from '@/types/firestore';
 
 interface ProductInfoProps {
-  product: ProductDetail;
+  product: GiftDetail;
   totalPrice: number;
   customizationCost: number;
   selectedCustomizations: SelectedCustomization;
@@ -26,12 +27,14 @@ export function ProductInfo({ product, totalPrice, customizationCost, selectedCu
   const { toast } = useToast();
 
   const handleAddToCart = () => {
-    const productWithCustomizations = {
-      ...product,
+    // We need to cast the gift detail to a format the cart understands.
+    // The cart expects a Product-like structure, so we adapt it.
+    const cartProduct = {
+      ...(product as unknown as Gift),
       price: totalPrice, // Use the final calculated price
       customizations: selectedCustomizations,
     };
-    addToCart(productWithCustomizations, quantity);
+    addToCart(cartProduct, quantity);
     toast({
       title: "¡Añadido al carrito!",
       description: `${quantity} x ${product.name} se ha añadido a tu carrito.`,

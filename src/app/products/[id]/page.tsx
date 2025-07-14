@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
-import { ProductDetail, getProductDetails, CustomizationOption } from '@/lib/mock-data';
+import { GiftDetail, getGiftDetails, CustomizationOption } from '@/lib/mock-data';
 import { ProductImages } from '@/components/products/detail/ProductImages';
 import { ProductInfo } from '@/components/products/detail/ProductInfo';
 import { CustomizationOptions } from '@/components/products/detail/CustomizationOptions';
@@ -21,7 +21,7 @@ export interface SelectedCustomization {
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [gift, setGift] = useState<GiftDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCustomizations, setSelectedCustomizations] = useState<SelectedCustomization>({});
 
@@ -29,15 +29,15 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (id) {
-        const fetchProduct = async () => {
+        const fetchGift = async () => {
             setLoading(true);
-            const fetchedProduct = await getProductDetails(id);
-            if (fetchedProduct) {
-                setProduct(fetchedProduct);
+            const fetchedGift = await getGiftDetails(id);
+            if (fetchedGift) {
+                setGift(fetchedGift);
             }
             setLoading(false);
         };
-        fetchProduct();
+        fetchGift();
     } else {
         setLoading(false);
     }
@@ -48,9 +48,9 @@ export default function ProductDetailPage() {
   }, [selectedCustomizations]);
 
   const totalPrice = useMemo(() => {
-    if (!product) return 0;
-    return product.price + customizationCost;
-  }, [product, customizationCost]);
+    if (!gift) return 0;
+    return gift.price + customizationCost;
+  }, [gift, customizationCost]);
 
   const handleCustomizationChange = (option: CustomizationOption, value: string) => {
     setSelectedCustomizations(prev => {
@@ -104,7 +104,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (!product) {
+  if (!gift) {
     return notFound();
   }
 
@@ -113,17 +113,17 @@ export default function ProductDetailPage() {
       <Header />
       <main className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
-          <ProductImages images={product.images} productName={product.name} />
+          <ProductImages images={gift.images} productName={gift.name} />
           <div className="flex flex-col">
             <ProductInfo 
-              product={product}
+              product={gift}
               totalPrice={totalPrice}
               customizationCost={customizationCost}
               selectedCustomizations={selectedCustomizations}
             />
-            {product.isPersonalizable && (
+            {gift.isPersonalizable && (
               <CustomizationOptions
-                options={product.customizationOptions}
+                options={gift.customizationOptions}
                 onCustomizationChange={handleCustomizationChange}
               />
             )}

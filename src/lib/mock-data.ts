@@ -1,6 +1,6 @@
 // src/lib/mock-data.ts
-import type { Product } from '@/types/firestore';
-import { collection, doc, getDoc, getDocs, onSnapshot } from 'firebase/firestore';
+import type { Product, Gift } from '@/types/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/config';
 
 export interface CustomizationChoice {
@@ -17,26 +17,23 @@ export interface CustomizationOption {
     priceModifier?: number; // For text/textarea/image inputs
 }
 
-
-export interface ProductDetail extends Product {
-    detailedDescription: string;
+// Renamed to represent a detailed view of a Gift
+export interface GiftDetail extends Gift {
     customizationOptions?: CustomizationOption[];
 }
 
-// Fetching real product data now, but keeping one mock detail for structure reference.
-// In a real app, this would also fetch from Firestore.
-export async function getProductDetails(productId: string): Promise<ProductDetail | null> {
-    const productRef = doc(db, 'products', productId);
-    const productSnap = await getDoc(productRef);
+export async function getGiftDetails(giftId: string): Promise<GiftDetail | null> {
+    const giftRef = doc(db, 'gifts', giftId);
+    const giftSnap = await getDoc(giftRef);
 
-    if (!productSnap.exists()) {
+    if (!giftSnap.exists()) {
         return null;
     }
 
-    const product = { id: productSnap.id, ...productSnap.data() } as Product;
+    const giftData = { id: giftSnap.id, ...giftSnap.data() } as Gift;
 
     // You could fetch dynamic customization options from another collection here if needed
-    const customizationOptions: CustomizationOption[] = product.isPersonalizable ? [
+    const customizationOptions: CustomizationOption[] = giftData.isPersonalizable ? [
          { id: 'nombre', label: 'Nombre para Grabar (+S/5.00)', type: 'text', placeholder: 'Ej: "Para mi amor, María"', priceModifier: 5 },
          { id: 'color-luz', label: 'Color de la Luz', type: 'radio', choices: [{name: 'Cálida', priceModifier: 0}, {name: 'Fría', priceModifier: 0}, {name: 'RGB (+S/15.00)', priceModifier: 15}] },
          { id: 'foto', label: 'Sube tu Foto (+S/10.00)', type: 'image', priceModifier: 10},
@@ -44,8 +41,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     ] : [];
 
     return {
-        ...product,
-        detailedDescription: product.description + " Este es un texto de descripción más largo que detalla las características, materiales y el proceso de creación de este fantástico producto. Es ideal para convencer al cliente de la calidad y el valor que está a punto de adquirir.",
+        ...giftData,
         customizationOptions,
     };
 }
