@@ -29,18 +29,23 @@ export async function saveProduct(
   productId: string | undefined,
   data: Partial<ProductData> // Partial because some fields might not be sent every time
 ) {
+  // Clean up undefined fields before sending to Firestore
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([_, v]) => v !== undefined)
+  );
+
   if (productId) {
     // Actualizar producto existente
     const productRef = doc(db, 'products', productId);
     await setDoc(productRef, {
-      ...data,
+      ...cleanData,
       updatedAt: serverTimestamp(),
     }, { merge: true });
     return productId;
   } else {
     // Crear nuevo producto
     const newProductData = {
-      ...data,
+      ...cleanData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       rating: Math.floor(Math.random() * (50 - 40) + 40) / 10, // Default random rating 4.0-5.0
