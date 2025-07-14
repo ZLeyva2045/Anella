@@ -116,7 +116,7 @@ export default function PosPage() {
 
   return (
     <>
-      <div className="h-[calc(100vh-5rem)] flex flex-col">
+      <div className="flex flex-col h-full md:h-[calc(100vh-5rem)]">
           <header className="mb-4">
               <h1 className="text-3xl font-bold">Punto de Venta (POS)</h1>
               <p className="text-muted-foreground">
@@ -124,9 +124,9 @@ export default function PosPage() {
               </p>
           </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+          <div className="flex-1 min-h-0 flex flex-col md:grid md:grid-cols-12 gap-6">
               {/* Product Selection */}
-              <div className="lg:col-span-2 flex flex-col min-h-0">
+              <div className="md:col-span-7 lg:col-span-8 flex flex-col min-h-[300px] md:min-h-0">
                   <Card className="flex-1 flex flex-col">
                       <CardHeader>
                           <div className="relative">
@@ -149,7 +149,7 @@ export default function PosPage() {
                               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                                   {filteredProducts.map(product => (
                                       <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => addToCart(product)}>
-                                          <Image src={product.images[0]} alt={product.name} width={150} height={150} className="w-full h-24 object-cover" />
+                                          <Image src={product.images[0]} alt={product.name} width={150} height={150} className="w-full h-24 object-cover" data-ai-hint="product image" />
                                           <div className="p-2">
                                               <h4 className="text-sm font-semibold truncate">{product.name}</h4>
                                               <p className="text-xs text-primary font-bold">S/{product.price.toFixed(2)}</p>
@@ -164,7 +164,7 @@ export default function PosPage() {
               </div>
 
               {/* Cart Section */}
-              <div className="lg:col-span-1 flex flex-col min-h-0">
+              <div className="md:col-span-5 lg:col-span-4 flex flex-col min-h-0">
                   <Card className="flex-1 flex flex-col">
                       <CardHeader className="flex-row items-center justify-between">
                           <CardTitle>Venta Actual</CardTitle>
@@ -177,11 +177,13 @@ export default function PosPage() {
                         <ScrollArea className="h-full">
                               <div className="space-y-2 p-2">
                                   {cart.length === 0 ? (
-                                      <p className="text-center text-muted-foreground py-10">Añade productos para empezar una venta.</p>
+                                     <div className="h-full flex items-center justify-center">
+                                        <p className="text-center text-muted-foreground p-10">Añade productos para empezar una venta.</p>
+                                      </div>
                                   ) : (
                                       cart.map(item => (
                                         <div key={item.id} className="flex items-center gap-2">
-                                            <Image src={item.images[0]} alt={item.name} width={40} height={40} className="rounded-md object-cover flex-shrink-0" />
+                                            <Image src={item.images[0]} alt={item.name} width={40} height={40} className="rounded-md object-cover flex-shrink-0" data-ai-hint="product image" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium truncate">{item.name}</p>
                                                 <p className="text-xs text-muted-foreground">S/{item.price.toFixed(2)}</p>
