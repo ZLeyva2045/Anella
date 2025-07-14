@@ -28,6 +28,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BottomNavBar, type NavItem } from '@/components/shared/BottomNavBar';
+
+const adminNavItems: NavItem[] = [
+  { href: '/admin', label: 'Dashboard', icon: Home },
+  { href: '/admin/pos', label: 'POS', icon: Store },
+  { href: '/admin/orders', label: 'Pedidos', icon: ShoppingCart },
+  { href: '/admin/gifts', label: 'Regalos', icon: Gift },
+  { href: '/admin/products', label: 'Inventario', icon: Package },
+];
+
 
 const AdminNav = () => {
     const pathname = usePathname();
@@ -145,9 +155,9 @@ export default function AdminLayout({
     <SidebarProvider>
         <div className="flex min-h-screen">
              <AdminNav />
-            <SidebarInset className="flex-1">
+            <SidebarInset className="flex-1 pb-16 md:pb-0">
                  {/* Mobile Header */}
-                <header className="sticky top-0 z-40 lg:hidden flex items-center justify-between px-4 py-2 bg-background border-b">
+                <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-4 py-2 bg-background border-b">
                     <Link href="/" className="flex items-center gap-2 font-bold text-lg">
                         <Package className="h-6 w-6 text-primary" />
                         <span style={{fontFamily: 'Amarillo', color: 'hsl(var(--primary))'}}>Anella Admin</span>
@@ -156,6 +166,7 @@ export default function AdminLayout({
                  <main className="p-4 sm:p-6 lg:p-8">
                      {children}
                  </main>
+                 <BottomNavBar navItems={adminNavItems} />
              </SidebarInset>
         </div>
     </SidebarProvider>
