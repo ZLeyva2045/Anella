@@ -180,22 +180,22 @@ export default function PosPage() {
                                       <p className="text-center text-muted-foreground py-10">Añade productos para empezar una venta.</p>
                                   ) : (
                                       cart.map(item => (
-                                          <div key={item.id} className="flex items-center gap-2">
-                                              <Image src={item.images[0]} alt={item.name} width={40} height={40} className="rounded-md object-cover" />
-                                              <div className="flex-1">
-                                                  <p className="text-sm font-medium truncate">{item.name}</p>
-                                                  <p className="text-xs text-muted-foreground">S/{item.price.toFixed(2)}</p>
-                                              </div>
-                                              <Input 
-                                                  type="number" 
-                                                  value={item.quantity}
-                                                  onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                                                  className="w-16 h-8 text-center"
-                                              />
-                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeFromCart(item.id)}>
-                                                  <Trash2 className="h-4 w-4" />
-                                              </Button>
-                                          </div>
+                                        <div key={item.id} className="flex items-center gap-2">
+                                            <Image src={item.images[0]} alt={item.name} width={40} height={40} className="rounded-md object-cover flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium truncate">{item.name}</p>
+                                                <p className="text-xs text-muted-foreground">S/{item.price.toFixed(2)}</p>
+                                            </div>
+                                            <Input 
+                                                type="number" 
+                                                value={item.quantity}
+                                                onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                                                className="w-16 h-8 text-center flex-shrink-0"
+                                            />
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive flex-shrink-0" onClick={() => removeFromCart(item.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                       ))
                                   )}
                               </div>
