@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -186,13 +186,14 @@ export function Header() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
-        <nav className="flex flex-col h-full">
-          <div className="p-4 border-b">
-             <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
+         <SheetHeader className="p-4 border-b">
+            <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
+            <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
               <Gift className="h-7 w-7 text-primary" />
               <span className="text-2xl font-headline text-primary" style={{fontFamily: 'Amarillo'}}>Anella</span>
             </Link>
-          </div>
+          </SheetHeader>
+        <nav className="flex flex-col h-full">
           <div className="flex-grow p-4 space-y-2 overflow-y-auto">
              <Link href="/" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Inicio</Link>
              <Link href="/products" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Regalos</Link>
