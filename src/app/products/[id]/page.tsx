@@ -81,7 +81,7 @@ export default function ProductDetailPage() {
         <div className="flex flex-col min-h-screen bg-background">
             <Header />
             <main className="container mx-auto px-4 py-12">
-                <div className="grid md:grid-cols-2 gap-12">
+                <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
                     <div>
                         <Skeleton className="w-full aspect-square rounded-lg" />
                         <div className="flex gap-2 mt-2">

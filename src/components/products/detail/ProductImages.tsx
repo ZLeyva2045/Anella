@@ -15,7 +15,7 @@ export function ProductImages({ images, productName }: ProductImagesProps) {
   const [selectedImage, setSelectedImage] = useState(images[0]);
 
   return (
-    <div className="flex flex-col gap-4 sticky top-24">
+    <div className="flex flex-col gap-4 md:sticky md:top-24">
       <Card className="overflow-hidden">
         <Image
           src={selectedImage}
