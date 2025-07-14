@@ -27,8 +27,12 @@ export async function saveOrder(
         throw new Error(`Producto con ID ${item.itemId} no encontrado.`);
       }
       const productData = productDoc.data() as Product;
-      if (productData.stock < item.quantity) {
-        throw new Error(`Stock insuficiente para ${productData.name}. Disponible: ${productData.stock}, solicitado: ${item.quantity}.`);
+      
+      // Stock check only applies to non-service products
+      if (productData.productType !== 'Servicios') {
+        if (productData.stock < item.quantity) {
+          throw new Error(`Stock insuficiente para ${productData.name}. Disponible: ${productData.stock}, solicitado: ${item.quantity}.`);
+        }
       }
     }
 
@@ -50,13 +54,17 @@ export async function saveOrder(
       finalOrderId = newOrderRef.id;
     }
 
-    // 3. Update stock for all items
+    // 3. Update stock for all items that are not services
     for (const item of data.items) {
       const productRef = doc(db, 'products', item.itemId);
-      const productDoc = await transaction.get(productRef); // Re-get to ensure we have the latest version inside transaction
-      const currentStock = productDoc.data()?.stock || 0;
-      const newStock = currentStock - item.quantity;
-      transaction.update(productRef, { stock: newStock });
+      const productDoc = await transaction.get(productRef); 
+      const productData = productDoc.data() as Product;
+
+      if (productData.productType !== 'Servicios') {
+        const currentStock = productData.stock || 0;
+        const newStock = currentStock - item.quantity;
+        transaction.update(productRef, { stock: newStock });
+      }
     }
 
     // If order is completed, award points
