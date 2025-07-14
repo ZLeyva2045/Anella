@@ -20,25 +20,22 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Product } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { CustomerForm } from '@/components/shared/CustomerForm';
-
-interface PosCartItem extends Product {
-  quantity: number;
-}
+import { CompleteSaleDialog } from '@/components/shared/CompleteSaleDialog';
+import type { PosCartItem } from '@/app/admin/pos/page';
 
 export default function PosPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<PosCartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+  const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'products'), (snapshot) => {
       const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-      setProducts(productsData);
+      setProducts(productsData.filter(p => p.productType !== 'Servicios' && p.stock > 0)); // Solo mostrar productos con stock
       setLoading(false);
     });
     return () => unsub();
@@ -53,9 +50,14 @@ export default function PosPage() {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
+        if (existingItem.quantity < product.stock) {
+          return prevCart.map(item =>
+            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          );
+        } else {
+            toast({ variant: 'destructive', title: 'Stock máximo alcanzado', description: `No hay más stock disponible para ${product.name}.` });
+            return prevCart;
+        }
       }
       return [...prevCart, { ...product, quantity: 1 }];
     });
@@ -65,7 +67,16 @@ export default function PosPage() {
     if (newQuantity <= 0) {
       removeFromCart(productId);
     } else {
-      setCart(cart => cart.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item));
+      setCart(cart => cart.map(item => {
+        if(item.id === productId) {
+          if(newQuantity > item.stock) {
+            toast({ variant: 'destructive', title: 'Stock insuficiente', description: `Solo hay ${item.stock} unidades de ${item.name}.` });
+            return { ...item, quantity: item.stock };
+          }
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
+      }));
     }
   };
 
@@ -77,20 +88,8 @@ export default function PosPage() {
     setCart([]);
   };
 
-  const subtotal = useMemo(() => cart.reduce((acc, item) => acc + item.price * item.quantity, 0), [cart]);
-  const igv = useMemo(() => subtotal * 0.18, [subtotal]);
-  const total = useMemo(() => subtotal + igv, [subtotal, igv]);
+  const total = useMemo(() => cart.reduce((acc, item) => acc + item.price * item.quantity, 0), [cart]);
 
-  const handleCompleteSale = () => {
-    // In a real app, this would integrate with a payment gateway,
-    // create an order in Firestore, and update stock.
-    toast({
-      title: 'Venta Completada',
-      description: `Venta por un total de S/${total.toFixed(2)} registrada.`,
-    });
-    clearCart();
-  };
-  
   const handleCreateOrder = () => {
     if (cart.length === 0) {
       toast({
@@ -102,8 +101,18 @@ export default function PosPage() {
     }
     // Guardar en localStorage y redirigir
     localStorage.setItem('pendingOrderCart', JSON.stringify(cart));
-    router.push('/sales/orders/create'); // Asumiendo que esta será la ruta para crear pedidos
+    router.push('/sales/orders/create');
   };
+
+  const handleSaleSuccess = () => {
+    clearCart();
+    setIsSaleDialogOpen(false);
+    toast({
+      title: 'Venta Completada',
+      description: 'La venta ha sido registrada y el stock actualizado.',
+    });
+  }
+
 
   return (
     <>
@@ -165,13 +174,6 @@ export default function PosPage() {
                           </Button>
                       </CardHeader>
                       <CardContent className="flex-1 p-2 min-h-0">
-                        <div className="px-2 pb-2">
-                           <Button variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
-                            <UserPlus className="mr-2 h-4 w-4" />
-                            Añadir / Buscar Cliente
-                          </Button>
-                        </div>
-                        <Separator className="mb-2"/>
                         <ScrollArea className="h-full">
                               <div className="space-y-2 p-2">
                                   {cart.length === 0 ? (
@@ -201,15 +203,13 @@ export default function PosPage() {
                       </CardContent>
                       <Separator />
                       <CardFooter className="flex-col p-4 space-y-2">
-                          <div className="w-full flex justify-between text-sm"><span>Subtotal</span><span>S/{subtotal.toFixed(2)}</span></div>
-                          <div className="w-full flex justify-between text-sm"><span>IGV (18%)</span><span>S/{igv.toFixed(2)}</span></div>
                           <div className="w-full flex justify-between text-lg font-bold pt-2 border-t"><span>Total</span><span>S/{total.toFixed(2)}</span></div>
                           <div className="grid grid-cols-2 gap-2 w-full mt-2">
                             <Button size="lg" disabled={cart.length === 0} onClick={handleCreateOrder} variant="outline">
                                 <ClipboardCheck className="mr-2" />
                                 Crear Pedido
                             </Button>
-                            <Button size="lg" disabled={cart.length === 0} onClick={handleCompleteSale}>
+                            <Button size="lg" disabled={cart.length === 0} onClick={() => setIsSaleDialogOpen(true)}>
                                 <PlusCircle className="mr-2" />
                                 Completar Venta
                             </Button>
@@ -219,9 +219,12 @@ export default function PosPage() {
               </div>
           </div>
       </div>
-      <CustomerForm
-        isOpen={isCustomerFormOpen}
-        setIsOpen={setIsCustomerFormOpen}
+      <CompleteSaleDialog
+        isOpen={isSaleDialogOpen}
+        setIsOpen={setIsSaleDialogOpen}
+        cartItems={cart}
+        totalAmount={total}
+        onSaleSuccess={handleSaleSuccess}
       />
     </>
   );
