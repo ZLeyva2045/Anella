@@ -156,6 +156,7 @@ export default function AdminProductsPage() {
                       <span className="sr-only">Imagen</span>
                     </TableHead>
                     <TableHead>Nombre</TableHead>
+                    <TableHead className="hidden md:table-cell">Tipo</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead className="hidden md:table-cell">Costo</TableHead>
                     <TableHead className="hidden md:table-cell">Precio</TableHead>
@@ -180,6 +181,9 @@ export default function AdminProductsPage() {
                             />
                           </TableCell>
                           <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {product.productType || 'N/A'}
+                          </TableCell>
                           <TableCell>
                             <Badge variant={product.stock > 10 ? "secondary" : "outline"}
                              className={cn(product.stock <= 5 && 'bg-destructive/20 border-destructive/50 text-destructive-foreground')}>

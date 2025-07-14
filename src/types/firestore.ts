@@ -1,6 +1,17 @@
 // src/types/firestore.ts
 import type { Timestamp } from 'firebase/firestore';
 
+export const productTypes = [
+  'Bienes',
+  'Consumibles',
+  'Materiales',
+  'Empaques',
+  'Servicios',
+] as const;
+
+export type ProductType = (typeof productTypes)[number];
+
+
 /**
  * Representa un producto en la colección 'products' de Firestore.
  * Esto funciona como el inventario base.
@@ -19,6 +30,7 @@ export interface Product {
   stock: number; // Cantidad en inventario
   supplier?: string; // Proveedor del producto (opcional)
   isPersonalizable: boolean;
+  productType?: ProductType;
 }
 
 /**

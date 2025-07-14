@@ -26,10 +26,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Category } from '@/types/firestore';
+import { productTypes } from '@/types/firestore';
 import { saveProduct, addCategory } from '@/services/productService';
 import { Loader2, ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -40,6 +42,7 @@ const productSchema = z.object({
   costPrice: z.coerce.number().min(0, 'El costo no puede ser negativo.').optional(),
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
+  productType: z.enum(productTypes, { required_error: 'Debes seleccionar un tipo de producto.' }),
   images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
   stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.'),
   supplier: z.string().optional(),
@@ -77,6 +80,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       costPrice: 0,
       price: 0,
       category: '',
+      productType: 'Bienes',
       images: [''],
       stock: 0,
       supplier: '',
@@ -96,6 +100,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         costPrice: 0,
         price: 0,
         category: '',
+        productType: 'Bienes',
         images: [''],
         stock: 0,
         supplier: '',
@@ -107,7 +112,9 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     setLoading(true);
 
     try {
-      await saveProduct(product?.id, data);
+      // Omit `isPersonalizable` as it's no longer in the form for individual products
+      const { ...productData } = data;
+      await saveProduct(product?.id, productData as any);
       
       toast({
         title: `Producto ${product ? 'actualizado' : 'creado'}`,
@@ -189,48 +196,72 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Categoría</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoría</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                            {field.value ? categories.find(c => c.name === field.value)?.name : "Selecciona una categoría"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command onKeyDown={(e) => {
+                          if (e.key === 'Enter' && (e.target as HTMLInputElement).value && !categories.some(c => c.name.toLowerCase() === (e.target as HTMLInputElement).value.toLowerCase())) {
+                            e.preventDefault();
+                            handleCreateCategory((e.target as HTMLInputElement).value);
+                            (document.activeElement as HTMLElement)?.blur();
+                          }
+                        }}>
+                          <CommandInput placeholder="Buscar o crear categoría..." />
+                          <CommandList>
+                            <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
+                            <CommandGroup>
+                              {categories.map(cat => (
+                                <CommandItem key={cat.id} value={cat.name} onSelect={() => form.setValue("category", cat.name)}>
+                                  <Check className={cn("mr-2 h-4 w-4", cat.name === field.value ? "opacity-100" : "opacity-0")} />
+                                  {cat.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                  control={form.control}
+                  name="productType"
+                  render={({ field }) => (
+                  <FormItem>
+                      <FormLabel>Tipo de Producto</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
-                          {field.value ? categories.find(c => c.name === field.value)?.name : "Selecciona una categoría"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
+                          <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un tipo" />
+                          </SelectTrigger>
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                      <Command onKeyDown={(e) => {
-                        if (e.key === 'Enter' && (e.target as HTMLInputElement).value && !categories.some(c => c.name.toLowerCase() === (e.target as HTMLInputElement).value.toLowerCase())) {
-                          e.preventDefault();
-                          handleCreateCategory((e.target as HTMLInputElement).value);
-                          (document.activeElement as HTMLElement)?.blur();
-                        }
-                      }}>
-                        <CommandInput placeholder="Buscar o crear categoría..." />
-                        <CommandList>
-                          <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
-                          <CommandGroup>
-                            {categories.map(cat => (
-                              <CommandItem key={cat.id} value={cat.name} onSelect={() => form.setValue("category", cat.name)}>
-                                <Check className={cn("mr-2 h-4 w-4", cat.name === field.value ? "opacity-100" : "opacity-0")} />
-                                {cat.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      <SelectContent>
+                          {productTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                      </SelectContent>
+                      </Select>
+                      <FormMessage />
+                  </FormItem>
+                  )}
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
