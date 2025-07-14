@@ -31,7 +31,7 @@ import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
 import { collection, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search } from 'lucide-react';
+import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search, ChevronsUpDown, Check } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
 
@@ -73,6 +73,7 @@ export default function CreateOrderPage() {
   const [loading, setLoading] = useState(false);
   const [inventory, setInventory] = useState<Product[]>([]);
   const [searchPopoverOpen, setSearchPopoverOpen] = useState(false);
+  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
 
 
   const { toast } = useToast();
@@ -309,30 +310,62 @@ export default function CreateOrderPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <FormField
-                            control={form.control}
-                            name="customer.id"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Seleccionar Cliente</FormLabel>
-                                <Select onValueChange={(value) => {
-                                    const customer = customers.find(c => c.id === value);
-                                    if(customer) {
-                                      setSelectedCustomer(customer);
-                                      field.onChange(value);
-                                    }
-                                }} value={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Busca o selecciona un cliente" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
+                          control={form.control}
+                          name="customer.id"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Seleccionar Cliente</FormLabel>
+                               <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
+                                    >
+                                      {field.value
+                                        ? customers.find((customer) => customer.id === field.value)?.name
+                                        : "Busca o selecciona un cliente"}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                  <Command>
+                                    <CommandInput placeholder="Buscar cliente por nombre o email..." />
+                                     <CommandList>
+                                        <CommandEmpty>No se encontró el cliente.</CommandEmpty>
+                                        <CommandGroup>
+                                          {customers.map((customer) => (
+                                            <CommandItem
+                                              value={`${customer.name} ${customer.email}`}
+                                              key={customer.id}
+                                              onSelect={() => {
+                                                field.onChange(customer.id);
+                                                setSelectedCustomer(customer);
+                                                setCustomerPopoverOpen(false);
+                                              }}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  customer.id === field.value ? "opacity-100" : "opacity-0"
+                                                )}
+                                              />
+                                              <div>
+                                                <p>{customer.name}</p>
+                                                <p className="text-xs text-muted-foreground">{customer.email}</p>
+                                              </div>
+                                            </CommandItem>
+                                          ))}
+                                        </CommandGroup>
+                                     </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                          <Button variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
                             <UserPlus className="mr-2 h-4 w-4" />
