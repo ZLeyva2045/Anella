@@ -168,7 +168,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
           <DialogDescription>Completa la información del producto. Haz clic en guardar cuando termines.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
