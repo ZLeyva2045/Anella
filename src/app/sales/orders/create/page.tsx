@@ -330,7 +330,7 @@ export default function CreateOrderPage() {
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onInteractOutside={(e) => e.preventDefault()}>
                                   <Command>
                                     <CommandInput placeholder="Buscar cliente por nombre o email..." />
                                      <CommandList>
@@ -341,13 +341,6 @@ export default function CreateOrderPage() {
                                               value={`${customer.name} ${customer.email}`}
                                               key={customer.id}
                                               onSelect={() => {
-                                                field.onChange(customer.id);
-                                                setSelectedCustomer(customer);
-                                                setCustomerPopoverOpen(false);
-                                              }}
-                                              onMouseDown={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
                                                 field.onChange(customer.id);
                                                 setSelectedCustomer(customer);
                                                 setCustomerPopoverOpen(false);

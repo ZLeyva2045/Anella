@@ -188,7 +188,7 @@ export function CompleteSaleDialog({
                             </Button>
                         </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onInteractOutside={(e) => e.preventDefault()}>
                           <Command>
                             <CommandInput placeholder="Buscar cliente..." />
                             <CommandList>
@@ -199,12 +199,6 @@ export function CompleteSaleDialog({
                                       value={`${customer.name} ${customer.email}`}
                                       key={customer.id}
                                       onSelect={() => {
-                                        form.setValue("customerId", customer.id);
-                                        setCustomerPopoverOpen(false);
-                                      }}
-                                      onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
                                         form.setValue("customerId", customer.id);
                                         setCustomerPopoverOpen(false);
                                       }}
