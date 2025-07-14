@@ -196,12 +196,18 @@ export function CompleteSaleDialog({
                                 <CommandGroup>
                                 {customers.map((customer) => (
                                     <CommandItem
-                                    value={`${customer.name} ${customer.email}`}
-                                    key={customer.id}
-                                    onSelect={() => {
-                                        form.setValue("customerId", customer.id)
-                                        setCustomerPopoverOpen(false)
-                                    }}
+                                      value={`${customer.name} ${customer.email}`}
+                                      key={customer.id}
+                                      onSelect={() => {
+                                        form.setValue("customerId", customer.id);
+                                        setCustomerPopoverOpen(false);
+                                      }}
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        form.setValue("customerId", customer.id);
+                                        setCustomerPopoverOpen(false);
+                                      }}
                                     >
                                     <Check
                                         className={cn(

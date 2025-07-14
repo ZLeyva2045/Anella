@@ -345,6 +345,13 @@ export default function CreateOrderPage() {
                                                 setSelectedCustomer(customer);
                                                 setCustomerPopoverOpen(false);
                                               }}
+                                              onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                field.onChange(customer.id);
+                                                setSelectedCustomer(customer);
+                                                setCustomerPopoverOpen(false);
+                                              }}
                                             >
                                               <Check
                                                 className={cn(
