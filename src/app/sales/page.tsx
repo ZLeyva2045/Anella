@@ -50,15 +50,17 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
 
         const q = query(
             collection(db, "orders"), 
-            where("sellerId", "==", sellerId),
-            orderBy("createdAt", "desc"), 
+            orderBy("createdAt", "desc"),
             limit(5)
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+            const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)).filter(order => order.sellerId === sellerId);
             setOrders(ordersData);
             setLoading(false);
+        }, (error) => {
+          console.error(error);
+          setLoading(false);
         });
 
         return () => unsubscribe();
@@ -66,9 +68,9 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
     
      const getStatusVariant = (status: Order['status']) => {
         switch (status) {
-        case 'delivered': return 'default';
+        case 'completed': return 'default';
         case 'processing': return 'secondary';
-        case 'shipped': return 'outline';
+        case 'finishing': return 'outline';
         case 'cancelled': return 'destructive';
         case 'pending': return 'secondary';
         default: return 'outline';
