@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -24,19 +24,23 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Category } from '@/types/firestore';
 import { productTypes } from '@/types/firestore';
 import { saveProduct, addCategory } from '@/services/productService';
-import { Loader2, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, ChevronsUpDown, Check, Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Calendar } from '../ui/calendar';
 
-const productSchema = z.object({
+const baseProductSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres.'),
   costPrice: z.coerce.number().min(0, 'El costo no puede ser negativo.').optional(),
@@ -44,9 +48,29 @@ const productSchema = z.object({
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
   productType: z.enum(productTypes, { required_error: 'Debes seleccionar un tipo de producto.' }),
   images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
-  stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.'),
+  stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.').optional(),
   supplier: z.string().optional(),
+  expirationDate: z.date().optional(),
+  isBreakfast: z.boolean().default(false),
 });
+
+const productSchema = baseProductSchema.superRefine((data, ctx) => {
+    // Si el tipo es 'Servicios', el stock no es requerido.
+    if (data.productType === 'Servicios') return;
+
+    // Si es 'Consumibles' y está marcado como "Desayuno", el stock es opcional.
+    if (data.productType === 'Consumibles' && data.isBreakfast) return;
+    
+    // En todos los demás casos, el stock es obligatorio.
+    if (data.stock === undefined || data.stock === null || isNaN(data.stock)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El stock es obligatorio para este tipo de producto.',
+            path: ['stock'],
+        });
+    }
+});
+
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
@@ -84,38 +108,34 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       images: [''],
       stock: 0,
       supplier: '',
+      expirationDate: undefined,
+      isBreakfast: false
     },
   });
+
+  const productType = useWatch({ control: form.control, name: 'productType' });
+  const isBreakfast = useWatch({ control: form.control, name: 'isBreakfast' });
 
   useEffect(() => {
     if (product) {
       form.reset({
         ...product,
         images: product.images.length > 0 ? product.images : [''],
+        expirationDate: product.expirationDate ? (product.expirationDate as any).toDate() : undefined,
       });
     } else {
       form.reset({
-        name: '',
-        description: '',
-        costPrice: 0,
-        price: 0,
-        category: '',
-        productType: 'Bienes',
-        images: [''],
-        stock: 0,
-        supplier: '',
+        name: '', description: '', costPrice: 0, price: 0, category: '',
+        productType: 'Bienes', images: [''], stock: 0, supplier: '',
+        expirationDate: undefined, isBreakfast: false
       });
     }
   }, [product, form, isOpen]);
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
-
     try {
-      // Omit `isPersonalizable` as it's no longer in the form for individual products
-      const { ...productData } = data;
-      await saveProduct(product?.id, productData as any);
-      
+      await saveProduct(product?.id, data);
       toast({
         title: `Producto ${product ? 'actualizado' : 'creado'}`,
         description: `El producto "${data.name}" se ha guardado correctamente.`,
@@ -148,7 +168,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
           <DialogDescription>Completa la información del producto. Haz clic en guardar cuando termines.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -193,6 +213,67 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                 </FormItem>
                 )}
             />
+            
+            {productType === 'Consumibles' && (
+              <div className="space-y-4 rounded-md border p-4">
+                 <FormField
+                    control={form.control}
+                    name="expirationDate"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                        <FormLabel>Fecha de Vencimiento</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <FormControl>
+                                <Button
+                                variant={"outline"}
+                                className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                                disabled={isBreakfast}
+                                >
+                                {field.value ? (
+                                    format(field.value, "PPP", { locale: es })
+                                ) : (
+                                    <span>Selecciona una fecha</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                            </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date < new Date()}
+                                initialFocus
+                                locale={es}
+                            />
+                            </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                 />
+                 <FormField
+                    control={form.control}
+                    name="isBreakfast"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                            <FormControl>
+                                <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                                <FormLabel>Desayuno o similar (omite fecha)</FormLabel>
+                            </div>
+                        </FormItem>
+                    )}
+                 />
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -262,17 +343,26 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
             />
             
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="stock"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stock</FormLabel>
-                    <FormControl><Input type="number" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {productType !== 'Servicios' && (
+                <FormField
+                  control={form.control}
+                  name="stock"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Stock</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          value={field.value ?? ''}
+                          onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
                <FormField
                 control={form.control}
                 name="supplier"
