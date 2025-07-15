@@ -128,7 +128,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     try {
       let imageUrls = data.images || [];
       
-      if (!imageFile && imageUrls.length === 0) {
+      if (!imageFile && (!product || !product.images || product.images.length === 0)) {
         toast({ variant: "destructive", title: "Error", description: "Debes añadir al menos una imagen." });
         setLoading(false);
         return;
@@ -139,7 +139,13 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         imageUrls = [uploadedUrl];
       }
 
-      await saveProduct(product?.id, { ...data, images: imageUrls });
+      const finalData = { ...data, images: imageUrls };
+      if (finalData.isBreakfast) {
+        finalData.expirationDate = undefined;
+      }
+      
+      await saveProduct(product?.id, finalData);
+      
       toast({
         title: `Producto ${product ? 'actualizado' : 'creado'}`,
         description: `El producto "${data.name}" se ha guardado correctamente.`,
@@ -248,7 +254,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
-                                disabled={(date) => date < new Date()}
+                                disabled={(date) => date < new Date() || !!isBreakfast}
                                 initialFocus
                                 locale={es}
                             />
