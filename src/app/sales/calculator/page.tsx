@@ -22,6 +22,7 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Product } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export interface CalculatorCartItem extends Product {
   quantity: number;
