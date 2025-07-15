@@ -47,7 +47,7 @@ const baseProductSchema = z.object({
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
   productType: z.enum(productTypes, { required_error: 'Debes seleccionar un tipo de producto.' }),
-  images: z.array(z.string()).optional(), // Imagen opcional en el schema
+  images: z.array(z.string()).optional(),
   stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.').optional(),
   supplier: z.string().optional(),
   expirationDate: z.date().optional(),
@@ -119,7 +119,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
           expirationDate: undefined, isBreakfast: false
         });
       }
-      setImageFile(null); // Reset file input on open
+      setImageFile(null);
     }
   }, [product, form, isOpen]);
 
@@ -127,8 +127,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     setLoading(true);
     try {
       let imageUrls = data.images || [];
-
-      // Validar si hay imagen
+      
       if (!imageFile && imageUrls.length === 0) {
         toast({ variant: "destructive", title: "Error", description: "Debes añadir al menos una imagen." });
         setLoading(false);
@@ -150,7 +149,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
       console.error('Error saving product: ', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
+        title: 'Error al guardar',
         description: 'No se pudo guardar el producto. Revisa la consola para más detalles.',
       });
     } finally {
