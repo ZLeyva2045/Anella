@@ -66,20 +66,19 @@ export default function PosPage() {
   const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
-    } else {
-      setCart(cart => cart.map(item => {
+      return;
+    }
+    setCart(cart => cart.map(item => {
         if(item.id === productId) {
-          if(newQuantity > item.stock) {
-            toast({ variant: 'destructive', title: 'Stock insuficiente', description: `Solo hay ${item.stock} unidades de ${item.name}.` });
-            return { ...item, quantity: item.stock };
-          }
-          return { ...item, quantity: newQuantity };
+          // Clamp quantity to stock without showing a toast here to avoid render-cycle updates
+          const quantity = Math.min(newQuantity, item.stock);
+          return { ...item, quantity };
         }
         return item;
-      }));
-    }
+      })
+    );
   };
-
+  
   const removeFromCart = (productId: string) => {
     setCart(cart => cart.filter(item => item.id !== productId));
   };
