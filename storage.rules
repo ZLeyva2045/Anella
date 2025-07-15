@@ -1,21 +1,12 @@
+
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // Función para verificar si un usuario tiene un rol de administrador
-    function isAdmin() {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['manager', 'designer'];
-    }
-
-    // Permite que cualquiera lea archivos (necesario para mostrar imágenes de productos)
+    // Allow public read access for all files
     match /{allPaths=**} {
       allow read;
-    }
-
-    // Solo los administradores pueden escribir (subir, actualizar, eliminar) en la carpeta de productos.
-    match /products/{allPaths=**} {
-      allow write: if isAdmin();
+      allow write: if request.auth != null;
     }
   }
 }
