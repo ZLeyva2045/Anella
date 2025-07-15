@@ -34,12 +34,11 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { addTheme } from '@/services/productService';
+import { addTheme, uploadImage } from '@/services/productService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const giftProductSchema = z.object({
   productId: z.string().min(1),
-  name: z.string(),
   quantity: z.coerce.number().min(1),
 });
 
@@ -48,7 +47,7 @@ const giftSchema = z.object({
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres.'),
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   themes: z.array(z.string()).min(1, 'Debes seleccionar al menos una temática.'),
-  images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
+  images: z.array(z.string()).min(1, 'Debes añadir al menos una imagen.'),
   isPersonalizable: z.boolean().default(false),
   isNew: z.boolean().default(true),
   showInWebsite: z.boolean().default(true),
@@ -67,6 +66,7 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
   const [loading, setLoading] = useState(false);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [inventory, setInventory] = useState<Product[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
       description: '',
       price: 0,
       themes: [],
-      images: [''],
+      images: [],
       isPersonalizable: false,
       isNew: true,
       showInWebsite: true,
@@ -100,16 +100,20 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
   });
 
   useEffect(() => {
-    if (gift) {
-      form.reset({
-        ...gift,
-        showInWebsite: gift.showInWebsite ?? true,
-      });
-    } else {
-      form.reset({
-        name: '', description: '', price: 0, 
-        themes: [], images: [''], isPersonalizable: false, isNew: true, showInWebsite: true, products: [],
-      });
+    if (isOpen) {
+      if (gift) {
+        form.reset({
+          ...gift,
+          images: gift.images || [],
+          showInWebsite: gift.showInWebsite ?? true,
+        });
+      } else {
+        form.reset({
+          name: '', description: '', price: 0, 
+          themes: [], images: [], isPersonalizable: false, isNew: true, showInWebsite: true, products: [],
+        });
+      }
+      setImageFile(null); // Reset file input on open
     }
   }, [gift, form, isOpen]);
   
@@ -125,7 +129,19 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
   const onSubmit = async (data: GiftFormValues) => {
     setLoading(true);
     try {
-      await saveGift(gift?.id, data);
+      let imageUrls = data.images;
+      if (imageFile) {
+        const uploadedUrl = await uploadImage(imageFile, 'gifts');
+        imageUrls = [uploadedUrl]; // Replace with new image
+      }
+
+      if (imageUrls.length === 0) {
+        toast({ variant: "destructive", title: "Error", description: "Por favor, sube una imagen." });
+        setLoading(false);
+        return;
+      }
+
+      await saveGift(gift?.id, { ...data, images: imageUrls });
       toast({
         title: `Regalo ${gift ? 'actualizado' : 'creado'}`,
         description: `El regalo "${data.name}" se ha guardado correctamente.`,
@@ -145,7 +161,7 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
 
   const addProductToGift = () => {
     if (inventory.length > 0) {
-      append({ productId: inventory[0].id, name: inventory[0].name, quantity: 1 });
+      append({ productId: inventory[0].id, quantity: 1 });
     }
   }
 
@@ -215,9 +231,18 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
               )} />
             </div>
             
-            <FormField name="images.0" control={form.control} render={({ field }) => (
-              <FormItem><FormLabel>URL de la Imagen Principal</FormLabel><FormControl><Input placeholder="https://ejemplo.com/imagen.png" {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
+            <FormItem>
+              <FormLabel>Imagen Principal del Regalo</FormLabel>
+              <FormControl>
+                 <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+                />
+              </FormControl>
+              <FormMessage>{form.formState.errors.images?.message}</FormMessage>
+            </FormItem>
+
 
             <div className="space-y-2">
                 <h3 className="text-sm font-medium">Productos en este Regalo</h3>
@@ -226,8 +251,7 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
                         <Select
                             value={field.productId}
                             onValueChange={(productId) => {
-                                const product = inventory.find(p => p.id === productId);
-                                update(index, { productId: productId, name: product?.name || '', quantity: field.quantity });
+                                update(index, { productId: productId, quantity: field.quantity });
                             }}
                         >
                             <SelectTrigger>

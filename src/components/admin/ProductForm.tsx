@@ -28,7 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Category } from '@/types/firestore';
 import { productTypes } from '@/types/firestore';
-import { saveProduct, addCategory } from '@/services/productService';
+import { saveProduct, addCategory, uploadImage } from '@/services/productService';
 import { Loader2, ChevronsUpDown, Check, Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -47,7 +47,7 @@ const baseProductSchema = z.object({
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
   productType: z.enum(productTypes, { required_error: 'Debes seleccionar un tipo de producto.' }),
-  images: z.array(z.string().url('Debe ser una URL válida.')).min(1, 'Debes añadir al menos una imagen.'),
+  images: z.array(z.string()).min(1, 'Debes añadir al menos una imagen.'),
   stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.').optional(),
   supplier: z.string().optional(),
   expirationDate: z.date().optional(),
@@ -55,13 +55,9 @@ const baseProductSchema = z.object({
 });
 
 const productSchema = baseProductSchema.superRefine((data, ctx) => {
-    // Si el tipo es 'Servicios', el stock no es requerido.
     if (data.productType === 'Servicios') return;
-
-    // Si es 'Consumibles' y está marcado como "Desayuno", el stock es opcional.
     if (data.productType === 'Consumibles' && data.isBreakfast) return;
     
-    // En todos los demás casos, el stock es obligatorio.
     if (data.stock === undefined || data.stock === null || isNaN(data.stock)) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -70,7 +66,6 @@ const productSchema = baseProductSchema.superRefine((data, ctx) => {
         });
     }
 });
-
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
@@ -83,6 +78,7 @@ interface ProductFormProps {
 export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -99,17 +95,9 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      costPrice: 0,
-      price: 0,
-      category: '',
-      productType: 'Bienes',
-      images: [''],
-      stock: 0,
-      supplier: '',
-      expirationDate: undefined,
-      isBreakfast: false
+      name: '', description: '', costPrice: 0, price: 0, category: '',
+      productType: 'Bienes', images: [], stock: 0, supplier: '',
+      expirationDate: undefined, isBreakfast: false
     },
   });
 
@@ -117,25 +105,40 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const isBreakfast = useWatch({ control: form.control, name: 'isBreakfast' });
 
   useEffect(() => {
-    if (product) {
-      form.reset({
-        ...product,
-        images: product.images.length > 0 ? product.images : [''],
-        expirationDate: product.expirationDate ? (product.expirationDate as any).toDate() : undefined,
-      });
-    } else {
-      form.reset({
-        name: '', description: '', costPrice: 0, price: 0, category: '',
-        productType: 'Bienes', images: [''], stock: 0, supplier: '',
-        expirationDate: undefined, isBreakfast: false
-      });
+    if (isOpen) {
+      if (product) {
+        form.reset({
+          ...product,
+          images: product.images || [],
+          expirationDate: product.expirationDate ? (product.expirationDate as any).toDate() : undefined,
+        });
+      } else {
+        form.reset({
+          name: '', description: '', costPrice: 0, price: 0, category: '',
+          productType: 'Bienes', images: [], stock: 0, supplier: '',
+          expirationDate: undefined, isBreakfast: false
+        });
+      }
+      setImageFile(null); // Reset file input on open
     }
   }, [product, form, isOpen]);
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
     try {
-      await saveProduct(product?.id, data);
+      let imageUrls = data.images;
+      if (imageFile) {
+        const uploadedUrl = await uploadImage(imageFile, 'products');
+        imageUrls = [uploadedUrl];
+      }
+      
+      if (imageUrls.length === 0) {
+        toast({ variant: "destructive", title: "Error", description: "Por favor, sube una imagen." });
+        setLoading(false);
+        return;
+      }
+
+      await saveProduct(product?.id, { ...data, images: imageUrls });
       toast({
         title: `Producto ${product ? 'actualizado' : 'creado'}`,
         description: `El producto "${data.name}" se ha guardado correctamente.`,
@@ -376,19 +379,17 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="images.0"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL de la Imagen Principal</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://ejemplo.com/imagen.png" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormItem>
+              <FormLabel>Imagen Principal</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+                />
+              </FormControl>
+              <FormMessage>{form.formState.errors.images?.message}</FormMessage>
+            </FormItem>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>

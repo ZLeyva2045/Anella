@@ -19,7 +19,7 @@ type CategoryData = Omit<Category, 'id'>;
 type ThemeData = Omit<Theme, 'id'>;
 
 export async function uploadImage(file: File, path: string): Promise<string> {
-  const storageRef = ref(storage, `${path}/${file.name}`);
+  const storageRef = ref(storage, `${path}/${Date.now()}-${file.name}`);
   const snapshot = await uploadBytes(storageRef, file);
   const downloadURL = await getDownloadURL(snapshot.ref);
   return downloadURL;

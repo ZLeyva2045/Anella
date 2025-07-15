@@ -59,7 +59,6 @@ export interface Gift {
  */
 export interface GiftProduct {
   productId: string; // ID del producto del inventario
-  name: string; // Nombre del producto para referencia
   quantity: number; // Cantidad de este producto en el regalo
 }
 
