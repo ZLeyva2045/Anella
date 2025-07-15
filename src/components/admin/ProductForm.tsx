@@ -47,7 +47,7 @@ const baseProductSchema = z.object({
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
   productType: z.enum(productTypes, { required_error: 'Debes seleccionar un tipo de producto.' }),
-  images: z.array(z.string()).min(1, 'Debes añadir al menos una imagen.'),
+  images: z.array(z.string()).optional(), // Imagen opcional en el schema
   stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.').optional(),
   supplier: z.string().optional(),
   expirationDate: z.date().optional(),
@@ -126,16 +126,18 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
     try {
-      let imageUrls = data.images;
+      let imageUrls = data.images || [];
+
+      // Validar si hay imagen
+      if (!imageFile && imageUrls.length === 0) {
+        toast({ variant: "destructive", title: "Error", description: "Debes añadir al menos una imagen." });
+        setLoading(false);
+        return;
+      }
+      
       if (imageFile) {
         const uploadedUrl = await uploadImage(imageFile, 'products');
         imageUrls = [uploadedUrl];
-      }
-      
-      if (imageUrls.length === 0) {
-        toast({ variant: "destructive", title: "Error", description: "Por favor, sube una imagen." });
-        setLoading(false);
-        return;
       }
 
       await saveProduct(product?.id, { ...data, images: imageUrls });

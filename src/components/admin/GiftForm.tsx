@@ -47,7 +47,7 @@ const giftSchema = z.object({
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres.'),
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   themes: z.array(z.string()).min(1, 'Debes seleccionar al menos una temática.'),
-  images: z.array(z.string()).min(1, 'Debes añadir al menos una imagen.'),
+  images: z.array(z.string()).optional(), // Imagen opcional en el schema
   isPersonalizable: z.boolean().default(false),
   isNew: z.boolean().default(true),
   showInWebsite: z.boolean().default(true),
@@ -129,16 +129,18 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
   const onSubmit = async (data: GiftFormValues) => {
     setLoading(true);
     try {
-      let imageUrls = data.images;
+      let imageUrls = data.images || [];
+      
+      // Validar si hay imagen
+      if (!imageFile && imageUrls.length === 0) {
+        toast({ variant: "destructive", title: "Error", description: "Debes añadir al menos una imagen." });
+        setLoading(false);
+        return;
+      }
+      
       if (imageFile) {
         const uploadedUrl = await uploadImage(imageFile, 'gifts');
         imageUrls = [uploadedUrl]; // Replace with new image
-      }
-
-      if (imageUrls.length === 0) {
-        toast({ variant: "destructive", title: "Error", description: "Por favor, sube una imagen." });
-        setLoading(false);
-        return;
       }
 
       await saveGift(gift?.id, { ...data, images: imageUrls });
