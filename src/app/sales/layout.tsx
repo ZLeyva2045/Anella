@@ -8,6 +8,7 @@ import {
   Users,
   Settings,
   Store,
+  Calculator,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -31,7 +32,7 @@ const salesNavItems: NavItem[] = [
   { href: '/sales/pos', label: 'POS', icon: Store },
   { href: '/sales/orders', label: 'Pedidos', icon: ShoppingCart },
   { href: '/sales/customers', label: 'Clientes', icon: Users },
-  { href: '/products', label: 'Catálogo', icon: Package },
+  { href: '/sales/calculator', label: 'Calculadora', icon: Calculator },
 ];
 
 const SalesNav = () => {
@@ -70,6 +71,15 @@ const SalesNav = () => {
                             tooltip={{ children: "Punto de Venta" }}
                         >
                              <Link href="/sales/pos"><Store /><span>Punto de Venta</span></Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname.startsWith('/sales/calculator')}
+                            tooltip={{ children: "Calculadora" }}
+                        >
+                             <Link href="/sales/calculator"><Calculator /><span>Calculadora</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
