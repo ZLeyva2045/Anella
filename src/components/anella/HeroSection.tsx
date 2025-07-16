@@ -48,9 +48,8 @@ export function HeroSection() {
         <Image
           src="https://placehold.co/1920x1080.png"
           alt="Mosaico de regalos personalizados"
-          layout="fill"
-          objectFit="cover"
-          className="opacity-10 animate-fade-in"
+          fill={true}
+          className="object-cover opacity-10 animate-fade-in"
           data-ai-hint="gift collage"
           priority
         />
