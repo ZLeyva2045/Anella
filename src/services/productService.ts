@@ -8,6 +8,8 @@ import {
   query,
   where,
   serverTimestamp,
+  WriteBatch,
+  writeBatch,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
@@ -27,15 +29,19 @@ export async function uploadImage(file: File, path: string): Promise<string> {
 
 export async function saveProduct(
   productId: string | undefined,
-  data: Partial<ProductData> // Partial because some fields might not be sent every time
+  data: Partial<ProductData>
 ) {
-  // Clean up undefined fields before sending to Firestore
-  const cleanData = Object.fromEntries(
-    Object.entries(data).filter(([_, v]) => v !== undefined)
-  );
+  // Clean up data before sending to Firestore
+  const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+    // Remove keys with undefined, null, or empty string values, except for description
+    if (value !== undefined && value !== null && value !== '') {
+      (acc as any)[key] = value;
+    }
+    return acc;
+  }, {} as Partial<ProductData>);
 
   if (productId) {
-    // Actualizar producto existente
+    // Update existing product
     const productRef = doc(db, 'products', productId);
     await setDoc(productRef, {
       ...cleanData,
@@ -43,7 +49,7 @@ export async function saveProduct(
     }, { merge: true });
     return productId;
   } else {
-    // Crear nuevo producto
+    // Create new product
     const newProductData = {
       ...cleanData,
       createdAt: serverTimestamp(),
