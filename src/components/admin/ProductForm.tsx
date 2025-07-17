@@ -1,7 +1,7 @@
 // src/components/admin/ProductForm.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,9 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import type { Product, Category } from '@/types/firestore';
 import { productTypes } from '@/types/firestore';
 import { saveProduct, addCategory, uploadImage } from '@/services/productService';
-import { Loader2, ChevronsUpDown, Check, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, Search, Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -39,6 +38,7 @@ import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar } from '../ui/calendar';
+import { useClickAway } from 'react-use';
 
 const baseProductSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -78,8 +78,16 @@ interface ProductFormProps {
 export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  const [categorySearchQuery, setCategorySearchQuery] = useState('');
+  const [isCategoryListVisible, setIsCategoryListVisible] = useState(false);
+  const categorySearchContainerRef = useRef(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
+
+  useClickAway(categorySearchContainerRef, () => {
+    setIsCategoryListVisible(false);
+  });
 
   useEffect(() => {
     const unsubCategories = onSnapshot(collection(db, 'categories'), snapshot => {
@@ -112,16 +120,52 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
           images: product.images || [],
           expirationDate: product.expirationDate ? (product.expirationDate as any).toDate() : undefined,
         });
+        setCategorySearchQuery(product.category);
       } else {
         form.reset({
           name: '', description: '', costPrice: 0, price: 0, category: '',
           productType: 'Bienes', images: [], stock: 0, supplier: '',
           expirationDate: undefined, isBreakfast: false
         });
+        setCategorySearchQuery('');
       }
       setImageFile(null);
     }
   }, [product, form, isOpen]);
+
+  useEffect(() => {
+    if (categorySearchQuery.length > 0) {
+      const filtered = categories.filter(c => c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()));
+      setFilteredCategories(filtered);
+      setIsCategoryListVisible(true);
+    } else {
+      setFilteredCategories([]);
+      setIsCategoryListVisible(false);
+    }
+  }, [categorySearchQuery, categories]);
+
+  const handleSelectCategory = (category: Category) => {
+    form.setValue('category', category.name, { shouldValidate: true });
+    setCategorySearchQuery(category.name);
+    setIsCategoryListVisible(false);
+  };
+  
+  const handleCreateCategory = async (categoryName: string) => {
+    if (!categoryName.trim()) return;
+    const existing = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase().trim());
+    if (existing) {
+      handleSelectCategory(existing);
+      return;
+    };
+    
+    try {
+      const newCategoryId = await addCategory({ name: categoryName.trim() });
+      const newCategory = { id: newCategoryId, name: categoryName.trim() };
+      handleSelectCategory(newCategory);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear la categoría.' });
+    }
+  }
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
@@ -163,13 +207,6 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     }
   };
   
-  const handleCreateCategory = async (categoryName: string) => {
-    const existing = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
-    if (existing) return;
-    await addCategory({ name: categoryName });
-    form.setValue('category', categoryName);
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
@@ -312,41 +349,51 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
             <FormField
               control={form.control}
               name="category"
-              render={({ field }) => (
-                <FormItem>
+              render={() => (
+                <FormItem ref={categorySearchContainerRef}>
                   <FormLabel>Categoría</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
-                          {field.value ? categories.find(c => c.name === field.value)?.name : "Selecciona una categoría"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                      <Command onKeyDown={(e) => {
-                        if (e.key === 'Enter' && (e.target as HTMLInputElement).value && !categories.some(c => c.name.toLowerCase() === (e.target as HTMLInputElement).value.toLowerCase())) {
-                          e.preventDefault();
-                          handleCreateCategory((e.target as HTMLInputElement).value);
-                          (document.activeElement as HTMLElement)?.blur();
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar o crear categoría..."
+                      className="pl-9"
+                      value={categorySearchQuery}
+                      onChange={(e) => {
+                        setCategorySearchQuery(e.target.value);
+                        if (form.getValues('category')) {
+                          form.setValue('category', '');
                         }
-                      }}>
-                        <CommandInput placeholder="Buscar o crear categoría..." />
-                        <CommandList>
-                          <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
-                          <CommandGroup>
-                            {categories.map(cat => (
-                              <CommandItem key={cat.id} value={cat.name} onSelect={() => form.setValue("category", cat.name)}>
-                                <Check className={cn("mr-2 h-4 w-4", cat.name === field.value ? "opacity-100" : "opacity-0")} />
-                                {cat.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                      }}
+                      onFocus={() => setIsCategoryListVisible(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleCreateCategory(categorySearchQuery);
+                        }
+                      }}
+                    />
+                  </div>
+                  {isCategoryListVisible && (
+                    <div className="relative w-full">
+                       <div className="absolute z-10 w-full bg-background border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                        {filteredCategories.length > 0 ? (
+                           filteredCategories.map(cat => (
+                            <div
+                              key={cat.id}
+                              className="p-2 hover:bg-accent cursor-pointer"
+                              onClick={() => handleSelectCategory(cat)}
+                            >
+                              <p>{cat.name}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-2 text-center text-sm text-muted-foreground">
+                            No se encontraron categorías. Presiona Enter para crear una nueva.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
