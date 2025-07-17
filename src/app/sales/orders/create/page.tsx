@@ -315,7 +315,7 @@ export default function CreateOrderPage() {
                           render={({ field }) => (
                             <FormItem className="flex flex-col">
                               <FormLabel>Seleccionar Cliente</FormLabel>
-                               <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                               <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen} modal={true}>
                                 <PopoverTrigger asChild>
                                   <FormControl>
                                     <Button
@@ -330,7 +330,7 @@ export default function CreateOrderPage() {
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onInteractOutside={(e) => e.preventDefault()}>
+                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                                   <Command>
                                     <CommandInput placeholder="Buscar cliente por nombre o email..." />
                                      <CommandList>
