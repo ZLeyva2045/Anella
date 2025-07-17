@@ -2,7 +2,7 @@
 // src/components/shared/CompleteSaleDialog.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,16 +27,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import type { User, OrderItem } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
-import { Loader2, UserPlus, CheckCircle, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, UserPlus, CheckCircle, Search } from 'lucide-react';
 import { collection, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { PosCartItem } from '@/app/admin/pos/page';
 import { useAuth } from '@/hooks/useAuth';
 import { CustomerForm } from './CustomerForm';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { useClickAway } from 'react-use';
 
 
 const saleSchema = z.object({
@@ -64,12 +62,21 @@ export function CompleteSaleDialog({
   onSaleSuccess 
 }: CompleteSaleDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [customers, setCustomers] = useState<User[]>([]);
+  const [allCustomers, setAllCustomers] = useState<User[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<User[]>([]);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCustomerName, setSelectedCustomerName] = useState('');
+  const [isListVisible, setIsListVisible] = useState(false);
+  
+  const searchContainerRef = useRef(null);
+  
   const { toast } = useToast();
   const { user: sellerUser } = useAuth();
-  const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
-  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
+  
+  useClickAway(searchContainerRef, () => {
+    setIsListVisible(false);
+  });
 
   const form = useForm<SaleFormValues>({
     resolver: zodResolver(saleSchema),
@@ -83,19 +90,35 @@ export function CompleteSaleDialog({
     if (isOpen) {
         const q = query(collection(db, "users"), where('role', '==', 'customer'));
         const unsubscribe = onSnapshot(q, snapshot => {
-            setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
+            setAllCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
         });
         return () => unsubscribe();
     } else {
-        setSelectedCustomer(null);
         form.reset();
+        setSearchQuery('');
+        setSelectedCustomerName('');
+        setFilteredCustomers([]);
     }
   }, [isOpen, form]);
+  
+  useEffect(() => {
+    if (searchQuery.length > 1) {
+      const filtered = allCustomers.filter(customer =>
+        customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredCustomers(filtered);
+      setIsListVisible(true);
+    } else {
+      setFilteredCustomers([]);
+      setIsListVisible(false);
+    }
+  }, [searchQuery, allCustomers]);
+
 
   const onSubmit = async (data: SaleFormValues) => {
     setLoading(true);
     try {
-      const customer = customers.find(c => c.id === data.customerId);
+      const customer = allCustomers.find(c => c.id === data.customerId);
       if (!customer) {
         toast({ variant: 'destructive', title: 'Error', description: 'Cliente no encontrado.' });
         setLoading(false);
@@ -120,9 +143,9 @@ export function CompleteSaleDialog({
           phone: customer.phone || '',
           address: customer.address || '',
         },
-        status: 'completed', // POS sales are completed immediately
+        status: 'completed',
         paymentMethod: data.paymentMethod,
-        deliveryMethod: 'localPickup', // POS sales are local pickup
+        deliveryMethod: 'localPickup',
         deliveryDate: new Date(),
         totalAmount: totalAmount,
         pointsAwarded: false,
@@ -154,9 +177,7 @@ export function CompleteSaleDialog({
       });
       
       const newCustomer = {id: newDocRef.id, ...data} as User
-      setSelectedCustomer(newCustomer);
-      form.setValue('customerId', newCustomer.id, { shouldValidate: true });
-
+      handleSelectCustomer(newCustomer);
       toast({ title: 'Cliente añadido', description: 'El nuevo cliente ha sido creado y seleccionado.' });
       setIsCustomerFormOpen(false);
     } catch (error) {
@@ -164,6 +185,13 @@ export function CompleteSaleDialog({
        toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el cliente." });
     }
   }
+  
+  const handleSelectCustomer = (customer: User) => {
+    form.setValue('customerId', customer.id, { shouldValidate: true });
+    setSelectedCustomerName(customer.name);
+    setSearchQuery(customer.name);
+    setIsListVisible(false);
+  };
 
   return (
     <>
@@ -175,64 +203,42 @@ export function CompleteSaleDialog({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="customerId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Cliente</FormLabel>
-                    <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {selectedCustomer?.name ?? "Selecciona un cliente"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Buscar cliente..." />
-                          <CommandList>
-                            <CommandEmpty>No se encontraron clientes.</CommandEmpty>
-                            <CommandGroup>
-                              {customers.map((customer) => (
-                                <CommandItem
-                                  value={customer.name}
-                                  key={customer.id}
-                                  onSelect={() => {
-                                    form.setValue("customerId", customer.id, { shouldValidate: true });
-                                    setSelectedCustomer(customer);
-                                    setCustomerPopoverOpen(false);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      field.value === customer.id
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {customer.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
+
+              <FormItem ref={searchContainerRef}>
+                <FormLabel>Buscar Cliente</FormLabel>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Escribe para buscar..."
+                    className="pl-9"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        if(form.getValues('customerId')) {
+                           form.setValue('customerId', '');
+                           setSelectedCustomerName('');
+                        }
+                    }}
+                    onFocus={() => setIsListVisible(searchQuery.length > 1)}
+                  />
+                </div>
+                {isListVisible && filteredCustomers.length > 0 && (
+                  <div className="absolute z-10 w-[calc(100%-3rem)] bg-background border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                    {filteredCustomers.map(customer => (
+                      <div
+                        key={customer.id}
+                        className="p-2 hover:bg-accent cursor-pointer"
+                        onClick={() => handleSelectCustomer(customer)}
+                      >
+                        <p className="font-medium">{customer.name}</p>
+                        <p className="text-xs text-muted-foreground">{customer.email}</p>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              />
+                <FormMessage>{form.formState.errors.customerId?.message}</FormMessage>
+              </FormItem>
+
 
               <Button type="button" variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
                   <UserPlus className="mr-2 h-4 w-4" />

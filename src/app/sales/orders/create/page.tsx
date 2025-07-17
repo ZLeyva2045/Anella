@@ -1,8 +1,7 @@
-
 // src/app/sales/orders/create/page.tsx
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,10 +31,11 @@ import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
 import { collection, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useClickAway } from 'react-use';
+
 
 interface CartItem extends Product {
   quantity: number;
@@ -69,17 +69,24 @@ const orderSchema = z.object({
 type OrderFormValues = z.infer<typeof orderSchema>;
 
 export default function CreateOrderPage() {
-  const [customers, setCustomers] = useState<User[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
+  const [allCustomers, setAllCustomers] = useState<User[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<User[]>([]);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [inventory, setInventory] = useState<Product[]>([]);
   const [searchPopoverOpen, setSearchPopoverOpen] = useState(false);
-  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
+  
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [isCustomerListVisible, setIsCustomerListVisible] = useState(false);
+  const customerSearchContainerRef = useRef(null);
 
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
+  
+  useClickAway(customerSearchContainerRef, () => {
+    setIsCustomerListVisible(false);
+  });
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -113,6 +120,18 @@ export default function CreateOrderPage() {
     });
     setSearchPopoverOpen(false);
   }
+  
+  const handleSelectCustomer = (customer: User) => {
+    form.setValue('customer', {
+      id: customer.id,
+      name: customer.name || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      address: customer.address || '',
+    }, { shouldValidate: true });
+    setCustomerSearchQuery(customer.name);
+    setIsCustomerListVisible(false);
+  };
 
   useEffect(() => {
     // Load cart from localStorage
@@ -126,7 +145,7 @@ export default function CreateOrderPage() {
     // Load customers
     const unsubCustomers = onSnapshot(collection(db, "users"), (snapshot) => {
       const customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-      setCustomers(customersData);
+      setAllCustomers(customersData);
     });
     
     // Load inventory
@@ -141,18 +160,16 @@ export default function CreateOrderPage() {
   }, [form]);
   
   useEffect(() => {
-    if (selectedCustomer) {
-      form.setValue('customer', {
-        id: selectedCustomer.id,
-        name: selectedCustomer.name || '',
-        email: selectedCustomer.email || '',
-        phone: selectedCustomer.phone || '',
-        address: selectedCustomer.address || '',
-      });
+    if (customerSearchQuery.length > 1) {
+      const filtered = allCustomers.filter(c => c.name.toLowerCase().includes(customerSearchQuery.toLowerCase()));
+      setFilteredCustomers(filtered);
+      setIsCustomerListVisible(true);
     } else {
-        form.setValue('customer', { id: '', name: '', email: '', phone: '', address: '' });
+      setFilteredCustomers([]);
+      setIsCustomerListVisible(false);
     }
-  }, [selectedCustomer, form]);
+  }, [customerSearchQuery, allCustomers]);
+
 
   const totalAmount = useMemo(() => {
     return form.watch('items').reduce((acc, p) => acc + p.price * p.quantity, 0);
@@ -199,9 +216,7 @@ export default function CreateOrderPage() {
         });
         
         const newCustomer = {id: newDocRef.id, ...data} as User
-        setSelectedCustomer(newCustomer)
-        form.setValue('customer.id', newCustomer.id, { shouldValidate: true });
-
+        handleSelectCustomer(newCustomer);
         toast({ title: 'Cliente añadido', description: 'El nuevo cliente ha sido creado y seleccionado.' });
         setIsCustomerFormOpen(false);
     } catch (error) {
@@ -313,66 +328,40 @@ export default function CreateOrderPage() {
                         <CardTitle>Información del Cliente</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="customer.id"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Cliente</FormLabel>
-                                    <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
-                                        <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            className={cn(
-                                                "w-full justify-between",
-                                                !selectedCustomer && "text-muted-foreground"
-                                            )}
-                                            >
-                                            {selectedCustomer
-                                                ? selectedCustomer.name
-                                                : "Selecciona un cliente"}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
-                                        </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                                        <Command>
-                                            <CommandInput placeholder="Buscar cliente..." />
-                                            <CommandList>
-                                                <CommandEmpty>No se encontraron clientes.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {customers.map((customer) => (
-                                                    <CommandItem
-                                                        value={customer.name}
-                                                        key={customer.id}
-                                                        onSelect={() => {
-                                                            setSelectedCustomer(customer);
-                                                            form.setValue("customer.id", customer.id, { shouldValidate: true });
-                                                            setCustomerPopoverOpen(false);
-                                                        }}
-                                                    >
-                                                        <Check
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            selectedCustomer?.id === customer.id
-                                                            ? "opacity-100"
-                                                            : "opacity-0"
-                                                        )}
-                                                        />
-                                                        {customer.name}
-                                                    </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
+                        <FormItem ref={customerSearchContainerRef}>
+                            <FormLabel>Buscar Cliente</FormLabel>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Escribe para buscar..."
+                                    className="pl-9"
+                                    value={customerSearchQuery}
+                                    onChange={(e) => {
+                                      setCustomerSearchQuery(e.target.value);
+                                      if (form.getValues('customer.id')) {
+                                        form.setValue('customer.id', '');
+                                      }
+                                    }}
+                                    onFocus={() => setIsCustomerListVisible(customerSearchQuery.length > 1)}
+                                />
+                            </div>
+                            {isCustomerListVisible && filteredCustomers.length > 0 && (
+                                <div className="absolute z-10 w-[var(--radix-popover-trigger-width)] bg-background border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                                  {filteredCustomers.map(customer => (
+                                    <div
+                                      key={customer.id}
+                                      className="p-2 hover:bg-accent cursor-pointer"
+                                      onClick={() => handleSelectCustomer(customer)}
+                                    >
+                                      <p className="font-medium">{customer.name}</p>
+                                      <p className="text-xs text-muted-foreground">{customer.email}</p>
+                                    </div>
+                                  ))}
+                                </div>
                             )}
-                        />
+                            <FormMessage>{form.formState.errors.customer?.id?.message}</FormMessage>
+                        </FormItem>
+
                          <Button type="button" variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
                             <UserPlus className="mr-2 h-4 w-4" />
                             Añadir Nuevo Cliente
