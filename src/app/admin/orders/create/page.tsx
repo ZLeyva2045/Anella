@@ -22,7 +22,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandInput, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
@@ -315,7 +315,7 @@ export default function CreateOrderPage() {
                         <FormField
                             control={form.control}
                             name="customer.id"
-                            render={() => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Cliente</FormLabel>
                                     <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>

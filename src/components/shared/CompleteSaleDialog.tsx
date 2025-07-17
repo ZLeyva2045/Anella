@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import type { User, OrderItem } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
-import { Loader2, UserPlus, CheckCircle, Search, ChevronsUpDown } from 'lucide-react';
+import { Loader2, UserPlus, CheckCircle, Search, ChevronsUpDown, Check } from 'lucide-react';
 import { collection, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { PosCartItem } from '@/app/admin/pos/page';
@@ -176,7 +176,7 @@ export function CompleteSaleDialog({
               <FormField
                 control={form.control}
                 name="customerId"
-                render={() => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>Cliente</FormLabel>
                     <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
@@ -187,12 +187,10 @@ export function CompleteSaleDialog({
                             role="combobox"
                             className={cn(
                               "w-full justify-between",
-                              !selectedCustomer && "text-muted-foreground"
+                              !field.value && "text-muted-foreground"
                             )}
                           >
-                            {selectedCustomer
-                              ? selectedCustomer.name
-                              : "Selecciona un cliente"}
+                            {selectedCustomer?.name ?? "Selecciona un cliente"}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
@@ -208,15 +206,15 @@ export function CompleteSaleDialog({
                                   value={customer.name}
                                   key={customer.id}
                                   onSelect={() => {
-                                    setSelectedCustomer(customer);
                                     form.setValue("customerId", customer.id, { shouldValidate: true });
+                                    setSelectedCustomer(customer);
                                     setCustomerPopoverOpen(false);
                                   }}
                                 >
                                   <Check
                                     className={cn(
                                       "mr-2 h-4 w-4",
-                                      selectedCustomer?.id === customer.id
+                                      field.value === customer.id
                                         ? "opacity-100"
                                         : "opacity-0"
                                     )}
