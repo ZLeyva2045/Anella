@@ -33,7 +33,6 @@ import type { PosCartItem } from '@/app/admin/pos/page';
 import { useAuth } from '@/hooks/useAuth';
 import { CustomerForm } from './CustomerForm';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
-import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
 
@@ -173,7 +172,7 @@ export function CompleteSaleDialog({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
+               <FormField
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
