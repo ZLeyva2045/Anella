@@ -26,15 +26,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import type { User, OrderItem } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
-import { Loader2, UserPlus, CheckCircle, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, UserPlus, CheckCircle, Search } from 'lucide-react';
 import { collection, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { PosCartItem } from '@/app/admin/pos/page';
 import { useAuth } from '@/hooks/useAuth';
 import { CustomerForm } from './CustomerForm';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
-import { cn } from '@/lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
 
 const saleSchema = z.object({
   customerId: z.string().min(1, 'Debe seleccionar un cliente.'),
@@ -63,9 +62,9 @@ export function CompleteSaleDialog({
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<User[]>([]);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
-  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
   const { toast } = useToast();
   const { user: sellerUser } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const form = useForm<SaleFormValues>({
     resolver: zodResolver(saleSchema),
@@ -84,6 +83,14 @@ export function CompleteSaleDialog({
         return () => unsubscribe();
     }
   }, [isOpen]);
+  
+  const filteredCustomers = customers.filter(customer => 
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    customer.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const selectedCustomerName = customers.find(c => c.id === form.watch('customerId'))?.name;
+
 
   const onSubmit = async (data: SaleFormValues) => {
     setLoading(true);
@@ -167,61 +174,53 @@ export function CompleteSaleDialog({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-               <FormField
+              <FormField
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem>
                     <FormLabel>Cliente</FormLabel>
-                    <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen} modal={true}>
-                        <PopoverTrigger asChild>
-                        <FormControl>
-                            <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
-                            >
-                            {field.value
-                                ? customers.find((customer) => customer.id === field.value)?.name
-                                : "Busca o selecciona un cliente"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                        </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command>
-                            <CommandInput placeholder="Buscar cliente..." />
-                            <CommandList>
-                                <CommandEmpty>No se encontró el cliente.</CommandEmpty>
-                                <CommandGroup>
-                                {customers.map((customer) => (
-                                    <CommandItem
-                                      value={`${customer.name} ${customer.email}`}
-                                      key={customer.id}
-                                      onSelect={() => {
-                                        form.setValue("customerId", customer.id);
-                                        setCustomerPopoverOpen(false);
-                                      }}
-                                    >
-                                    <Check
-                                        className={cn(
-                                        "mr-2 h-4 w-4",
-                                        customer.id === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
+                    <FormControl>
+                        <div className="space-y-2">
+                             <div className="p-2 border rounded-md min-h-[40px]">
+                                {selectedCustomerName || <span className="text-muted-foreground">Ningún cliente seleccionado</span>}
+                            </div>
+                             <Command className="border rounded-lg">
+                                <div className="flex items-center border-b px-3">
+                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                    <input
+                                        placeholder="Buscar cliente..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
                                     />
-                                    <div>
-                                        <p>{customer.name}</p>
-                                        <p className="text-xs text-muted-foreground">{customer.email}</p>
-                                    </div>
-                                    </CommandItem>
-                                ))}
-                                </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                    </Popover>
+                                </div>
+                                <CommandList>
+                                     <ScrollArea className="h-48">
+                                        <CommandEmpty>No se encontró el cliente.</CommandEmpty>
+                                        <CommandGroup>
+                                            {filteredCustomers.map((customer) => (
+                                            <CommandItem
+                                                key={customer.id}
+                                                value={customer.name}
+                                                onSelect={() => {
+                                                    field.onChange(customer.id);
+                                                    setSearchQuery(''); // Clear search on select
+                                                }}
+                                                className="cursor-pointer"
+                                            >
+                                                <div>
+                                                    <p>{customer.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{customer.email}</p>
+                                                </div>
+                                            </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </ScrollArea>
+                                </CommandList>
+                            </Command>
+                        </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

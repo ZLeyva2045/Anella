@@ -31,9 +31,10 @@ import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
 import { collection, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CartItem extends Product {
   quantity: number;
@@ -73,7 +74,7 @@ export default function CreateOrderPage() {
   const [loading, setLoading] = useState(false);
   const [inventory, setInventory] = useState<Product[]>([]);
   const [searchPopoverOpen, setSearchPopoverOpen] = useState(false);
-  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
 
 
   const { toast } = useToast();
@@ -138,6 +139,11 @@ export default function CreateOrderPage() {
       unsubInventory();
     };
   }, [form]);
+  
+  const filteredCustomers = customers.filter(customer =>
+    customer.name.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
+    customer.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     if (selectedCustomer) {
@@ -148,6 +154,8 @@ export default function CreateOrderPage() {
         phone: selectedCustomer.phone || '',
         address: selectedCustomer.address || '',
       });
+    } else {
+        form.setValue('customer', { id: '', name: '', email: '', phone: '', address: '' });
     }
   }, [selectedCustomer, form]);
 
@@ -313,57 +321,51 @@ export default function CreateOrderPage() {
                           control={form.control}
                           name="customer.id"
                           render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel>Seleccionar Cliente</FormLabel>
-                               <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen} modal={true}>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
-                                    >
-                                      {field.value
-                                        ? customers.find((customer) => customer.id === field.value)?.name
-                                        : "Busca o selecciona un cliente"}
-                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                  <Command>
-                                    <CommandInput placeholder="Buscar cliente por nombre o email..." />
-                                     <CommandList>
-                                        <CommandEmpty>No se encontró el cliente.</CommandEmpty>
-                                        <CommandGroup>
-                                          {customers.map((customer) => (
-                                            <CommandItem
-                                              value={`${customer.name} ${customer.email}`}
-                                              key={customer.id}
-                                              onSelect={() => {
-                                                field.onChange(customer.id);
-                                                setSelectedCustomer(customer);
-                                                setCustomerPopoverOpen(false);
-                                              }}
-                                            >
-                                              <Check
-                                                className={cn(
-                                                  "mr-2 h-4 w-4",
-                                                  customer.id === field.value ? "opacity-100" : "opacity-0"
-                                                )}
-                                              />
-                                               <div>
-                                                <p>{customer.name}</p>
-                                                <p className="text-xs text-muted-foreground">{customer.email}</p>
-                                              </div>
-                                            </CommandItem>
-                                          ))}
-                                        </CommandGroup>
-                                     </CommandList>
-                                  </Command>
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
+                            <FormItem>
+                                <FormLabel>Cliente</FormLabel>
+                                <FormControl>
+                                    <div className="space-y-2">
+                                        <div className="p-2 border rounded-md min-h-[40px]">
+                                            {selectedCustomer?.name || <span className="text-muted-foreground">Ningún cliente seleccionado</span>}
+                                        </div>
+                                        <Command className="border rounded-lg">
+                                            <div className="flex items-center border-b px-3">
+                                                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                                <input
+                                                    placeholder="Buscar cliente..."
+                                                    value={customerSearchQuery}
+                                                    onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                                                    className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                                                />
+                                            </div>
+                                            <CommandList>
+                                                <ScrollArea className="h-48">
+                                                <CommandEmpty>No se encontró el cliente.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {filteredCustomers.map((customer) => (
+                                                        <CommandItem
+                                                            key={customer.id}
+                                                            value={customer.name}
+                                                            onSelect={() => {
+                                                                setSelectedCustomer(customer);
+                                                                field.onChange(customer.id);
+                                                                setCustomerSearchQuery('');
+                                                            }}
+                                                            className="cursor-pointer"
+                                                        >
+                                                        <div>
+                                                            <p>{customer.name}</p>
+                                                            <p className="text-xs text-muted-foreground">{customer.email}</p>
+                                                        </div>
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                                </ScrollArea>
+                                            </CommandList>
+                                        </Command>
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
                             </FormItem>
                           )}
                         />
