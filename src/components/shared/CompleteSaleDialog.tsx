@@ -65,6 +65,7 @@ export function CompleteSaleDialog({
   const { toast } = useToast();
   const { user: sellerUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
 
   const form = useForm<SaleFormValues>({
     resolver: zodResolver(saleSchema),
@@ -81,22 +82,23 @@ export function CompleteSaleDialog({
             setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
         });
         return () => unsubscribe();
+    } else {
+        setSelectedCustomer(null);
+        setSearchQuery('');
+        form.reset();
     }
-  }, [isOpen]);
+  }, [isOpen, form]);
   
   const filteredCustomers = customers.filter(customer => 
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     customer.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const selectedCustomerName = customers.find(c => c.id === form.watch('customerId'))?.name;
-
-
   const onSubmit = async (data: SaleFormValues) => {
     setLoading(true);
     try {
-      const selectedCustomer = customers.find(c => c.id === data.customerId);
-      if (!selectedCustomer) {
+      const customer = customers.find(c => c.id === data.customerId);
+      if (!customer) {
         toast({ variant: 'destructive', title: 'Error', description: 'Cliente no encontrado.' });
         setLoading(false);
         return;
@@ -111,14 +113,14 @@ export function CompleteSaleDialog({
       }));
 
       await saveOrder(undefined, {
-        userId: selectedCustomer.id,
+        userId: customer.id,
         sellerId: sellerUser?.uid,
         items: orderItems,
         customerInfo: {
-          name: selectedCustomer.name,
-          email: selectedCustomer.email || '',
-          phone: selectedCustomer.phone || '',
-          address: selectedCustomer.address || '',
+          name: customer.name,
+          email: customer.email || '',
+          phone: customer.phone || '',
+          address: customer.address || '',
         },
         status: 'completed', // POS sales are completed immediately
         paymentMethod: data.paymentMethod,
@@ -154,6 +156,7 @@ export function CompleteSaleDialog({
       });
       
       const newCustomer = {id: newDocRef.id, ...data} as User
+      setSelectedCustomer(newCustomer);
       form.setValue('customerId', newCustomer.id, { shouldValidate: true });
 
       toast({ title: 'Cliente añadido', description: 'El nuevo cliente ha sido creado y seleccionado.' });
@@ -174,57 +177,56 @@ export function CompleteSaleDialog({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="customerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cliente</FormLabel>
-                    <FormControl>
-                        <div className="space-y-2">
-                             <div className="p-2 border rounded-md min-h-[40px]">
-                                {selectedCustomerName || <span className="text-muted-foreground">Ningún cliente seleccionado</span>}
-                            </div>
-                             <Command className="border rounded-lg">
-                                <div className="flex items-center border-b px-3">
-                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                                    <input
-                                        placeholder="Buscar cliente..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                                    />
-                                </div>
-                                <CommandList>
-                                     <ScrollArea className="h-48">
-                                        <CommandEmpty>No se encontró el cliente.</CommandEmpty>
-                                        <CommandGroup>
-                                            {filteredCustomers.map((customer) => (
-                                            <CommandItem
-                                                key={customer.id}
-                                                value={customer.name}
-                                                onSelect={() => {
-                                                    field.onChange(customer.id);
-                                                    setSearchQuery(''); // Clear search on select
-                                                }}
-                                                className="cursor-pointer"
-                                            >
-                                                <div>
-                                                    <p>{customer.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{customer.email}</p>
-                                                </div>
-                                            </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    </ScrollArea>
-                                </CommandList>
-                            </Command>
-                        </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <FormLabel>Cliente</FormLabel>
+                <div className="p-2 border rounded-md min-h-[40px] bg-muted">
+                    {selectedCustomer?.name || <span className="text-muted-foreground">Ningún cliente seleccionado</span>}
+                </div>
+                <FormField
+                    control={form.control}
+                    name="customerId"
+                    render={({ field }) => (
+                        <FormItem className="hidden">
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <Command className="border rounded-lg">
+                    <CommandInput 
+                        placeholder="Buscar cliente por nombre o email..."
+                        value={searchQuery}
+                        onValueChange={setSearchQuery}
+                    />
+                    <CommandList>
+                         <ScrollArea className="h-48">
+                            <CommandEmpty>No se encontró el cliente.</CommandEmpty>
+                            <CommandGroup>
+                                {filteredCustomers.map((customer) => (
+                                <CommandItem
+                                    key={customer.id}
+                                    value={customer.name}
+                                    onSelect={() => {
+                                        setSelectedCustomer(customer);
+                                        form.setValue('customerId', customer.id, { shouldValidate: true });
+                                        setSearchQuery('');
+                                    }}
+                                    className="cursor-pointer"
+                                >
+                                    <div>
+                                        <p>{customer.name}</p>
+                                        <p className="text-xs text-muted-foreground">{customer.email}</p>
+                                    </div>
+                                </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </ScrollArea>
+                    </CommandList>
+                </Command>
+                <FormMessage>{form.formState.errors.customerId?.message}</FormMessage>
+              </div>
 
               <Button type="button" variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
                   <UserPlus className="mr-2 h-4 w-4" />
