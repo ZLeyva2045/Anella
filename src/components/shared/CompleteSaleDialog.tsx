@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import type { User, OrderItem } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
-import { Loader2, UserPlus, CheckCircle, Search } from 'lucide-react';
+import { Loader2, UserPlus, CheckCircle, Search, ChevronsUpDown } from 'lucide-react';
 import { collection, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { PosCartItem } from '@/app/admin/pos/page';
@@ -34,6 +34,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { CustomerForm } from './CustomerForm';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { cn } from '@/lib/utils';
 
 const saleSchema = z.object({
   customerId: z.string().min(1, 'Debe seleccionar un cliente.'),
@@ -64,8 +66,8 @@ export function CompleteSaleDialog({
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const { toast } = useToast();
   const { user: sellerUser } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
+  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
 
   const form = useForm<SaleFormValues>({
     resolver: zodResolver(saleSchema),
@@ -84,15 +86,9 @@ export function CompleteSaleDialog({
         return () => unsubscribe();
     } else {
         setSelectedCustomer(null);
-        setSearchQuery('');
         form.reset();
     }
   }, [isOpen, form]);
-  
-  const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    customer.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const onSubmit = async (data: SaleFormValues) => {
     setLoading(true);
@@ -177,53 +173,66 @@ export function CompleteSaleDialog({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-               <div className="space-y-2">
-                <FormLabel>Cliente</FormLabel>
-                <div className="p-2 border rounded-md min-h-[40px] bg-muted">
-                  {selectedCustomer?.name || <span className="text-muted-foreground">Ningún cliente seleccionado</span>}
-                </div>
-                <Command className="border rounded-lg">
-                  <CommandInput
-                    placeholder="Buscar cliente por nombre o email..."
-                    value={searchQuery}
-                    onValueChange={setSearchQuery}
-                  />
-                  <CommandList>
-                      <CommandEmpty>No se encontraron clientes.</CommandEmpty>
-                      <CommandGroup>
-                        {filteredCustomers.map((customer) => (
-                          <CommandItem
-                            key={customer.id}
-                            value={customer.name}
-                            onSelect={() => {
-                              setSelectedCustomer(customer);
-                              form.setValue('customerId', customer.id, { shouldValidate: true });
-                              setSearchQuery('');
-                            }}
-                            className="cursor-pointer"
+              <FormField
+                control={form.control}
+                name="customerId"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Cliente</FormLabel>
+                    <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !selectedCustomer && "text-muted-foreground"
+                            )}
                           >
-                             <div>
-                                <p>{customer.name}</p>
-                                <p className="text-xs text-muted-foreground">{customer.email}</p>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                  </CommandList>
-                </Command>
-                <FormField
-                    control={form.control}
-                    name="customerId"
-                    render={({ field }) => (
-                        <FormItem className="hidden">
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-              </div>
+                            {selectedCustomer
+                              ? selectedCustomer.name
+                              : "Selecciona un cliente"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar cliente..." />
+                          <CommandList>
+                            <CommandEmpty>No se encontraron clientes.</CommandEmpty>
+                            <CommandGroup>
+                              {customers.map((customer) => (
+                                <CommandItem
+                                  value={customer.name}
+                                  key={customer.id}
+                                  onSelect={() => {
+                                    setSelectedCustomer(customer);
+                                    form.setValue("customerId", customer.id, { shouldValidate: true });
+                                    setCustomerPopoverOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedCustomer?.id === customer.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {customer.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <Button type="button" variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
                   <UserPlus className="mr-2 h-4 w-4" />
