@@ -322,17 +322,6 @@ export default function CreateOrderPage() {
                             <div className="p-2 border rounded-md min-h-[40px] bg-muted">
                                 {selectedCustomer?.name || <span className="text-muted-foreground">Ningún cliente seleccionado</span>}
                             </div>
-                             <FormField
-                                control={form.control}
-                                name="customer.id"
-                                render={({ field }) => (
-                                    <FormItem className="hidden">
-                                        <FormControl>
-                                            <Input {...field} />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
                             <Command className="border rounded-lg">
                                 <CommandInput 
                                     placeholder="Buscar cliente..."
