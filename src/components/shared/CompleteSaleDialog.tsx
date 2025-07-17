@@ -22,7 +22,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import type { User, OrderItem } from '@/types/firestore';
@@ -34,7 +33,7 @@ import type { PosCartItem } from '@/app/admin/pos/page';
 import { useAuth } from '@/hooks/useAuth';
 import { CustomerForm } from './CustomerForm';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
-import { ScrollArea } from '../ui/scroll-area';
+import { Input } from '@/components/ui/input';
 
 const saleSchema = z.object({
   customerId: z.string().min(1, 'Debe seleccionar un cliente.'),
@@ -190,7 +189,6 @@ export function CompleteSaleDialog({
                     onValueChange={setSearchQuery}
                   />
                   <CommandList>
-                    <ScrollArea className="h-48">
                       <CommandEmpty>No se encontraron clientes.</CommandEmpty>
                       <CommandGroup>
                         {filteredCustomers.map((customer) => (
@@ -211,10 +209,20 @@ export function CompleteSaleDialog({
                           </CommandItem>
                         ))}
                       </CommandGroup>
-                    </ScrollArea>
                   </CommandList>
                 </Command>
-                 <FormMessage>{form.formState.errors.customerId?.message}</FormMessage>
+                <FormField
+                    control={form.control}
+                    name="customerId"
+                    render={({ field }) => (
+                        <FormItem className="hidden">
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
               </div>
 
               <Button type="button" variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>

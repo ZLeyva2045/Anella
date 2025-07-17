@@ -34,7 +34,6 @@ import { db } from '@/lib/firebase/config';
 import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CartItem extends Product {
   quantity: number;
@@ -329,7 +328,6 @@ export default function CreateOrderPage() {
                                     onValueChange={setCustomerSearchQuery}
                                 />
                                 <CommandList>
-                                    <ScrollArea className="h-48">
                                     <CommandEmpty>No se encontró el cliente.</CommandEmpty>
                                     <CommandGroup>
                                         {filteredCustomers.map((customer) => (
@@ -350,10 +348,20 @@ export default function CreateOrderPage() {
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>
-                                    </ScrollArea>
                                 </CommandList>
                             </Command>
-                             <FormMessage>{form.formState.errors.customer?.id?.message}</FormMessage>
+                             <FormField
+                                control={form.control}
+                                name="customer.id"
+                                render={({ field }) => (
+                                    <FormItem className="hidden">
+                                        <FormControl>
+                                            <Input {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
                          <Button variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
                             <UserPlus className="mr-2 h-4 w-4" />
