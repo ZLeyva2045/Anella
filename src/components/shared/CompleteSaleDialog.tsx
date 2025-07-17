@@ -1,3 +1,4 @@
+
 // src/components/shared/CompleteSaleDialog.tsx
 'use client';
 
@@ -26,7 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import type { User, OrderItem } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
-import { Loader2, UserPlus, CheckCircle, Search, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, UserPlus, CheckCircle, ChevronsUpDown, Check } from 'lucide-react';
 import { collection, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { PosCartItem } from '@/app/admin/pos/page';
@@ -35,6 +36,8 @@ import { CustomerForm } from './CustomerForm';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+
 
 const saleSchema = z.object({
   customerId: z.string().min(1, 'Debe seleccionar un cliente.'),
@@ -172,11 +175,11 @@ export function CompleteSaleDialog({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-               <FormField
+              <FormField
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>Cliente</FormLabel>
                     <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
                       <PopoverTrigger asChild>

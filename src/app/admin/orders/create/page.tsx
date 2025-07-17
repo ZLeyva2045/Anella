@@ -1,3 +1,4 @@
+
 // src/app/admin/orders/create/page.tsx
 'use client';
 
@@ -22,7 +23,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
@@ -316,7 +317,7 @@ export default function CreateOrderPage() {
                             control={form.control}
                             name="customer.id"
                             render={({ field }) => (
-                                <FormItem>
+                                <FormItem className="flex flex-col">
                                     <FormLabel>Cliente</FormLabel>
                                     <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
                                         <PopoverTrigger asChild>

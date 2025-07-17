@@ -1,3 +1,4 @@
+
 // src/app/sales/orders/create/page.tsx
 'use client';
 
@@ -31,7 +32,7 @@ import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
 import { collection, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search } from 'lucide-react';
+import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search, ChevronsUpDown, Check } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -74,8 +75,7 @@ export default function CreateOrderPage() {
   const [loading, setLoading] = useState(false);
   const [inventory, setInventory] = useState<Product[]>([]);
   const [searchPopoverOpen, setSearchPopoverOpen] = useState(false);
-  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
-
+  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -140,11 +140,6 @@ export default function CreateOrderPage() {
     };
   }, [form]);
   
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(customerSearchQuery.toLowerCase())
-  );
-
   useEffect(() => {
     if (selectedCustomer) {
       form.setValue('customer', {
@@ -205,6 +200,7 @@ export default function CreateOrderPage() {
         
         const newCustomer = {id: newDocRef.id, ...data} as User
         setSelectedCustomer(newCustomer)
+        form.setValue('customer.id', newCustomer.id, { shouldValidate: true });
 
         toast({ title: 'Cliente añadido', description: 'El nuevo cliente ha sido creado y seleccionado.' });
         setIsCustomerFormOpen(false);
@@ -317,56 +313,67 @@ export default function CreateOrderPage() {
                         <CardTitle>Información del Cliente</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <FormLabel>Cliente</FormLabel>
-                            <div className="p-2 border rounded-md min-h-[40px] bg-muted">
-                                {selectedCustomer?.name || <span className="text-muted-foreground">Ningún cliente seleccionado</span>}
-                            </div>
-                             <FormField
-                                control={form.control}
-                                name="customer.id"
-                                render={({ field }) => (
-                                    <FormItem className="hidden">
+                        <FormField
+                            control={form.control}
+                            name="customer.id"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Cliente</FormLabel>
+                                    <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                                        <PopoverTrigger asChild>
                                         <FormControl>
-                                            <Input {...field} />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-                            <Command className="border rounded-lg">
-                                <CommandInput 
-                                    placeholder="Buscar cliente..."
-                                    value={customerSearchQuery}
-                                    onValueChange={setCustomerSearchQuery}
-                                />
-                                <CommandList>
-                                    <ScrollArea className="h-48">
-                                    <CommandEmpty>No se encontró el cliente.</CommandEmpty>
-                                    <CommandGroup>
-                                        {filteredCustomers.map((customer) => (
-                                            <CommandItem
-                                                key={customer.id}
-                                                value={customer.name}
-                                                onSelect={() => {
-                                                    setSelectedCustomer(customer);
-                                                    form.setValue('customer.id', customer.id, { shouldValidate: true });
-                                                    setCustomerSearchQuery('');
-                                                }}
-                                                className="cursor-pointer"
+                                            <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className={cn(
+                                                "w-full justify-between",
+                                                !selectedCustomer && "text-muted-foreground"
+                                            )}
                                             >
-                                            <div>
-                                                <p>{customer.name}</p>
-                                                <p className="text-xs text-muted-foreground">{customer.email}</p>
-                                            </div>
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                    </ScrollArea>
-                                </CommandList>
-                            </Command>
-                             <FormMessage>{form.formState.errors.customer?.id?.message}</FormMessage>
-                        </div>
-                         <Button variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
+                                            {selectedCustomer
+                                                ? selectedCustomer.name
+                                                : "Selecciona un cliente"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                                        <Command>
+                                            <CommandInput placeholder="Buscar cliente..." />
+                                            <CommandList>
+                                                <CommandEmpty>No se encontraron clientes.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {customers.map((customer) => (
+                                                    <CommandItem
+                                                        value={customer.name}
+                                                        key={customer.id}
+                                                        onSelect={() => {
+                                                            setSelectedCustomer(customer);
+                                                            form.setValue("customer.id", customer.id, { shouldValidate: true });
+                                                            setCustomerPopoverOpen(false);
+                                                        }}
+                                                    >
+                                                        <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            selectedCustomer?.id === customer.id
+                                                            ? "opacity-100"
+                                                            : "opacity-0"
+                                                        )}
+                                                        />
+                                                        {customer.name}
+                                                    </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <Button type="button" variant="outline" className="w-full" onClick={() => setIsCustomerFormOpen(true)}>
                             <UserPlus className="mr-2 h-4 w-4" />
                             Añadir Nuevo Cliente
                         </Button>
