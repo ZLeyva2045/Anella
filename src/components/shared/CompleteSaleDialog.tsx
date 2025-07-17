@@ -22,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import type { User, OrderItem } from '@/types/firestore';
@@ -182,7 +183,7 @@ export function CompleteSaleDialog({
                 <div className="p-2 border rounded-md min-h-[40px] bg-muted">
                     {selectedCustomer?.name || <span className="text-muted-foreground">Ningún cliente seleccionado</span>}
                 </div>
-                <FormField
+                 <FormField
                     control={form.control}
                     name="customerId"
                     render={({ field }) => (
@@ -190,7 +191,6 @@ export function CompleteSaleDialog({
                             <FormControl>
                                 <Input {...field} />
                             </FormControl>
-                            <FormMessage />
                         </FormItem>
                     )}
                 />
