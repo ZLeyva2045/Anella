@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Heart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -42,19 +41,16 @@ export function HeroSection() {
   const title = useTypewriter("El regalo perfecto", 50, 500);
   const subtitle = useTypewriter("Miles de productos personalizados con fotos y frases únicas.", 30, 2500);
 
+  const heroImageUrl = "https://firebasestorage.googleapis.com/v0/b/anella-boutique.appspot.com/o/assets%2FGrupal.jpg?alt=media&token=11198e3d-1b47-4cf0-93ce-0fb471a0dad5";
+
   return (
     <section id="hero" className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] overflow-hidden flex items-center justify-center bg-soft-gradient">
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="https://firebasestorage.googleapis.com/v0/b/anella-boutique.appspot.com/o/assets%2FGrupal.jpg?alt=media&token=11198e3d-1b47-4cf0-93ce-0fb471a0dad5&v=2"
-          alt="El equipo de Anella Boutique"
-          fill={true}
-          className="object-contain opacity-20 animate-fade-in"
-          data-ai-hint="team photo"
-          priority
-        />
-         <div className="absolute inset-0 bg-background/50"></div>
-      </div>
+      <div
+        className="absolute inset-0 z-0 bg-no-repeat bg-center bg-contain opacity-20 animate-fade-in"
+        style={{ backgroundImage: `url(${heroImageUrl})` }}
+        data-ai-hint="team photo"
+      ></div>
+      <div className="absolute inset-0 bg-background/50"></div>
       
       {/* Floating Particles */}
       <FloatingParticle icon={Heart} className="w-12 h-12 top-[15%] left-[10%] animate-[bounce_10s_ease-in-out_infinite]" />
