@@ -195,7 +195,7 @@ export default function PosPage() {
 
       if (searchQuery) {
          return (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-4 animate-in fade-in-50">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2 p-4 animate-in fade-in-50">
                 {displayedProducts.map(product => (
                     <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
                         <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
@@ -212,13 +212,13 @@ export default function PosPage() {
       switch (viewState) {
           case 'categories':
               return (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 animate-in fade-in-50">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 p-4 animate-in fade-in-50">
                       {categories.map(cat => {
                           const Icon = getIcon(cat.icon);
                           return (
-                              <button key={cat.id} onClick={() => handleSelectCategory(cat)} className="flex flex-col items-center justify-center gap-2 p-4 bg-primary text-primary-foreground rounded-lg h-28 hover:bg-primary/90 transition-all duration-200 aspect-square">
+                              <button key={cat.id} onClick={() => handleSelectCategory(cat)} className="flex flex-col items-center justify-center gap-1 p-2 bg-primary text-primary-foreground rounded-lg h-24 hover:bg-primary/90 transition-all duration-200 aspect-square">
                                   <Icon className="w-8 h-8"/>
-                                  <span className="text-sm font-semibold text-center">{cat.name}</span>
+                                  <span className="text-sm font-semibold text-center leading-tight">{cat.name}</span>
                               </button>
                           );
                       })}
@@ -226,13 +226,13 @@ export default function PosPage() {
               );
           case 'subcategories':
                return (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 animate-in fade-in-50">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 p-4 animate-in fade-in-50">
                       {subcategories.map(sub => {
                           const Icon = getIcon(sub.icon);
                           return (
-                              <button key={sub.id} onClick={() => handleSelectSubcategory(sub)} className="flex flex-col items-center justify-center gap-2 p-4 bg-primary text-primary-foreground rounded-lg h-28 hover:bg-primary/90 transition-all duration-200 aspect-square">
+                              <button key={sub.id} onClick={() => handleSelectSubcategory(sub)} className="flex flex-col items-center justify-center gap-1 p-2 bg-primary text-primary-foreground rounded-lg h-24 hover:bg-primary/90 transition-all duration-200 aspect-square">
                                   <Icon className="w-8 h-8"/>
-                                  <span className="text-sm font-semibold text-center">{sub.name}</span>
+                                  <span className="text-sm font-semibold text-center leading-tight">{sub.name}</span>
                               </button>
                           );
                       })}
@@ -240,7 +240,7 @@ export default function PosPage() {
               );
           case 'products':
                return (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-4 animate-in fade-in-50">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2 p-4 animate-in fade-in-50">
                     {displayedProducts.map(product => (
                         <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
                             <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
@@ -273,7 +273,7 @@ export default function PosPage() {
                   <Card className="flex-1 flex flex-col">
                     <CardHeader className="p-4 border-b">
                          <div className="flex items-center gap-4">
-                             {viewState !== 'categories' && !searchQuery && (
+                             {(viewState !== 'categories' || searchQuery) && (
                                 <Button variant="ghost" size="icon" onClick={handleBack} className="flex-shrink-0">
                                     <ArrowLeft />
                                 </Button>
