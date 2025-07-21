@@ -69,11 +69,11 @@ export default function AdminProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // State for deletion flow
-  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [productsToDelete, setProductsToDelete] = useState<string[]>([]);
+  const [isSingleDeleteConfirmOpen, setIsSingleDeleteConfirmOpen] = useState(false);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [isDependencyAlertOpen, setIsDependencyAlertOpen] = useState(false);
   const [affectedGifts, setAffectedGifts] = useState<Gift[]>([]);
-
 
   // State for bulk selection
   const [selectedRows, setSelectedRows] = useState<Record<string, boolean>>({});
@@ -116,71 +116,76 @@ export default function AdminProductsPage() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = async (productId: string) => {
-    // Check for dependencies before showing a dialog
+  const checkProductDependencies = async (productIds: string[]) => {
     const querySnapshot = await getDocs(collection(db, "gifts"));
     const giftsWithProduct: Gift[] = [];
+    const uniqueGiftIds = new Set<string>();
+
     querySnapshot.forEach(doc => {
-        const gift = { id: doc.id, ...doc.data() } as Gift;
-        if (gift.products && gift.products.some(p => p.productId === productId)) {
+      const gift = { id: doc.id, ...doc.data() } as Gift;
+      if (gift.products && gift.products.some(p => productIds.includes(p.productId))) {
+        if (!uniqueGiftIds.has(gift.id)) {
             giftsWithProduct.push(gift);
+            uniqueGiftIds.add(gift.id);
         }
+      }
     });
 
-    if (giftsWithProduct.length > 0) {
-      setAffectedGifts(giftsWithProduct);
+    return giftsWithProduct;
+  }
+
+  const handleDeleteClick = async (productId: string) => {
+    const dependencies = await checkProductDependencies([productId]);
+    if (dependencies.length > 0) {
+      setAffectedGifts(dependencies);
       setIsDependencyAlertOpen(true);
     } else {
-      setProductToDelete(productId);
+      setProductsToDelete([productId]);
+      setIsSingleDeleteConfirmOpen(true);
     }
   };
+  
+  const handleBulkDeleteClick = async () => {
+    const idsToDelete = Object.keys(selectedRows).filter(id => selectedRows[id]);
+    if (idsToDelete.length === 0) return;
+
+    const dependencies = await checkProductDependencies(idsToDelete);
+    if (dependencies.length > 0) {
+        setAffectedGifts(dependencies);
+        setIsDependencyAlertOpen(true);
+    } else {
+        setProductsToDelete(idsToDelete);
+        setIsBulkDeleteConfirmOpen(true);
+    }
+  }
   
   const getProductName = (productId: string | null) => {
       if (!productId) return '';
       return products.find(p => p.id === productId)?.name || '';
   }
 
-  const handleDeleteConfirm = async () => {
-    if (!productToDelete) return;
+  const confirmDelete = async () => {
+    if (productsToDelete.length === 0) return;
     try {
-      await deleteProducts([productToDelete]);
+      await deleteProducts(productsToDelete);
       toast({
-        title: 'Producto eliminado',
-        description: `El producto ha sido eliminado del inventario.`,
-      });
-    } catch (error) {
-      console.error('Error deleting product: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudo eliminar el producto.',
-      });
-    } finally {
-      setProductToDelete(null);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    const idsToDelete = Object.keys(selectedRows).filter(id => selectedRows[id]);
-    if (idsToDelete.length === 0) return;
-
-    // We can add dependency check for bulk delete too, but for now we keep it simple.
-    // This could be a future improvement.
-    
-    try {
-      await deleteProducts(idsToDelete);
-      toast({
-        title: 'Productos eliminados',
-        description: `${idsToDelete.length} productos han sido eliminados.`,
+        title: productsToDelete.length > 1 ? 'Productos eliminados' : 'Producto eliminado',
+        description: `${productsToDelete.length} ${productsToDelete.length > 1 ? 'productos han' : 'producto ha'} sido eliminado(s).`,
       });
       setSelectedRows({});
     } catch (error) {
-        console.error('Error bulk deleting products: ', error);
-        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron eliminar los productos.' });
+      console.error('Error deleting product(s): ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudieron eliminar los productos.',
+      });
     } finally {
-        setIsBulkDeleteConfirmOpen(false);
+      setProductsToDelete([]);
+      setIsSingleDeleteConfirmOpen(false);
+      setIsBulkDeleteConfirmOpen(false);
     }
-  }
+  };
   
   const calculateMargin = (price: number, costPrice?: number) => {
     if (!costPrice || price <= costPrice) return { percentage: 0, color: 'text-destructive' };
@@ -211,7 +216,7 @@ export default function AdminProductsPage() {
             {selectedRowCount > 0 && (
               <>
                 <span className="text-sm text-muted-foreground">{selectedRowCount} seleccionado(s)</span>
-                <Button variant="outline" size="sm" onClick={() => setIsBulkDeleteConfirmOpen(true)}>
+                <Button variant="outline" size="sm" onClick={handleBulkDeleteClick}>
                     <Trash2 className="mr-2 h-4 w-4" />
                     Eliminar
                 </Button>
@@ -242,8 +247,8 @@ export default function AdminProductsPage() {
                   <TableRow>
                      <TableHead className="w-[40px]">
                         <Checkbox
-                            checked={selectedRowCount > 0 && (selectedRowCount === products.length ? true : 'indeterminate')}
-                            onCheckedChange={(checked) => handleSelectAll(checked)}
+                            checked={selectedRowCount > 0 && (selectedRowCount === products.length ? true : (selectedRowCount > 0 ? 'indeterminate' : false))}
+                            onCheckedChange={(checked) => handleSelectAll(checked === 'indeterminate' ? false : checked)}
                             aria-label="Seleccionar todo"
                         />
                     </TableHead>
@@ -351,20 +356,20 @@ export default function AdminProductsPage() {
       />
 
       <AlertDialog
-        open={!!productToDelete}
-        onOpenChange={(open) => !open && setProductToDelete(null)}
+        open={isSingleDeleteConfirmOpen}
+        onOpenChange={(open) => !open && setProductsToDelete([])}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Esto eliminará permanentemente
-              el producto &quot;{getProductName(productToDelete)}&quot; del inventario.
+              el producto &quot;{getProductName(productsToDelete[0])}&quot; del inventario.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>
+            <AlertDialogAction onClick={confirmDelete}>
               Sí, eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -379,19 +384,19 @@ export default function AdminProductsPage() {
           <AlertDialogHeader>
              <AlertDialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="text-amber-500" />
-                Producto en Uso
+                Producto(s) en Uso
             </AlertDialogTitle>
             <AlertDialogDescription>
               Este producto no se puede eliminar porque forma parte de los siguientes regalos:
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="max-h-40 overflow-y-auto px-6">
+           <div className="max-h-40 overflow-y-auto px-6">
             <ul className="list-disc pl-5 mt-2 text-sm text-foreground">
               {affectedGifts.map(gift => <li key={gift.id}>{gift.name}</li>)}
             </ul>
           </div>
           <p className="px-6 text-sm text-muted-foreground">
-            Para eliminar este producto, primero debes editar los regalos mencionados y quitarlo de ellos.
+            Para eliminar los productos seleccionados, primero debes editar los regalos mencionados y quitarlos de ellos.
           </p>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setIsDependencyAlertOpen(false)}>
@@ -414,7 +419,7 @@ export default function AdminProductsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleBulkDelete}>
+            <AlertDialogAction onClick={confirmDelete}>
               Sí, eliminar {selectedRowCount} productos
             </AlertDialogAction>
           </AlertDialogFooter>
