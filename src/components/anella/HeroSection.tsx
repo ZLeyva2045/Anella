@@ -46,7 +46,7 @@ export function HeroSection() {
   return (
     <section 
       id="hero" 
-      className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] overflow-hidden flex items-center justify-center bg-soft-gradient"
+      className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] flex items-center justify-center bg-soft-gradient"
       style={{
         backgroundImage: `url(${heroImageUrl})`,
         backgroundSize: 'contain',
