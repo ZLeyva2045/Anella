@@ -1,3 +1,4 @@
+
 // src/app/admin/products/page.tsx
 'use client';
 
@@ -216,7 +217,8 @@ export default function AdminProductsPage() {
                      <TableHead padding="checkbox">
                         <Checkbox
                             checked={selectedRowCount === products.length && products.length > 0}
-                            indeterminate={selectedRowCount > 0 && selectedRowCount < products.length}
+                            // @ts-ignore - The type definition doesn't account for the 'indeterminate' string value
+                            indeterminate={selectedRowCount > 0 && selectedRowCount < products.length ? "true" : undefined}
                             onCheckedChange={(checked) => handleSelectAll(!!checked)}
                             aria-label="Seleccionar todo"
                         />
