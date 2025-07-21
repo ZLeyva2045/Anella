@@ -156,9 +156,8 @@ export default function AdminProductsPage() {
                       <span className="sr-only">Imagen</span>
                     </TableHead>
                     <TableHead>Nombre</TableHead>
-                    <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                    <TableHead className="hidden md:table-cell">Categoría</TableHead>
                     <TableHead>Stock</TableHead>
-                    <TableHead className="hidden md:table-cell">Costo</TableHead>
                     <TableHead className="hidden md:table-cell">Precio</TableHead>
                     <TableHead className="hidden lg:table-cell">Margen</TableHead>
                     <TableHead>
@@ -180,18 +179,20 @@ export default function AdminProductsPage() {
                               width="64"
                             />
                           </TableCell>
-                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell className="font-medium">
+                            <div>
+                                {product.name}
+                                {product.subcategory && <p className="text-xs text-muted-foreground">{product.subcategory}</p>}
+                            </div>
+                          </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            {product.productType || 'N/A'}
+                            {product.category || 'N/A'}
                           </TableCell>
                           <TableCell>
                             <Badge variant={product.stock > 10 ? "secondary" : "outline"}
                              className={cn(product.stock <= 5 && 'bg-destructive/20 border-destructive/50 text-destructive-foreground')}>
                               {product.stock} en stock
                             </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {product.costPrice ? `S/${product.costPrice.toFixed(2)}` : 'N/A'}
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
                             S/{product.price.toFixed(2)}

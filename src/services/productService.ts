@@ -13,11 +13,12 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
-import type { Product, Category, Theme } from '@/types/firestore';
+import type { Product, Category, Theme, Subcategory } from '@/types/firestore';
 
 // Omit fields that are auto-generated or handled by the backend
 type ProductData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'rating'>;
 type CategoryData = Omit<Category, 'id'>;
+type SubcategoryData = Omit<Subcategory, 'id'>;
 type ThemeData = Omit<Theme, 'id'>;
 
 export async function uploadImage(file: File, path: string): Promise<string> {
@@ -34,7 +35,7 @@ export async function saveProduct(
   // Clean up data before sending to Firestore
   const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
     // Remove keys with undefined, null, or empty string values, except for description
-    if (value !== undefined && value !== null && value !== '') {
+    if (value !== undefined && value !== null && (value !== '' || key === 'description')) {
       (acc as any)[key] = value;
     }
     return acc;
@@ -83,6 +84,20 @@ export async function addCategory(data: CategoryData): Promise<string> {
   return newDocRef.id;
 }
 
+// --- Subcategory Functions ---
+
+export async function addSubcategory(data: SubcategoryData): Promise<string> {
+  // Check if subcategory already exists for this category to avoid duplicates
+  const q = query(collection(db, 'subcategories'), where("name", "==", data.name), where("categoryId", "==", data.categoryId));
+  const querySnapshot = await getDocs(q);
+  if (!querySnapshot.empty) {
+    // Return existing subcategory ID
+    return querySnapshot.docs[0].id;
+  }
+  // Add new subcategory
+  const newDocRef = await addDoc(collection(db, 'subcategories'), data);
+  return newDocRef.id;
+}
 
 // --- Theme Functions ---
 

@@ -23,6 +23,7 @@ export interface Product {
   price: number;
   costPrice?: number; // Precio de costo del producto
   category: string; 
+  subcategory?: string; // Subcategoría del producto
   images: string[]; 
   createdAt: Date | Timestamp; 
   updatedAt: Date | Timestamp; 
@@ -69,6 +70,16 @@ export interface Category {
   id: string; // ID único autogenerado por Firestore
   name: string; // Nombre de la categoría, ej: "Lámparas"
 }
+
+/**
+ * Representa una subcategoría en la colección 'subcategories' de Firestore.
+ */
+export interface Subcategory {
+  id: string; // ID único autogenerado por Firestore
+  name: string; // Nombre de la subcategoría
+  categoryId: string; // ID de la categoría padre
+}
+
 
 /**
  * Representa una temática en la colección 'themes' de Firestore.

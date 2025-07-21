@@ -26,14 +26,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import type { Product, Category } from '@/types/firestore';
+import type { Product, Category, Subcategory } from '@/types/firestore';
 import { productTypes } from '@/types/firestore';
-import { saveProduct, addCategory, uploadImage } from '@/services/productService';
+import { saveProduct, addCategory, addSubcategory, uploadImage } from '@/services/productService';
 import { Loader2, Search, Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -46,6 +46,7 @@ const baseProductSchema = z.object({
   costPrice: z.coerce.number().min(0, 'El costo no puede ser negativo.').optional(),
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
+  subcategory: z.string().optional(),
   productType: z.enum(productTypes, { required_error: 'Debes seleccionar un tipo de producto.' }),
   images: z.array(z.string()).optional(),
   stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.').optional(),
@@ -78,32 +79,29 @@ interface ProductFormProps {
 export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
+
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [isCategoryListVisible, setIsCategoryListVisible] = useState(false);
   const categorySearchContainerRef = useRef(null);
+
+  const [subcategorySearchQuery, setSubcategorySearchQuery] = useState('');
+  const [isSubcategoryListVisible, setIsSubcategoryListVisible] = useState(false);
+  const subcategorySearchContainerRef = useRef(null);
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
 
-  useClickAway(categorySearchContainerRef, () => {
-    setIsCategoryListVisible(false);
-  });
+  useClickAway(categorySearchContainerRef, () => setIsCategoryListVisible(false));
+  useClickAway(subcategorySearchContainerRef, () => setIsSubcategoryListVisible(false));
 
-  useEffect(() => {
-    const unsubCategories = onSnapshot(collection(db, 'categories'), snapshot => {
-      const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
-      setCategories(cats);
-    });
-    
-    return () => {
-      unsubCategories();
-    };
-  }, []);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: '', description: '', costPrice: 0, price: 0, category: '',
+      name: '', description: '', costPrice: 0, price: 0, category: '', subcategory: '',
       productType: 'Bienes', images: [], stock: 0, supplier: '',
       expirationDate: undefined, isBreakfast: false
     },
@@ -111,6 +109,30 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
 
   const productType = useWatch({ control: form.control, name: 'productType' });
   const isBreakfast = useWatch({ control: form.control, name: 'isBreakfast' });
+  const selectedCategoryName = useWatch({ control: form.control, name: 'category' });
+  const selectedCategoryId = categories.find(c => c.name === selectedCategoryName)?.id;
+
+
+  useEffect(() => {
+    const unsubCategories = onSnapshot(collection(db, 'categories'), snapshot => {
+      setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
+    });
+
+    let unsubSubcategories: () => void;
+    if (selectedCategoryId) {
+      const q = query(collection(db, 'subcategories'), where('categoryId', '==', selectedCategoryId));
+      unsubSubcategories = onSnapshot(q, snapshot => {
+        setSubcategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subcategory)));
+      });
+    } else {
+      setSubcategories([]);
+    }
+    
+    return () => {
+      unsubCategories();
+      unsubSubcategories?.();
+    };
+  }, [selectedCategoryId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -121,13 +143,15 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
           expirationDate: product.expirationDate ? (product.expirationDate as any).toDate() : undefined,
         });
         setCategorySearchQuery(product.category);
+        setSubcategorySearchQuery(product.subcategory || '');
       } else {
         form.reset({
-          name: '', description: '', costPrice: 0, price: 0, category: '',
+          name: '', description: '', costPrice: 0, price: 0, category: '', subcategory: '',
           productType: 'Bienes', images: [], stock: 0, supplier: '',
           expirationDate: undefined, isBreakfast: false
         });
         setCategorySearchQuery('');
+        setSubcategorySearchQuery('');
       }
       setImageFile(null);
     }
@@ -135,19 +159,36 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
 
   useEffect(() => {
     if (categorySearchQuery.length > 0) {
-      const filtered = categories.filter(c => c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()));
-      setFilteredCategories(filtered);
+      setFilteredCategories(categories.filter(c => c.name.toLowerCase().includes(categorySearchQuery.toLowerCase())));
       setIsCategoryListVisible(true);
     } else {
       setFilteredCategories([]);
       setIsCategoryListVisible(false);
     }
   }, [categorySearchQuery, categories]);
+  
+  useEffect(() => {
+    if (subcategorySearchQuery.length > 0) {
+      setFilteredSubcategories(subcategories.filter(s => s.name.toLowerCase().includes(subcategorySearchQuery.toLowerCase())));
+      setIsSubcategoryListVisible(true);
+    } else {
+      setFilteredSubcategories([]);
+      setIsSubcategoryListVisible(false);
+    }
+  }, [subcategorySearchQuery, subcategories]);
 
   const handleSelectCategory = (category: Category) => {
     form.setValue('category', category.name, { shouldValidate: true });
+    form.setValue('subcategory', ''); // Reset subcategory when category changes
+    setSubcategorySearchQuery('');
     setCategorySearchQuery(category.name);
     setIsCategoryListVisible(false);
+  };
+  
+  const handleSelectSubcategory = (subcategory: Subcategory) => {
+    form.setValue('subcategory', subcategory.name, { shouldValidate: true });
+    setSubcategorySearchQuery(subcategory.name);
+    setIsSubcategoryListVisible(false);
   };
   
   const handleCreateCategory = async (categoryName: string) => {
@@ -165,7 +206,25 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear la categoría.' });
     }
+  };
+  
+  const handleCreateSubcategory = async (subcategoryName: string) => {
+    if (!subcategoryName.trim() || !selectedCategoryId) return;
+    const existing = subcategories.find(s => s.name.toLowerCase() === subcategoryName.toLowerCase().trim());
+    if (existing) {
+      handleSelectSubcategory(existing);
+      return;
+    };
+    
+    try {
+      const newSubcategoryId = await addSubcategory({ name: subcategoryName.trim(), categoryId: selectedCategoryId });
+      const newSubcategory = { id: newSubcategoryId, name: subcategoryName.trim(), categoryId: selectedCategoryId };
+      handleSelectSubcategory(newSubcategory);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear la subcategoría.' });
+    }
   }
+
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
@@ -346,58 +405,104 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="category"
-              render={() => (
-                <FormItem ref={categorySearchContainerRef}>
-                  <FormLabel>Categoría</FormLabel>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar o crear categoría..."
-                      className="pl-9"
-                      value={categorySearchQuery}
-                      onChange={(e) => {
-                        setCategorySearchQuery(e.target.value);
-                        if (form.getValues('category')) {
-                          form.setValue('category', '');
-                        }
-                      }}
-                      onFocus={() => setIsCategoryListVisible(true)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleCreateCategory(categorySearchQuery);
-                        }
-                      }}
-                    />
-                  </div>
-                  {isCategoryListVisible && (
-                    <div className="relative w-full">
-                       <div className="absolute z-10 w-full bg-background border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
-                        {filteredCategories.length > 0 ? (
-                           filteredCategories.map(cat => (
-                            <div
-                              key={cat.id}
-                              className="p-2 hover:bg-accent cursor-pointer"
-                              onClick={() => handleSelectCategory(cat)}
-                            >
-                              <p>{cat.name}</p>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-2 text-center text-sm text-muted-foreground">
-                            No se encontraron categorías. Presiona Enter para crear una nueva.
-                          </div>
-                        )}
-                      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={() => (
+                  <FormItem ref={categorySearchContainerRef}>
+                    <FormLabel>Categoría</FormLabel>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar o crear categoría..."
+                        className="pl-9"
+                        value={categorySearchQuery}
+                        onChange={(e) => {
+                          setCategorySearchQuery(e.target.value);
+                          if (form.getValues('category')) {
+                            form.setValue('category', '');
+                          }
+                        }}
+                        onFocus={() => setIsCategoryListVisible(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleCreateCategory(categorySearchQuery);
+                          }
+                        }}
+                      />
                     </div>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    {isCategoryListVisible && (
+                      <div className="relative w-full">
+                        <div className="absolute z-10 w-full bg-background border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                          {filteredCategories.length > 0 ? (
+                            filteredCategories.map(cat => (
+                              <div
+                                key={cat.id}
+                                className="p-2 hover:bg-accent cursor-pointer"
+                                onClick={() => handleSelectCategory(cat)}
+                              >
+                                <p>{cat.name}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-2 text-center text-sm text-muted-foreground">
+                              No se encontraron. Presiona Enter para crear.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="subcategory"
+                render={() => (
+                  <FormItem ref={subcategorySearchContainerRef}>
+                    <FormLabel>Subcategoría (Opcional)</FormLabel>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar o crear subcategoría..."
+                        className="pl-9"
+                        value={subcategorySearchQuery}
+                        onChange={(e) => setSubcategorySearchQuery(e.target.value)}
+                        onFocus={() => setIsSubcategoryListVisible(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleCreateSubcategory(subcategorySearchQuery);
+                          }
+                        }}
+                        disabled={!selectedCategoryId}
+                      />
+                    </div>
+                     {isSubcategoryListVisible && (
+                       <div className="relative w-full">
+                        <div className="absolute z-10 w-full bg-background border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                          {filteredSubcategories.length > 0 ? (
+                            filteredSubcategories.map(sub => (
+                              <div key={sub.id} className="p-2 hover:bg-accent cursor-pointer" onClick={() => handleSelectSubcategory(sub)}>
+                                <p>{sub.name}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-2 text-center text-sm text-muted-foreground">
+                              No se encontraron. Presiona Enter para crear.
+                            </div>
+                          )}
+                        </div>
+                       </div>
+                     )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
               {productType !== 'Servicios' && (
