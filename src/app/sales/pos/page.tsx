@@ -12,9 +12,9 @@ import {
   CardFooter
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, PlusCircle, Search, Trash2, XCircle, ClipboardCheck, ArrowLeft } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Loader2, Search, ArrowLeft, ShoppingCart, Trash2, PlusCircle, ClipboardCheck, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -22,7 +22,6 @@ import type { Product, Category, Subcategory } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { CompleteSaleDialog } from '@/components/shared/CompleteSaleDialog';
 import * as Icons from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export interface PosCartItem extends Product {
   quantity: number;
@@ -51,6 +50,7 @@ export default function PosPage() {
   const [activeSubcategory, setActiveSubcategory] = useState<Subcategory | null>(null);
   
   const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
+  const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -88,7 +88,10 @@ export default function PosPage() {
     if (activeSubcategory) {
         filtered = filtered.filter(p => p.subcategoryId === activeSubcategory.id);
     } else if (activeCategory) {
-        filtered = filtered.filter(p => p.categoryId === activeCategory.id && !p.subcategoryId)
+        const categoryHasSubcategories = subcategories.some(sub => sub.id); // Checks if subcategories exist for this category
+        if(!categoryHasSubcategories){
+          filtered = filtered.filter(p => p.categoryId === activeCategory.id && !p.subcategoryId);
+        }
     }
 
     if (searchQuery) {
@@ -96,13 +99,13 @@ export default function PosPage() {
     }
     
     return filtered;
-  }, [products, searchQuery, activeCategory, activeSubcategory]);
+  }, [products, searchQuery, activeCategory, activeSubcategory, subcategories]);
   
   const handleSelectCategory = (category: Category) => {
     setActiveCategory(category);
-    const categorySubcategories = subcategories.filter(s => collection(db, 'categories', category.id, 'subcategories').path.includes(s.id));
+    const categoryHasSubcategories = subcategories.some(sub => sub.id);
     
-    if (subcategories.length > 0) {
+    if (categoryHasSubcategories) {
       setViewState('subcategories');
     } else {
       setViewState('products');
@@ -117,7 +120,7 @@ export default function PosPage() {
   const handleBack = () => {
     setSearchQuery('');
     if (viewState === 'products') {
-      if (subcategories.length > 0 && activeSubcategory) {
+      if (activeSubcategory) {
         setActiveSubcategory(null);
         setViewState('subcategories');
       } else {
@@ -126,7 +129,6 @@ export default function PosPage() {
       }
     } else if (viewState === 'subcategories') {
       setActiveCategory(null);
-      setActiveSubcategory(null);
       setViewState('categories');
     }
   }
@@ -190,16 +192,16 @@ export default function PosPage() {
 
   const renderContent = () => {
       if (loading) {
-        return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
+        return <div className="flex justify-center items-center h-full"><Loader2 className="h-16 w-16 animate-spin" /></div>
       }
 
       if (searchQuery) {
          return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2 p-4 animate-in fade-in-50">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 animate-in fade-in-50">
                 {displayedProducts.map(product => (
                     <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
                         <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
-                        <div className="p-2">
+                        <div className="p-3">
                             <h4 className="text-sm font-semibold truncate">{product.name}</h4>
                             <p className="text-xs text-primary font-bold">S/{product.price.toFixed(2)}</p>
                         </div>
@@ -209,131 +211,143 @@ export default function PosPage() {
          )
       }
 
-      switch (viewState) {
-          case 'categories':
-              return (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 p-4 animate-in fade-in-50">
-                      {categories.map(cat => {
-                          const Icon = getIcon(cat.icon);
-                          return (
-                              <button key={cat.id} onClick={() => handleSelectCategory(cat)} className="flex flex-col items-center justify-center gap-1 p-2 bg-primary text-primary-foreground rounded-lg h-24 hover:bg-primary/90 transition-all duration-200 aspect-square">
-                                  <Icon className="w-8 h-8"/>
-                                  <span className="text-sm font-semibold text-center leading-tight">{cat.name}</span>
-                              </button>
-                          );
-                      })}
-                  </div>
-              );
-          case 'subcategories':
-               return (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 p-4 animate-in fade-in-50">
-                      {subcategories.map(sub => {
-                          const Icon = getIcon(sub.icon);
-                          return (
-                              <button key={sub.id} onClick={() => handleSelectSubcategory(sub)} className="flex flex-col items-center justify-center gap-1 p-2 bg-primary text-primary-foreground rounded-lg h-24 hover:bg-primary/90 transition-all duration-200 aspect-square">
-                                  <Icon className="w-8 h-8"/>
-                                  <span className="text-sm font-semibold text-center leading-tight">{sub.name}</span>
-                              </button>
-                          );
-                      })}
-                  </div>
-              );
-          case 'products':
-               return (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2 p-4 animate-in fade-in-50">
-                    {displayedProducts.map(product => (
-                        <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
-                            <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
-                            <div className="p-2">
-                                <h4 className="text-sm font-semibold truncate">{product.name}</h4>
-                                <p className="text-xs text-primary font-bold">S/{product.price.toFixed(2)}</p>
-                            </div>
-                        </Card>
-                    ))}
-                </div>
-              );
-          default:
-              return null;
+      const itemsToShow = viewState === 'categories' ? categories :
+                         viewState === 'subcategories' ? subcategories : [];
+
+      const handleItemClick = viewState === 'categories' ? handleSelectCategory : handleSelectSubcategory;
+
+      if (viewState === 'categories' || viewState === 'subcategories') {
+          return (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 animate-in fade-in-50">
+                  {itemsToShow.map(item => {
+                      return (
+                          <button 
+                            key={item.id} 
+                            onClick={() => handleItemClick(item as any)} 
+                            className="group relative flex flex-col items-center justify-center rounded-full aspect-square overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                            style={{ 
+                              backgroundImage: `linear-gradient(0deg, rgba(20, 20, 20, 0.4) 0%, rgba(20, 20, 20, 0.4) 100%), url(${item.imageUrl || 'https://placehold.co/200x200.png'})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                            }}
+                          >
+                              <p className="text-white text-base font-bold leading-tight w-[70%] text-center line-clamp-2 z-10">{item.name}</p>
+                          </button>
+                      );
+                  })}
+              </div>
+          );
       }
+      
+      if (viewState === 'products') {
+         return (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 animate-in fade-in-50">
+                {displayedProducts.map(product => (
+                    <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
+                        <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
+                        <div className="p-3">
+                            <h4 className="text-sm font-semibold truncate">{product.name}</h4>
+                            <p className="text-sm text-primary font-bold">S/{product.price.toFixed(2)}</p>
+                        </div>
+                    </Card>
+                ))}
+            </div>
+          );
+      }
+
+      return null;
   }
 
+  const getBreadcrumb = () => {
+    if (viewState === 'categories' && !searchQuery) return "Catálogo";
+    if (activeCategory && !activeSubcategory) return activeCategory.name;
+    if (activeSubcategory) return `${activeCategory?.name} > ${activeSubcategory.name}`;
+    if (searchQuery) return `Resultados para "${searchQuery}"`;
+    return "Catálogo";
+  }
 
   return (
     <>
       <div className="flex flex-col h-full md:h-[calc(100vh-5rem)]">
           <header className="mb-4">
-              <h1 className="text-3xl font-bold">Punto de Venta (POS)</h1>
-              <p className="text-muted-foreground">
-                  Gestiona las ventas en la tienda física de forma interactiva.
-              </p>
+              <div className="flex flex-wrap justify-between items-center gap-4">
+                 <div className="flex items-center gap-2">
+                   {(viewState !== 'categories' || searchQuery) && (
+                        <Button variant="ghost" size="icon" onClick={handleBack} className="flex-shrink-0">
+                            <ArrowLeft />
+                        </Button>
+                    )}
+                   <h1 className="text-3xl font-bold tracking-tight">{getBreadcrumb()}</h1>
+                 </div>
+                 <div className="flex-1 min-w-[250px] flex items-center gap-4 justify-end">
+                    <div className="relative w-full max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            placeholder="Buscar productos..." 
+                            className="pl-9" 
+                            value={searchQuery} 
+                            onChange={(e) => setSearchQuery(e.target.value)} 
+                        />
+                    </div>
+                    <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}>
+                      <SheetTrigger asChild>
+                         <Button variant="outline" className="relative">
+                            <ShoppingCart className="mr-2 h-5 w-5" />
+                            Venta Actual
+                            {cart.length > 0 && <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{cart.length}</span>}
+                         </Button>
+                      </SheetTrigger>
+                      <SheetContent className="flex flex-col">
+                        <SheetHeader>
+                          <SheetTitle>Venta Actual</SheetTitle>
+                        </SheetHeader>
+                         <div className="flex-1 min-h-0">
+                           <ScrollArea className="h-full">
+                                <div className="space-y-3 pr-4">
+                                    {cart.length === 0 ? (
+                                        <div className="h-full flex items-center justify-center text-center text-muted-foreground p-10">Añade productos para empezar una venta.</div>
+                                    ) : (
+                                        cart.map(item => (
+                                          <div key={item.id} className="flex items-center gap-3">
+                                              <Image src={item.images[0] || 'https://placehold.co/64x64.png'} alt={item.name} width={64} height={64} className="rounded-md object-cover flex-shrink-0" data-ai-hint="product image" />
+                                              <div className="flex-1 min-w-0">
+                                                  <p className="text-sm font-medium truncate">{item.name}</p>
+                                                  <p className="text-xs text-muted-foreground">S/{item.price.toFixed(2)}</p>
+                                              </div>
+                                              <Input type="number" value={item.quantity} onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))} className="w-16 h-8 text-center flex-shrink-0" />
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive flex-shrink-0" onClick={() => removeFromCart(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                                          </div>
+                                        ))
+                                    )}
+                                </div>
+                            </ScrollArea>
+                         </div>
+                          {cart.length > 0 && (
+                            <div className="border-t pt-4 space-y-4">
+                              <div className="flex justify-between text-lg font-bold">
+                                <span>Total</span>
+                                <span>S/{total.toFixed(2)}</span>
+                              </div>
+                              <Button variant="ghost" size="sm" onClick={clearCart} className="w-full text-destructive"><XCircle className="mr-2 h-4 w-4" />Limpiar Carrito</Button>
+                              <div className="grid grid-cols-2 gap-2 w-full mt-2">
+                                <Button size="lg" onClick={handleCreateOrder} variant="outline"><ClipboardCheck className="mr-2" />Crear Pedido</Button>
+                                <Button size="lg" onClick={() => setIsSaleDialogOpen(true)}><PlusCircle className="mr-2" />Completar Venta</Button>
+                              </div>
+                            </div>
+                          )}
+                      </SheetContent>
+                    </Sheet>
+                 </div>
+              </div>
           </header>
 
-          <div className="flex-1 min-h-0 flex flex-col md:grid md:grid-cols-12 gap-6">
-              <div className="md:col-span-7 lg:col-span-8 flex flex-col min-h-[300px] md:min-h-0">
-                  <Card className="flex-1 flex flex-col">
-                    <CardHeader className="p-4 border-b">
-                         <div className="flex items-center gap-4">
-                              {(viewState !== 'categories' || searchQuery) && (
-                                <Button variant="ghost" size="icon" onClick={handleBack} className="flex-shrink-0">
-                                    <ArrowLeft />
-                                </Button>
-                             )}
-                            <div className="relative w-full">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input 
-                                    placeholder="Buscar productos..." 
-                                    className="pl-9" 
-                                    value={searchQuery} 
-                                    onChange={(e) => setSearchQuery(e.target.value)} 
-                                />
-                            </div>
-                         </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 p-0 min-h-0">
-                         <ScrollArea className="h-full">
-                           {renderContent()}
-                         </ScrollArea>
-                    </CardContent>
-                  </Card>
-              </div>
-
-              <div className="md:col-span-5 lg:col-span-4 flex flex-col min-h-0">
-                  <Card className="flex-1 flex flex-col">
-                      <CardHeader className="flex-row items-center justify-between p-4">
-                          <CardTitle>Venta Actual</CardTitle>
-                          <Button variant="ghost" size="sm" onClick={clearCart} disabled={cart.length === 0}><XCircle className="mr-2 h-4 w-4" />Limpiar</Button>
-                      </CardHeader>
-                      <CardContent className="flex-1 p-2 min-h-0">
-                        <ScrollArea className="h-full">
-                              <div className="space-y-2 p-2">
-                                  {cart.length === 0 ? (
-                                      <div className="h-full flex items-center justify-center text-center text-muted-foreground p-10">Añade productos para empezar una venta.</div>
-                                  ) : (
-                                      cart.map(item => (
-                                        <div key={item.id} className="flex items-center gap-2">
-                                            <Image src={item.images[0] || 'https://placehold.co/40x40.png'} alt={item.name} width={40} height={40} className="rounded-md object-cover flex-shrink-0" data-ai-hint="product image" />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium truncate">{item.name}</p>
-                                                <p className="text-xs text-muted-foreground">S/{item.price.toFixed(2)}</p>
-                                            </div>
-                                            <Input type="number" value={item.quantity} onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))} className="w-16 h-8 text-center flex-shrink-0" />
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive flex-shrink-0" onClick={() => removeFromCart(item.id)}><Trash2 className="h-4 w-4" /></Button>
-                                        </div>
-                                      ))
-                                  )}
-                              </div>
-                          </ScrollArea>
-                      </CardContent>
-                      <CardFooter className="flex-col p-4 space-y-4 border-t">
-                          <div className="w-full flex justify-between text-lg font-bold"><span>Total</span><span>S/{total.toFixed(2)}</span></div>
-                          <div className="grid grid-cols-2 gap-2 w-full mt-2">
-                             <Button size="lg" disabled={cart.length === 0} onClick={handleCreateOrder} variant="outline"><ClipboardCheck className="mr-2" />Crear Pedido</Button>
-                              <Button size="lg" disabled={cart.length === 0} onClick={() => setIsSaleDialogOpen(true)}><PlusCircle className="mr-2" />Completar Venta</Button>
-                          </div>
-                      </CardFooter>
-                  </Card>
-              </div>
-          </div>
+          <main className="flex-1 min-h-0">
+             <ScrollArea className="h-full">
+                <div className="p-1">
+                 {renderContent()}
+                </div>
+             </ScrollArea>
+          </main>
       </div>
       <CompleteSaleDialog
         isOpen={isSaleDialogOpen}
