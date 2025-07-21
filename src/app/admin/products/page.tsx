@@ -257,7 +257,7 @@ export default function AdminProductsPage() {
                   <TableRow>
                      <TableHead className="w-[40px]">
                         <Checkbox
-                            checked={selectedRowCount > 0 && (selectedRowCount === products.length ? true : (selectedRowCount > 0 ? 'indeterminate' : false))}
+                            checked={selectedRowCount === products.length ? true : (selectedRowCount > 0 ? 'indeterminate' : false)}
                             onCheckedChange={(checked) => handleSelectAll(checked === 'indeterminate' ? false : checked)}
                             aria-label="Seleccionar todo"
                         />
@@ -374,7 +374,12 @@ export default function AdminProductsPage() {
 
       <AlertDialog
         open={isSingleDeleteConfirmOpen}
-        onOpenChange={(open) => !open && setProductsToDelete([])}
+        onOpenChange={(open) => {
+          setIsSingleDeleteConfirmOpen(open);
+          if (!open) {
+            setProductsToDelete([]);
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
