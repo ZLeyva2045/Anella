@@ -79,9 +79,9 @@ export function ProductBulkEditForm({ isOpen, setIsOpen, products, onSuccess }: 
     }
 
     const missingFields: string[] = [];
-    if (products.every(p => !p.costPrice)) missingFields.push('costPrice');
-    if (products.every(p => !p.supplier)) missingFields.push('supplier');
-    if (isCategoryCommon && products.every(p => !p.subcategoryId)) missingFields.push('subcategory');
+    if (products.some(p => !p.costPrice)) missingFields.push('costPrice');
+    if (products.some(p => !p.supplier)) missingFields.push('supplier');
+    if (isCategoryCommon && products.some(p => !p.subcategoryId)) missingFields.push('subcategory');
     setCommonMissingFields(missingFields);
 
     form.reset();
@@ -153,77 +153,81 @@ export function ProductBulkEditForm({ isOpen, setIsOpen, products, onSuccess }: 
             Rellena los campos para {products.length} productos seleccionados. Solo se muestran los campos vacíos en común.
           </DialogDescription>
         </DialogHeader>
-        {commonMissingFields.length > 0 ? (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {commonMissingFields.includes('costPrice') && (
-                <FormField
-                  control={form.control}
-                  name="costPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Precio de Costo (S/)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {commonMissingFields.includes('supplier') && (
-                <FormField
-                  control={form.control}
-                  name="supplier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Proveedor</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nombre del proveedor" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {commonMissingFields.includes('subcategory') && commonCategoryId && (
-                <FormField
-                  control={form.control}
-                  name="subcategoryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Subcategoría</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {commonMissingFields.length > 0 ? (
+              <>
+                {commonMissingFields.includes('costPrice') && (
+                  <FormField
+                    control={form.control}
+                    name="costPrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Precio de Costo (S/)</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una subcategoría" />
-                          </SelectTrigger>
+                          <Input type="number" step="0.01" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          {subcategories.map(sub => (
-                            <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Guardar Cambios
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        ) : (
-          <div className="py-8 text-center text-sm text-muted-foreground">
-            No se encontraron campos vacíos en común para los productos seleccionados.
-          </div>
-        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {commonMissingFields.includes('supplier') && (
+                  <FormField
+                    control={form.control}
+                    name="supplier"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Proveedor</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nombre del proveedor" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {commonMissingFields.includes('subcategory') && commonCategoryId && (
+                  <FormField
+                    control={form.control}
+                    name="subcategoryId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subcategoría</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona una subcategoría" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {subcategories.map(sub => (
+                              <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </>
+            ) : (
+               <div className="py-8 text-center text-sm text-muted-foreground">
+                No se encontraron campos vacíos en común para los productos seleccionados.
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={loading || commonMissingFields.length === 0}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Guardar Cambios
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
