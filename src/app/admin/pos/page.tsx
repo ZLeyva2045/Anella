@@ -174,10 +174,10 @@ export default function PosPage() {
                   <Card className="flex-1 flex flex-col">
                     <CardHeader>
                         <Tabs value={activeCategory || ''} onValueChange={setActiveCategory} className="w-full">
-                            <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                            <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 h-auto">
                                 {categories.map(cat => {
                                     const Icon = getIcon(cat.icon);
-                                    return <TabsTrigger key={cat.id} value={cat.id} className="flex flex-col h-14 gap-1"><Icon className="w-5 h-5"/> <span className="text-xs truncate">{cat.name}</span></TabsTrigger>
+                                    return <TabsTrigger key={cat.id} value={cat.id} className="flex flex-col h-16 gap-1.5"><Icon className="w-6 h-6"/> <span className="text-xs truncate">{cat.name}</span></TabsTrigger>
                                 })}
                             </TabsList>
                         </Tabs>
@@ -207,7 +207,7 @@ export default function PosPage() {
                                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in-50">
                                     {displayedProducts.map(product => (
                                         <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
-                                            <Image src={product.images[0]} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
+                                            <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
                                             <div className="p-2">
                                                 <h4 className="text-sm font-semibold truncate">{product.name}</h4>
                                                 <p className="text-xs text-primary font-bold">S/{product.price.toFixed(2)}</p>
@@ -236,7 +236,7 @@ export default function PosPage() {
                                   ) : (
                                       cart.map(item => (
                                         <div key={item.id} className="flex items-center gap-2">
-                                            <Image src={item.images[0]} alt={item.name} width={40} height={40} className="rounded-md object-cover flex-shrink-0" data-ai-hint="product image" />
+                                            <Image src={item.images[0] || 'https://placehold.co/40x40.png'} alt={item.name} width={40} height={40} className="rounded-md object-cover flex-shrink-0" data-ai-hint="product image" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium truncate">{item.name}</p>
                                                 <p className="text-xs text-muted-foreground">S/{item.price.toFixed(2)}</p>
