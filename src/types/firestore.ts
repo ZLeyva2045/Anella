@@ -75,6 +75,7 @@ export interface Category {
   order?: number;
   imageUrl?: string;
   description?: string;
+  icon?: string; // Nombre del icono de lucide-react
 }
 
 /**
@@ -86,6 +87,7 @@ export interface Subcategory {
   order?: number;
   imageUrl?: string;
   description?: string;
+  icon?: string; // Nombre del icono de lucide-react
 }
 
 
