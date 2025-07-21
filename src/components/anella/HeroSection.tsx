@@ -46,8 +46,14 @@ export function HeroSection() {
   return (
     <section id="hero" className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] overflow-hidden flex items-center justify-center bg-soft-gradient">
       <div
-        className="absolute inset-0 z-0 bg-no-repeat bg-center bg-contain opacity-20 animate-fade-in"
-        style={{ backgroundImage: `url(${heroImageUrl})` }}
+        className="absolute inset-0 z-0 animate-fade-in"
+        style={{ 
+          backgroundImage: `url(${heroImageUrl})`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.2,
+        }}
         data-ai-hint="team photo"
       ></div>
       <div className="absolute inset-0 bg-background/50"></div>
