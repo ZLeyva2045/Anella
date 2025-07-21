@@ -86,7 +86,7 @@ export default function PosPage() {
     }
     
     return filtered;
-  }, [products, searchQuery, activeCategory, activeSubcategory, subcategories, viewState]);
+  }, [products, searchQuery, activeCategory, activeSubcategory, viewState]);
   
   const handleSelectCategory = (category: Category) => {
     setActiveCategory(category);
