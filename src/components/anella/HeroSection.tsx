@@ -46,14 +46,14 @@ export function HeroSection() {
     <section id="hero" className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] overflow-hidden flex items-center justify-center bg-soft-gradient">
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://placehold.co/1920x1080.png"
-          alt="Mosaico de regalos personalizados"
+          src="https://i.ibb.co/1Gdx736/Grupal.jpg"
+          alt="El equipo de Anella Boutique"
           fill={true}
-          className="object-cover opacity-10 animate-fade-in"
-          data-ai-hint="gift collage"
+          className="object-cover opacity-20 animate-fade-in"
+          data-ai-hint="team photo"
           priority
         />
-         <div className="absolute inset-0 bg-background/30"></div>
+         <div className="absolute inset-0 bg-background/50"></div>
       </div>
       
       {/* Floating Particles */}
