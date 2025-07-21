@@ -103,8 +103,8 @@ export default function PosPage() {
   };
 
   const handleBack = () => {
-    setActiveSubcategory(null);
     if (viewState === 'products') {
+      setActiveSubcategory(null);
       if (currentSubcategories.length > 0) {
           setViewState('subcategories');
       } else {
@@ -183,8 +183,9 @@ export default function PosPage() {
 
   const getBreadcrumb = () => {
     if (searchQuery) return `Resultados para "${searchQuery}"`;
-    if (activeSubcategory) return `${activeCategory?.name} > ${activeSubcategory.name}`;
-    if (activeCategory) return activeCategory.name;
+    if (viewState === 'products' && activeSubcategory) return `${activeCategory?.name} > ${activeSubcategory.name}`;
+    if (viewState === 'products' && activeCategory) return activeCategory.name;
+    if (viewState === 'subcategories' && activeCategory) return activeCategory.name;
     return "Catálogo";
   }
 
@@ -244,7 +245,11 @@ export default function PosPage() {
       }
 
       if(viewState === 'products') {
-        const displayedProducts = products.filter(p => activeSubcategory ? p.subcategoryId === activeSubcategory.id : p.categoryId === activeCategory?.id);
+        const displayedProducts = products.filter(p => 
+            activeSubcategory 
+                ? p.subcategoryId === activeSubcategory.id 
+                : p.categoryId === activeCategory?.id && !p.subcategoryId
+        );
         return (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 animate-in fade-in-50">
                 {displayedProducts.map(product => (
@@ -297,7 +302,7 @@ export default function PosPage() {
          <header className="mb-4">
               <div className="flex flex-wrap justify-between items-center gap-4">
                  <div className="flex items-center gap-2">
-                   {(viewState !== 'categories' || activeCategory) && !searchQuery && (
+                   {viewState !== 'categories' && !searchQuery && (
                         <Button variant="ghost" size="icon" onClick={handleBack} className="flex-shrink-0">
                             <ArrowLeft />
                         </Button>
