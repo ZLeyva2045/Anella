@@ -1,7 +1,7 @@
 // src/app/admin/pos/page.tsx
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,26 +13,17 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Loader2, Search, ArrowLeft, ShoppingCart, Trash2, PlusCircle, ClipboardCheck, XCircle } from 'lucide-react';
+import { Loader2, Search, ArrowLeft, Trash2, PlusCircle, ClipboardCheck, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Product, Category, Subcategory } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { CompleteSaleDialog } from '@/components/shared/CompleteSaleDialog';
-import * as Icons from 'lucide-react';
 
 export interface PosCartItem extends Product {
   quantity: number;
 }
-
-const getIcon = (iconName?: string): React.ElementType => {
-  if (iconName && (Icons as any)[iconName]) {
-    return (Icons as any)[iconName];
-  }
-  return Icons.Package; // Default icon
-};
 
 type ViewState = 'categories' | 'subcategories' | 'products';
 
@@ -50,7 +41,6 @@ export default function PosPage() {
   const [activeSubcategory, setActiveSubcategory] = useState<Subcategory | null>(null);
   
   const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
-  const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -85,31 +75,31 @@ export default function PosPage() {
   const displayedProducts = useMemo(() => {
     let filtered = products;
 
-    if (activeSubcategory) {
-        filtered = filtered.filter(p => p.subcategoryId === activeSubcategory.id);
-    } else if (activeCategory) {
-        const categoryHasSubcategories = subcategories.some(sub => sub.id); // Checks if subcategories exist for this category
-        if(!categoryHasSubcategories){
-          filtered = filtered.filter(p => p.categoryId === activeCategory.id && !p.subcategoryId);
-        }
-    }
-
     if (searchQuery) {
         return products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
     }
     
+    if (activeSubcategory) {
+        filtered = filtered.filter(p => p.subcategoryId === activeSubcategory.id);
+    } else if (viewState === 'products' && activeCategory) {
+        filtered = filtered.filter(p => p.categoryId === activeCategory.id);
+    }
+    
     return filtered;
-  }, [products, searchQuery, activeCategory, activeSubcategory, subcategories]);
+  }, [products, searchQuery, activeCategory, activeSubcategory, subcategories, viewState]);
   
   const handleSelectCategory = (category: Category) => {
     setActiveCategory(category);
-    const categoryHasSubcategories = subcategories.some(sub => sub.id);
-    
-    if (categoryHasSubcategories) {
-      setViewState('subcategories');
-    } else {
-      setViewState('products');
-    }
+    // This logic assumes that if a category has subcategories, we should show them.
+    // We check the subcategories state, which is populated by the useEffect hook.
+    const unsub = onSnapshot(collection(db, 'categories', category.id, 'subcategories'), (snapshot) => {
+        if (!snapshot.empty) {
+            setViewState('subcategories');
+        } else {
+            setViewState('products');
+        }
+        unsub(); // Detach listener after one check
+    });
   };
   
   const handleSelectSubcategory = (subcategory: Subcategory) => {
@@ -190,14 +180,21 @@ export default function PosPage() {
     toast({ title: 'Venta Completada', description: 'La venta ha sido registrada.' });
   }
 
+  const getBreadcrumb = () => {
+    if (searchQuery) return `Resultados para "${searchQuery}"`;
+    if (activeSubcategory) return `${activeCategory?.name} > ${activeSubcategory.name}`;
+    if (activeCategory) return activeCategory.name;
+    return "Catálogo";
+  }
+
   const renderContent = () => {
       if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-16 w-16 animate-spin" /></div>
       }
 
-      if (searchQuery) {
+      if (searchQuery || viewState === 'products') {
          return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 animate-in fade-in-50">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 animate-in fade-in-50">
                 {displayedProducts.map(product => (
                     <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
                         <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
@@ -211,65 +208,36 @@ export default function PosPage() {
          )
       }
 
-      const itemsToShow = viewState === 'categories' ? categories :
-                         viewState === 'subcategories' ? subcategories : [];
-
+      const itemsToShow = viewState === 'categories' ? categories : subcategories;
       const handleItemClick = viewState === 'categories' ? handleSelectCategory : handleSelectSubcategory;
 
-      if (viewState === 'categories' || viewState === 'subcategories') {
-          return (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 animate-in fade-in-50">
-                  {itemsToShow.map(item => {
-                      return (
-                          <button 
-                            key={item.id} 
-                            onClick={() => handleItemClick(item as any)} 
-                            className="group relative flex flex-col items-center justify-center rounded-full aspect-square overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                            style={{ 
-                              backgroundImage: `linear-gradient(0deg, rgba(20, 20, 20, 0.4) 0%, rgba(20, 20, 20, 0.4) 100%), url(${item.imageUrl || 'https://placehold.co/200x200.png'})`,
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center',
-                            }}
-                          >
-                              <p className="text-white text-base font-bold leading-tight w-[70%] text-center line-clamp-2 z-10">{item.name}</p>
-                          </button>
-                      );
-                  })}
-              </div>
-          );
-      }
-      
-      if (viewState === 'products') {
-         return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 animate-in fade-in-50">
-                {displayedProducts.map(product => (
-                    <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
-                        <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
-                        <div className="p-3">
-                            <h4 className="text-sm font-semibold truncate">{product.name}</h4>
-                            <p className="text-sm text-primary font-bold">S/{product.price.toFixed(2)}</p>
-                        </div>
-                    </Card>
-                ))}
-            </div>
-          );
-      }
-
-      return null;
-  }
-
-  const getBreadcrumb = () => {
-    if (viewState === 'categories' && !searchQuery) return "Catálogo";
-    if (activeCategory && !activeSubcategory) return activeCategory.name;
-    if (activeSubcategory) return `${activeCategory?.name} > ${activeSubcategory.name}`;
-    if (searchQuery) return `Resultados para "${searchQuery}"`;
-    return "Catálogo";
+      return (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 animate-in fade-in-50">
+              {itemsToShow.map(item => (
+                  <button 
+                    key={item.id} 
+                    onClick={() => handleItemClick(item as any)} 
+                    className="group relative flex flex-col items-center justify-center rounded-full aspect-square overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                    style={{ 
+                      backgroundImage: `linear-gradient(0deg, rgba(20, 20, 20, 0.4) 0%, rgba(20, 20, 20, 0.4) 100%), url(${item.imageUrl || 'https://placehold.co/200x200.png'})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
+                  >
+                      <p className="text-white text-base font-bold leading-tight w-[80%] text-center line-clamp-2 z-10">{item.name}</p>
+                  </button>
+              ))}
+          </div>
+      );
   }
 
   return (
     <>
-      <div className="flex flex-col h-full md:h-[calc(100vh-5rem)]">
-          <header className="mb-4">
+    <div className="flex flex-col md:grid md:grid-cols-12 gap-6 h-full md:h-[calc(100vh-5rem)]">
+      
+      {/* Catalog Section */}
+      <div className="md:col-span-7 lg:col-span-8 flex flex-col h-full">
+         <header className="mb-4">
               <div className="flex flex-wrap justify-between items-center gap-4">
                  <div className="flex items-center gap-2">
                    {(viewState !== 'categories' || searchQuery) && (
@@ -277,78 +245,83 @@ export default function PosPage() {
                             <ArrowLeft />
                         </Button>
                     )}
-                   <h1 className="text-3xl font-bold tracking-tight">{getBreadcrumb()}</h1>
+                   <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{getBreadcrumb()}</h1>
                  </div>
-                 <div className="flex-1 min-w-[250px] flex items-center gap-4 justify-end">
+                 <div className="flex-1 min-w-[200px] sm:min-w-[250px] flex items-center justify-end">
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
                             placeholder="Buscar productos..." 
                             className="pl-9" 
                             value={searchQuery} 
-                            onChange={(e) => setSearchQuery(e.target.value)} 
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                if (e.target.value) {
+                                    setViewState('products');
+                                } else {
+                                    handleBack();
+                                }
+                            }}
                         />
                     </div>
-                    <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}>
-                      <SheetTrigger asChild>
-                         <Button variant="outline" className="relative">
-                            <ShoppingCart className="mr-2 h-5 w-5" />
-                            Venta Actual
-                            {cart.length > 0 && <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{cart.length}</span>}
-                         </Button>
-                      </SheetTrigger>
-                      <SheetContent className="flex flex-col">
-                        <SheetHeader>
-                          <SheetTitle>Venta Actual</SheetTitle>
-                        </SheetHeader>
-                         <div className="flex-1 min-h-0">
-                           <ScrollArea className="h-full">
-                                <div className="space-y-3 pr-4">
-                                    {cart.length === 0 ? (
-                                        <div className="h-full flex items-center justify-center text-center text-muted-foreground p-10">Añade productos para empezar una venta.</div>
-                                    ) : (
-                                        cart.map(item => (
-                                          <div key={item.id} className="flex items-center gap-3">
-                                              <Image src={item.images[0] || 'https://placehold.co/64x64.png'} alt={item.name} width={64} height={64} className="rounded-md object-cover flex-shrink-0" data-ai-hint="product image" />
-                                              <div className="flex-1 min-w-0">
-                                                  <p className="text-sm font-medium truncate">{item.name}</p>
-                                                  <p className="text-xs text-muted-foreground">S/{item.price.toFixed(2)}</p>
-                                              </div>
-                                              <Input type="number" value={item.quantity} onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))} className="w-16 h-8 text-center flex-shrink-0" />
-                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive flex-shrink-0" onClick={() => removeFromCart(item.id)}><Trash2 className="h-4 w-4" /></Button>
-                                          </div>
-                                        ))
-                                    )}
-                                </div>
-                            </ScrollArea>
-                         </div>
-                          {cart.length > 0 && (
-                            <div className="border-t pt-4 space-y-4">
-                              <div className="flex justify-between text-lg font-bold">
-                                <span>Total</span>
-                                <span>S/{total.toFixed(2)}</span>
-                              </div>
-                              <Button variant="ghost" size="sm" onClick={clearCart} className="w-full text-destructive"><XCircle className="mr-2 h-4 w-4" />Limpiar Carrito</Button>
-                              <div className="grid grid-cols-2 gap-2 w-full mt-2">
-                                <Button size="lg" onClick={handleCreateOrder} variant="outline"><ClipboardCheck className="mr-2" />Crear Pedido</Button>
-                                <Button size="lg" onClick={() => setIsSaleDialogOpen(true)}><PlusCircle className="mr-2" />Completar Venta</Button>
-                              </div>
-                            </div>
-                          )}
-                      </SheetContent>
-                    </Sheet>
                  </div>
               </div>
           </header>
-
           <main className="flex-1 min-h-0">
-             <ScrollArea className="h-full">
-                <div className="p-1">
-                 {renderContent()}
-                </div>
+             <ScrollArea className="h-full pr-4">
+                {renderContent()}
              </ScrollArea>
           </main>
       </div>
+
+      {/* Cart Section */}
+      <div className="md:col-span-5 lg:col-span-4 flex flex-col h-full">
+         <Card className="flex-1 flex flex-col">
+            <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>Venta Actual</CardTitle>
+                <Button variant="ghost" size="sm" onClick={clearCart} disabled={cart.length === 0}>
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Limpiar
+                </Button>
+            </CardHeader>
+            <CardContent className="flex-1 p-2 min-h-0">
+                <ScrollArea className="h-full">
+                    <div className="space-y-3 pr-2">
+                        {cart.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-center text-muted-foreground p-10">
+                                Añade productos para empezar una venta.
+                            </div>
+                        ) : (
+                            cart.map(item => (
+                                <div key={item.id} className="flex items-center gap-3">
+                                    <Image src={item.images[0] || 'https://placehold.co/64x64.png'} alt={item.name} width={48} height={48} className="rounded-md object-cover flex-shrink-0" data-ai-hint="product image" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{item.name}</p>
+                                        <p className="text-xs text-muted-foreground">S/{item.price.toFixed(2)}</p>
+                                    </div>
+                                    <Input type="number" value={item.quantity} onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))} className="w-16 h-8 text-center flex-shrink-0" />
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive flex-shrink-0" onClick={() => removeFromCart(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </ScrollArea>
+            </CardContent>
+             {cart.length > 0 && (
+                <CardFooter className="flex-col p-4 border-t space-y-4">
+                    <div className="w-full flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>S/{total.toFixed(2)}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 w-full mt-2">
+                    <Button size="lg" onClick={handleCreateOrder} variant="outline"><ClipboardCheck className="mr-2" />Crear Pedido</Button>
+                    <Button size="lg" onClick={() => setIsSaleDialogOpen(true)}><PlusCircle className="mr-2" />Completar Venta</Button>
+                    </div>
+                </CardFooter>
+            )}
+        </Card>
+      </div>
+    </div>
       <CompleteSaleDialog
         isOpen={isSaleDialogOpen}
         setIsOpen={setIsSaleDialogOpen}
