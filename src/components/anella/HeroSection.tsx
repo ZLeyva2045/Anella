@@ -46,7 +46,7 @@ export function HeroSection() {
     <section id="hero" className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] overflow-hidden flex items-center justify-center bg-soft-gradient">
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://firebasestorage.googleapis.com/v0/b/anella-boutique.appspot.com/o/assets%2FGrupal.jpg?alt=media&token=e8c2d829-5f21-4389-94b5-6f6a5b2829b3"
+          src="https://firebasestorage.googleapis.com/v0/b/anella-boutique.appspot.com/o/assets%2FGrupal.jpg?alt=media"
           alt="El equipo de Anella Boutique"
           fill={true}
           className="object-contain opacity-20 animate-fade-in"
