@@ -8,8 +8,6 @@ import {
   query,
   where,
   serverTimestamp,
-  WriteBatch,
-  writeBatch,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
@@ -34,7 +32,6 @@ export async function saveProduct(
 ) {
   // Clean up data before sending to Firestore
   const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
-    // Remove keys with undefined, null, or empty string values, except for description
     if (value !== undefined && value !== null && (value !== '' || key === 'description')) {
       (acc as any)[key] = value;
     }
@@ -72,30 +69,25 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function addCategory(data: CategoryData): Promise<string> {
-  // Check if category already exists to avoid duplicates
   const q = query(collection(db, 'categories'), where("name", "==", data.name));
   const querySnapshot = await getDocs(q);
   if (!querySnapshot.empty) {
-    // Return existing category ID
     return querySnapshot.docs[0].id;
   }
-  // Add new category
   const newDocRef = await addDoc(collection(db, 'categories'), data);
   return newDocRef.id;
 }
 
 // --- Subcategory Functions ---
 
-export async function addSubcategory(data: SubcategoryData): Promise<string> {
-  // Check if subcategory already exists for this category to avoid duplicates
-  const q = query(collection(db, 'subcategories'), where("name", "==", data.name), where("categoryId", "==", data.categoryId));
+export async function addSubcategory(categoryId: string, data: SubcategoryData): Promise<string> {
+  const subcategoriesRef = collection(db, 'categories', categoryId, 'subcategories');
+  const q = query(subcategoriesRef, where("name", "==", data.name));
   const querySnapshot = await getDocs(q);
   if (!querySnapshot.empty) {
-    // Return existing subcategory ID
     return querySnapshot.docs[0].id;
   }
-  // Add new subcategory
-  const newDocRef = await addDoc(collection(db, 'subcategories'), data);
+  const newDocRef = await addDoc(subcategoriesRef, data);
   return newDocRef.id;
 }
 
@@ -108,13 +100,11 @@ export async function getThemes(): Promise<Theme[]> {
 }
 
 export async function addTheme(data: ThemeData): Promise<string> {
-   // Check if theme already exists
   const q = query(collection(db, 'themes'), where("name", "==", data.name));
   const querySnapshot = await getDocs(q);
   if (!querySnapshot.empty) {
     return querySnapshot.docs[0].id;
   }
-  // Add new theme
   const newDocRef = await addDoc(collection(db, 'themes'), data);
   return newDocRef.id;
 }

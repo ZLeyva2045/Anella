@@ -156,7 +156,7 @@ export default function AdminProductsPage() {
                       <span className="sr-only">Imagen</span>
                     </TableHead>
                     <TableHead>Nombre</TableHead>
-                    <TableHead className="hidden md:table-cell">Categoría</TableHead>
+                    <TableHead>Categoría</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead className="hidden md:table-cell">Precio</TableHead>
                     <TableHead className="hidden lg:table-cell">Margen</TableHead>
@@ -175,18 +175,18 @@ export default function AdminProductsPage() {
                               alt={product.name}
                               className="aspect-square rounded-md object-cover"
                               height="64"
-                              src={product.images[0] || '/placeholder.svg'}
+                              src={product.images[0] || 'https://placehold.co/64x64.png'}
                               width="64"
                             />
                           </TableCell>
                           <TableCell className="font-medium">
-                            <div>
-                                {product.name}
-                                {product.subcategory && <p className="text-xs text-muted-foreground">{product.subcategory}</p>}
-                            </div>
+                            {product.name}
                           </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {product.category || 'N/A'}
+                          <TableCell>
+                            <div className="flex flex-col">
+                                <span className="font-medium">{product.category || 'N/A'}</span>
+                                {product.subcategory && <span className="text-xs text-muted-foreground">{product.subcategory}</span>}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant={product.stock > 10 ? "secondary" : "outline"}

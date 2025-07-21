@@ -22,8 +22,10 @@ export interface Product {
   description: string; 
   price: number;
   costPrice?: number; // Precio de costo del producto
-  category: string; 
-  subcategory?: string; // Subcategoría del producto
+  category: string; // Nombre de la categoría
+  categoryId?: string; // ID de la categoría
+  subcategory?: string; // Nombre de la subcategoría
+  subcategoryId?: string; // ID de la subcategoría
   images: string[]; 
   createdAt: Date | Timestamp; 
   updatedAt: Date | Timestamp; 
@@ -53,6 +55,7 @@ export interface Gift {
   showInWebsite?: boolean;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
+  category?: string; // Categoría principal para filtrado
 }
 
 /**
@@ -69,15 +72,20 @@ export interface GiftProduct {
 export interface Category {
   id: string; // ID único autogenerado por Firestore
   name: string; // Nombre de la categoría, ej: "Lámparas"
+  order?: number;
+  imageUrl?: string;
+  description?: string;
 }
 
 /**
- * Representa una subcategoría en la colección 'subcategories' de Firestore.
+ * Representa una subcategoría en la subcolección 'subcategories' de Firestore.
  */
 export interface Subcategory {
   id: string; // ID único autogenerado por Firestore
   name: string; // Nombre de la subcategoría
-  categoryId: string; // ID de la categoría padre
+  order?: number;
+  imageUrl?: string;
+  description?: string;
 }
 
 
