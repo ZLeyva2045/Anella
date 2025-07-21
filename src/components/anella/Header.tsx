@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -189,8 +190,13 @@ export function Header() {
          <SheetHeader className="p-4 border-b">
             <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
             <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-              <Gift className="h-7 w-7 text-primary" />
-              <span className="text-2xl font-headline text-primary" style={{fontFamily: 'Amarillo'}}>Anella</span>
+               <Image
+                src="https://i.ibb.co/MyXzBh0/Anella.png"
+                alt="Anella Boutique Logo"
+                width={120}
+                height={30}
+                className="object-contain"
+              />
             </Link>
           </SheetHeader>
         <nav className="flex flex-col h-full">
@@ -224,8 +230,13 @@ export function Header() {
         <div className="flex items-center gap-4">
           <MobileNav />
           <Link href="/" className="flex items-center gap-2">
-            <Gift className="h-8 w-8 text-primary" />
-            <span className="text-3xl" style={{fontFamily: 'Amarillo', color: 'hsl(var(--primary))'}}>Anella</span>
+             <Image
+                src="https://i.ibb.co/MyXzBh0/Anella.png"
+                alt="Anella Boutique Logo"
+                width={140}
+                height={35}
+                className="object-contain"
+              />
           </Link>
         </div>
 

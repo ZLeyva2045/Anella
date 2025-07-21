@@ -1,6 +1,7 @@
 // src/app/admin/layout.tsx
 "use client";
 import React from 'react';
+import Image from 'next/image';
 import {
   Home,
   Package,
@@ -159,8 +160,13 @@ export default function AdminLayout({
                  {/* Mobile Header */}
                 <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-4 py-2 bg-background border-b">
                     <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-                        <Package className="h-6 w-6 text-primary" />
-                        <span style={{fontFamily: 'Amarillo', color: 'hsl(var(--primary))'}}>Anella Admin</span>
+                         <Image
+                            src="https://i.ibb.co/MyXzBh0/Anella.png"
+                            alt="Anella Boutique Logo"
+                            width={120}
+                            height={30}
+                            className="object-contain"
+                        />
                     </Link>
                 </header>
                  <main className="p-4 sm:p-6 lg:p-8">

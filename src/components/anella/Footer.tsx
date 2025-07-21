@@ -1,4 +1,5 @@
 import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
+import Image from 'next/image';
 
 export function Footer() {
   return (
@@ -6,7 +7,15 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
           <div>
-            <h3 className="text-lg font-semibold mb-3">Anella Boutique</h3>
+            <div className="flex justify-center md:justify-start mb-3">
+               <Image
+                src="https://i.ibb.co/MyXzBh0/Anella.png"
+                alt="Anella Boutique Logo"
+                width={160}
+                height={40}
+                className="object-contain"
+              />
+            </div>
             <p className="text-muted-foreground text-sm">
               Creando regalos personalizados con amor desde Cajamarca, Perú.
             </p>
