@@ -70,6 +70,19 @@ export async function deleteProducts(productIds: string[]): Promise<void> {
     await batch.commit();
 }
 
+export async function updateProductsInBatch(productIds: string[], data: Partial<Product>): Promise<void> {
+    const batch = writeBatch(db);
+    const updateData = {
+        ...data,
+        updatedAt: serverTimestamp(),
+    };
+    productIds.forEach(id => {
+        const docRef = doc(db, 'products', id);
+        batch.update(docRef, updateData);
+    });
+    await batch.commit();
+}
+
 
 // --- Category Functions ---
 

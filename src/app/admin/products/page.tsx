@@ -57,6 +57,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { ProductForm } from '@/components/admin/ProductForm';
+import { ProductBulkEditForm } from '@/components/admin/ProductBulkEditForm';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { deleteProducts } from '@/services/productService';
@@ -74,6 +75,9 @@ export default function AdminProductsPage() {
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [isDependencyAlertOpen, setIsDependencyAlertOpen] = useState(false);
   const [affectedGifts, setAffectedGifts] = useState<Gift[]>([]);
+
+  // State for bulk edit flow
+  const [isBulkEditFormOpen, setIsBulkEditFormOpen] = useState(false);
 
   // State for bulk selection
   const [selectedRows, setSelectedRows] = useState<Record<string, boolean>>({});
@@ -114,6 +118,12 @@ export default function AdminProductsPage() {
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsFormOpen(true);
+  };
+
+  const handleCompleteInfoClick = () => {
+    if (selectedRowCount > 0) {
+      setIsBulkEditFormOpen(true);
+    }
   };
 
   const checkProductDependencies = async (productIds: string[]) => {
@@ -220,7 +230,7 @@ export default function AdminProductsPage() {
                     <Trash2 className="mr-2 h-4 w-4" />
                     Eliminar
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleCompleteInfoClick}>
                     <FilePenLine className="mr-2 h-4 w-4" />
                     Completar Información
                 </Button>
@@ -355,6 +365,13 @@ export default function AdminProductsPage() {
         product={selectedProduct}
       />
 
+       <ProductBulkEditForm
+        isOpen={isBulkEditFormOpen}
+        setIsOpen={setIsBulkEditFormOpen}
+        products={products.filter(p => selectedRows[p.id])}
+        onSuccess={() => setSelectedRows({})}
+      />
+
       <AlertDialog
         open={isSingleDeleteConfirmOpen}
         onOpenChange={(open) => !open && setProductsToDelete([])}
@@ -387,7 +404,7 @@ export default function AdminProductsPage() {
                 Producto(s) en Uso
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Este producto no se puede eliminar porque forma parte de los siguientes regalos:
+              No se pueden eliminar porque al menos uno de los productos seleccionados forma parte de los siguientes regalos:
             </AlertDialogDescription>
           </AlertDialogHeader>
            <div className="max-h-40 overflow-y-auto px-6">
@@ -396,7 +413,7 @@ export default function AdminProductsPage() {
             </ul>
           </div>
           <p className="px-6 text-sm text-muted-foreground">
-            Para eliminar los productos seleccionados, primero debes editar los regalos mencionados y quitarlos de ellos.
+            Para eliminar los productos, primero debes editar los regalos mencionados y quitarlos de su composición.
           </p>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setIsDependencyAlertOpen(false)}>
@@ -408,7 +425,7 @@ export default function AdminProductsPage() {
 
       <AlertDialog
         open={isBulkDeleteConfirmOpen}
-        onOpenChange={setIsBulkDeleteConfirmOpen}
+        onOpenChange={(open) => !open && setProductsToDelete([])}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
