@@ -1,4 +1,3 @@
-
 // src/app/admin/products/page.tsx
 'use client';
 
@@ -28,7 +27,8 @@ import {
   Edit,
   Loader2,
   TrendingUp,
-  FilePenLine
+  FilePenLine,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -47,10 +47,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import Image from 'next/image';
-import type { Product } from '@/types/firestore';
+import type { Product, Gift } from '@/types/firestore';
 import {
   collection,
   onSnapshot,
+  query,
+  where,
+  getDocs
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { ProductForm } from '@/components/admin/ProductForm';
@@ -64,8 +67,13 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
+  // State for deletion flow
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
+  const [isDependencyAlertOpen, setIsDependencyAlertOpen] = useState(false);
+  const [affectedGifts, setAffectedGifts] = useState<Gift[]>([]);
+
 
   // State for bulk selection
   const [selectedRows, setSelectedRows] = useState<Record<string, boolean>>({});
@@ -108,8 +116,26 @@ export default function AdminProductsPage() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = (productId: string) => {
-    setProductToDelete(productId);
+  const handleDeleteClick = async (productId: string) => {
+    // Check for dependencies before showing a dialog
+    const giftsRef = collection(db, "gifts");
+    const q = query(giftsRef, where("products", "array-contains", { productId: productId, quantity: 1 })); // This is a limitation, quantity may vary. A better query is needed if possible.
+    
+    const querySnapshot = await getDocs(collection(db, "gifts"));
+    const giftsWithProduct: Gift[] = [];
+    querySnapshot.forEach(doc => {
+        const gift = { id: doc.id, ...doc.data() } as Gift;
+        if (gift.products.some(p => p.productId === productId)) {
+            giftsWithProduct.push(gift);
+        }
+    });
+
+    if (giftsWithProduct.length > 0) {
+      setAffectedGifts(giftsWithProduct);
+      setIsDependencyAlertOpen(true);
+    } else {
+      setProductToDelete(productId);
+    }
   };
   
   const getProductName = (productId: string | null) => {
@@ -141,6 +167,9 @@ export default function AdminProductsPage() {
     const idsToDelete = Object.keys(selectedRows).filter(id => selectedRows[id]);
     if (idsToDelete.length === 0) return;
 
+    // We can add dependency check for bulk delete too, but for now we keep it simple.
+    // This could be a future improvement.
+    
     try {
       await deleteProducts(idsToDelete);
       toast({
@@ -217,7 +246,6 @@ export default function AdminProductsPage() {
                      <TableHead padding="checkbox">
                         <Checkbox
                             checked={selectedRowCount === products.length && products.length > 0}
-                            // @ts-ignore - The type definition doesn't account for the 'indeterminate' string value
                             indeterminate={selectedRowCount > 0 && selectedRowCount < products.length ? "true" : undefined}
                             onCheckedChange={(checked) => handleSelectAll(!!checked)}
                             aria-label="Seleccionar todo"
@@ -342,6 +370,33 @@ export default function AdminProductsPage() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm}>
               Sí, eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <AlertDialog
+        open={isDependencyAlertOpen}
+        onOpenChange={setIsDependencyAlertOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+             <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="text-amber-500" />
+                Producto en Uso
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Este producto no se puede eliminar porque forma parte de los siguientes regalos:
+              <ul className="list-disc pl-5 mt-2 text-sm text-foreground">
+                {affectedGifts.map(gift => <li key={gift.id}>{gift.name}</li>)}
+              </ul>
+              <br/>
+              Para eliminar este producto, primero debes editar los regalos mencionados y quitarlo de ellos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsDependencyAlertOpen(false)}>
+              Entendido
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
