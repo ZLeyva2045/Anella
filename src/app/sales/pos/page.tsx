@@ -15,11 +15,12 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Search, ArrowLeft, Trash2, PlusCircle, ClipboardCheck, XCircle } from 'lucide-react';
 import Image from 'next/image';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Product, Category, Subcategory } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { CompleteSaleDialog } from '@/components/shared/CompleteSaleDialog';
+import { cn } from '@/lib/utils';
 
 export interface PosCartItem extends Product {
   quantity: number;
@@ -30,7 +31,7 @@ type ViewState = 'categories' | 'subcategories' | 'products';
 export default function PosPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [allSubcategories, setAllSubcategories] = useState<Subcategory[]>([]);
   
   const [cart, setCart] = useState<PosCartItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,9 +51,16 @@ export default function PosPage() {
       setProducts(productsData.filter(p => p.productType !== 'Servicios' && p.stock > 0));
     });
     
-    const unsubCategories = onSnapshot(collection(db, 'categories'), (snapshot) => {
+    const unsubCategories = onSnapshot(collection(db, 'categories'), async (snapshot) => {
         const cats = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Category)).sort((a,b) => (a.order || 99) - (b.order || 99));
         setCategories(cats);
+        
+        // Fetch all subcategories for search
+        const subcatPromises = cats.map(cat => getDocs(collection(db, 'categories', cat.id, 'subcategories')));
+        const subcatSnapshots = await Promise.all(subcatPromises);
+        const allSubs = subcatSnapshots.flatMap(snap => snap.docs.map(doc => ({...doc.data(), id: doc.id, categoryId: doc.ref.parent.parent?.id} as Subcategory)));
+        setAllSubcategories(allSubs);
+
         setLoading(false);
     });
 
@@ -62,42 +70,31 @@ export default function PosPage() {
     };
   }, []);
   
-  useEffect(() => {
-      if(activeCategory) {
-          const unsubSubcategories = onSnapshot(collection(db, 'categories', activeCategory.id, 'subcategories'), (snapshot) => {
-              const subs = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Subcategory)).sort((a,b) => (a.order || 99) - (b.order || 99));
-              setSubcategories(subs);
-          });
-          return () => unsubSubcategories();
-      }
-  }, [activeCategory]);
+  const currentSubcategories = useMemo(() => {
+      if (!activeCategory) return [];
+      return allSubcategories.filter(sub => sub.categoryId === activeCategory.id).sort((a, b) => (a.order || 99) - (b.order || 99));
+  }, [activeCategory, allSubcategories]);
 
-  const displayedProducts = useMemo(() => {
-    let filtered = products;
 
-    if (searchQuery) {
-        return products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    
-    if (activeSubcategory) {
-        filtered = filtered.filter(p => p.subcategoryId === activeSubcategory.id);
-    } else if (viewState === 'products' && activeCategory) {
-        filtered = filtered.filter(p => p.categoryId === activeCategory.id);
-    }
-    
-    return filtered;
-  }, [products, searchQuery, activeCategory, activeSubcategory, viewState]);
-  
+  const searchResults = useMemo(() => {
+    if (!searchQuery) return { categories: [], subcategories: [], products: [] };
+    const q = searchQuery.toLowerCase();
+    const foundProducts = products.filter(p => p.name.toLowerCase().includes(q));
+    const foundCategories = categories.filter(c => c.name.toLowerCase().includes(q));
+    const foundSubcategories = allSubcategories.filter(s => s.name.toLowerCase().includes(q));
+
+    return { categories: foundCategories, subcategories: foundSubcategories, products: foundProducts };
+  }, [searchQuery, products, categories, allSubcategories]);
+
+
   const handleSelectCategory = (category: Category) => {
     setActiveCategory(category);
-    const unsub = onSnapshot(collection(db, 'categories', category.id, 'subcategories'), (snapshot) => {
-        if (!snapshot.empty) {
-            setViewState('subcategories');
-        } else {
-            setViewState('products');
-        }
-        unsub();
-    });
+    const subs = allSubcategories.filter(s => s.categoryId === category.id);
+    if (subs.length > 0) {
+        setViewState('subcategories');
+    } else {
+        setViewState('products');
+    }
   };
   
   const handleSelectSubcategory = (subcategory: Subcategory) => {
@@ -106,14 +103,13 @@ export default function PosPage() {
   };
 
   const handleBack = () => {
-    setSearchQuery('');
+    setActiveSubcategory(null);
     if (viewState === 'products') {
-      if (activeSubcategory) {
-        setActiveSubcategory(null);
-        setViewState('subcategories');
+      if (currentSubcategories.length > 0) {
+          setViewState('subcategories');
       } else {
-        setActiveCategory(null);
-        setViewState('categories');
+          setActiveCategory(null);
+          setViewState('categories');
       }
     } else if (viewState === 'subcategories') {
       setActiveCategory(null);
@@ -160,6 +156,13 @@ export default function PosPage() {
   const clearCart = () => {
     setCart([]);
   };
+  
+  const clearSearch = () => {
+    setSearchQuery('');
+    setActiveCategory(null);
+    setActiveSubcategory(null);
+    setViewState('categories');
+  }
 
   const total = useMemo(() => cart.reduce((acc, item) => acc + item.price * item.quantity, 0), [cart]);
 
@@ -190,8 +193,59 @@ export default function PosPage() {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-16 w-16 animate-spin" /></div>
       }
 
-      if (searchQuery || viewState === 'products') {
+      if (searchQuery) {
          return (
+            <div className="space-y-6">
+                {searchResults.categories.length > 0 && (
+                    <div>
+                        <h3 className="font-bold text-lg mb-2">Categorías</h3>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 animate-in fade-in-50">
+                            {searchResults.categories.map(cat => (
+                                <button key={cat.id} onClick={() => {setSearchQuery(''); handleSelectCategory(cat);}} className="group relative flex flex-col items-center justify-center rounded-full aspect-square overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl" style={{backgroundImage: `linear-gradient(0deg, rgba(20, 20, 20, 0.4) 0%, rgba(20, 20, 20, 0.4) 100%), url(${cat.imageUrl || 'https://placehold.co/200x200.png'})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
+                                    <p className="text-white text-base font-bold leading-tight w-[80%] text-center line-clamp-2 z-10">{cat.name}</p>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {searchResults.subcategories.length > 0 && (
+                    <div>
+                        <h3 className="font-bold text-lg mb-2">Subcategorías</h3>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 animate-in fade-in-50">
+                            {searchResults.subcategories.map(sub => (
+                                <button key={sub.id} onClick={() => {setSearchQuery(''); handleSelectCategory(categories.find(c => c.id === sub.categoryId)!); handleSelectSubcategory(sub);}} className="group relative flex flex-col items-center justify-center rounded-full aspect-square overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl" style={{backgroundImage: `linear-gradient(0deg, rgba(20, 20, 20, 0.4) 0%, rgba(20, 20, 20, 0.4) 100%), url(${sub.imageUrl || 'https://placehold.co/200x200.png'})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
+                                    <p className="text-white text-base font-bold leading-tight w-[80%] text-center line-clamp-2 z-10">{sub.name}</p>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                 {searchResults.products.length > 0 && (
+                    <div>
+                        <h3 className="font-bold text-lg mb-2">Productos</h3>
+                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 animate-in fade-in-50">
+                            {searchResults.products.map(product => (
+                                <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
+                                    <Image src={product.images[0] || 'https://placehold.co/150x150.png'} alt={product.name} width={150} height={150} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" data-ai-hint="product image" />
+                                    <div className="p-3">
+                                        <h4 className="text-sm font-semibold truncate">{product.name}</h4>
+                                        <p className="text-xs text-primary font-bold">S/{product.price.toFixed(2)}</p>
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                 )}
+                 {searchResults.products.length === 0 && searchResults.categories.length === 0 && searchResults.subcategories.length === 0 && (
+                    <p className="text-center text-muted-foreground pt-10">No se encontraron resultados para "{searchQuery}".</p>
+                 )}
+            </div>
+         )
+      }
+
+      if(viewState === 'products') {
+        const displayedProducts = products.filter(p => activeSubcategory ? p.subcategoryId === activeSubcategory.id : p.categoryId === activeCategory?.id);
+        return (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 animate-in fade-in-50">
                 {displayedProducts.map(product => (
                     <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => addToCart(product)}>
@@ -202,11 +256,16 @@ export default function PosPage() {
                         </div>
                     </Card>
                 ))}
+                 {displayedProducts.length === 0 && (
+                    <div className="col-span-full text-center text-muted-foreground pt-10">
+                        No hay productos en esta categoría.
+                    </div>
+                )}
             </div>
          )
       }
 
-      const itemsToShow = viewState === 'categories' ? categories : subcategories;
+      const itemsToShow = viewState === 'categories' ? categories : currentSubcategories;
       const handleItemClick = viewState === 'categories' ? handleSelectCategory : handleSelectSubcategory;
 
       return (
@@ -238,7 +297,7 @@ export default function PosPage() {
          <header className="mb-4">
               <div className="flex flex-wrap justify-between items-center gap-4">
                  <div className="flex items-center gap-2">
-                   {(viewState !== 'categories' || searchQuery) && (
+                   {(viewState !== 'categories' || activeCategory) && !searchQuery && (
                         <Button variant="ghost" size="icon" onClick={handleBack} className="flex-shrink-0">
                             <ArrowLeft />
                         </Button>
@@ -249,18 +308,16 @@ export default function PosPage() {
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
-                            placeholder="Buscar productos..." 
+                            placeholder="Buscar productos, categorías..." 
                             className="pl-9" 
                             value={searchQuery} 
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                if (e.target.value) {
-                                    setViewState('products');
-                                } else {
-                                    handleBack();
-                                }
-                            }}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
+                        {searchQuery && (
+                            <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6" onClick={clearSearch}>
+                                <XCircle className="h-4 w-4"/>
+                            </Button>
+                        )}
                     </div>
                  </div>
               </div>
