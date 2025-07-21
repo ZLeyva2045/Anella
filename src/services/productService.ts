@@ -8,6 +8,7 @@ import {
   query,
   where,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
@@ -59,6 +60,16 @@ export async function saveProduct(
     return newDocRef.id;
   }
 }
+
+export async function deleteProducts(productIds: string[]): Promise<void> {
+    const batch = writeBatch(db);
+    productIds.forEach(id => {
+        const docRef = doc(db, 'products', id);
+        batch.delete(docRef);
+    });
+    await batch.commit();
+}
+
 
 // --- Category Functions ---
 
