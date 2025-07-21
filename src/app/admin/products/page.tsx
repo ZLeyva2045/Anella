@@ -94,9 +94,9 @@ export default function AdminProductsPage() {
     return () => unsubscribe();
   }, []);
   
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
     const newSelectedRows: Record<string, boolean> = {};
-    if (checked) {
+    if (checked === true) {
       products.forEach(p => newSelectedRows[p.id] = true);
     }
     setSelectedRows(newSelectedRows);
@@ -118,14 +118,11 @@ export default function AdminProductsPage() {
 
   const handleDeleteClick = async (productId: string) => {
     // Check for dependencies before showing a dialog
-    const giftsRef = collection(db, "gifts");
-    const q = query(giftsRef, where("products", "array-contains", { productId: productId, quantity: 1 })); // This is a limitation, quantity may vary. A better query is needed if possible.
-    
     const querySnapshot = await getDocs(collection(db, "gifts"));
     const giftsWithProduct: Gift[] = [];
     querySnapshot.forEach(doc => {
         const gift = { id: doc.id, ...doc.data() } as Gift;
-        if (gift.products.some(p => p.productId === productId)) {
+        if (gift.products && gift.products.some(p => p.productId === productId)) {
             giftsWithProduct.push(gift);
         }
     });
@@ -243,11 +240,10 @@ export default function AdminProductsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                     <TableHead padding="checkbox">
+                     <TableHead className="w-[40px]">
                         <Checkbox
-                            checked={selectedRowCount === products.length && products.length > 0}
-                            indeterminate={selectedRowCount > 0 && selectedRowCount < products.length ? "true" : undefined}
-                            onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                            checked={selectedRowCount > 0 && (selectedRowCount === products.length ? true : 'indeterminate')}
+                            onCheckedChange={(checked) => handleSelectAll(checked)}
                             aria-label="Seleccionar todo"
                         />
                     </TableHead>
@@ -269,7 +265,7 @@ export default function AdminProductsPage() {
                     const margin = calculateMargin(product.price, product.costPrice);
                     return (
                         <TableRow key={product.id} data-state={selectedRows[product.id] && "selected"}>
-                          <TableCell padding="checkbox">
+                          <TableCell>
                             <Checkbox
                                 checked={!!selectedRows[product.id]}
                                 onCheckedChange={(checked) => handleSelectRow(product.id, !!checked)}
@@ -387,13 +383,16 @@ export default function AdminProductsPage() {
             </AlertDialogTitle>
             <AlertDialogDescription>
               Este producto no se puede eliminar porque forma parte de los siguientes regalos:
-              <ul className="list-disc pl-5 mt-2 text-sm text-foreground">
-                {affectedGifts.map(gift => <li key={gift.id}>{gift.name}</li>)}
-              </ul>
-              <br/>
-              Para eliminar este producto, primero debes editar los regalos mencionados y quitarlo de ellos.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="max-h-40 overflow-y-auto px-6">
+            <ul className="list-disc pl-5 mt-2 text-sm text-foreground">
+              {affectedGifts.map(gift => <li key={gift.id}>{gift.name}</li>)}
+            </ul>
+          </div>
+          <p className="px-6 text-sm text-muted-foreground">
+            Para eliminar este producto, primero debes editar los regalos mencionados y quitarlo de ellos.
+          </p>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setIsDependencyAlertOpen(false)}>
               Entendido
