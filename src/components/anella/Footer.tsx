@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <div className="flex justify-center md:justify-start mb-3">
                <Image
-                src="https://i.ibb.co/MyXzBh0/Anella.png"
+                src="https://i.ibb.co/MyXzBh0r/Anella.png"
                 alt="Anella Boutique Logo"
                 width={160}
                 height={40}

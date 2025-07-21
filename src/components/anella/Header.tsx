@@ -191,7 +191,7 @@ export function Header() {
             <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
             <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
                <Image
-                src="https://i.ibb.co/MyXzBh0/Anella.png"
+                src="https://i.ibb.co/MyXzBh0r/Anella.png"
                 alt="Anella Boutique Logo"
                 width={120}
                 height={30}
@@ -231,7 +231,7 @@ export function Header() {
           <MobileNav />
           <Link href="/" className="flex items-center gap-2">
              <Image
-                src="https://i.ibb.co/MyXzBh0/Anella.png"
+                src="https://i.ibb.co/MyXzBh0r/Anella.png"
                 alt="Anella Boutique Logo"
                 width={140}
                 height={35}
