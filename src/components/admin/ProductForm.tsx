@@ -1,7 +1,7 @@
 // src/components/admin/ProductForm.tsx
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,16 +29,16 @@ import { useToast } from '@/hooks/use-toast';
 import type { Product, Category, Subcategory } from '@/types/firestore';
 import { productTypes } from '@/types/firestore';
 import { saveProduct, addCategory, addSubcategory, uploadImage } from '@/services/productService';
-import { Loader2, Search, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { collection, onSnapshot, query, doc } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar } from '../ui/calendar';
-import { useClickAway } from 'react-use';
 
 const baseProductSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -82,9 +82,6 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  
-  const [categorySearchQuery, setCategorySearchQuery] = useState('');
-  const [subcategorySearchQuery, setSubcategorySearchQuery] = useState('');
   
   const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -151,16 +148,19 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     const existing = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase().trim());
     if (existing) {
       form.setValue('category', existing.name);
-      form.setValue('categoryId', existing.id);
+      form.setValue('categoryId', existing.id, { shouldValidate: true });
       return;
     };
     
+    setLoading(true);
     try {
       const newCategoryId = await addCategory({ name: categoryName.trim() });
       form.setValue('category', categoryName.trim());
-      form.setValue('categoryId', newCategoryId);
+      form.setValue('categoryId', newCategoryId, { shouldValidate: true });
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear la categoría.' });
+    } finally {
+        setLoading(false);
     }
   };
   
@@ -169,16 +169,19 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     const existing = subcategories.find(s => s.name.toLowerCase() === subcategoryName.toLowerCase().trim());
     if (existing) {
        form.setValue('subcategory', existing.name);
-       form.setValue('subcategoryId', existing.id);
+       form.setValue('subcategoryId', existing.id, { shouldValidate: true });
        return;
     };
     
+    setLoading(true);
     try {
       const newSubcategoryId = await addSubcategory(selectedCategoryId, { name: subcategoryName.trim() });
       form.setValue('subcategory', subcategoryName.trim());
-      form.setValue('subcategoryId', newSubcategoryId);
+      form.setValue('subcategoryId', newSubcategoryId, { shouldValidate: true });
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear la subcategoría.' });
+    } finally {
+        setLoading(false);
     }
   }
 
@@ -250,40 +253,92 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField control={form.control} name="category" render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                         <FormLabel>Categoría</FormLabel>
-                        <Select onValueChange={(value) => {
-                            const selectedCat = categories.find(c => c.id === value);
-                            if (selectedCat) {
-                                field.onChange(selectedCat.name);
-                                form.setValue('categoryId', selectedCat.id);
-                                form.setValue('subcategory', '');
-                                form.setValue('subcategoryId', '');
-                            }
-                        }} value={form.getValues('categoryId')}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Selecciona una categoría"/></SelectTrigger></FormControl>
-                            <SelectContent>
-                                {categories.map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                        {field.value ? categories.find(c => c.name === field.value)?.name : "Selecciona o crea una categoría"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <Command onKeyDown={(e) => {
+                                   if (e.key === 'Enter' && (e.target as HTMLInputElement).value) {
+                                     e.preventDefault();
+                                     handleCreateCategory((e.target as HTMLInputElement).value);
+                                   }
+                                }}>
+                                    <CommandInput placeholder="Buscar categoría..." />
+                                    <CommandList>
+                                        <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
+                                        <CommandGroup>
+                                            {categories.map(cat => (
+                                                <CommandItem
+                                                    value={cat.name}
+                                                    key={cat.id}
+                                                    onSelect={() => {
+                                                        form.setValue("category", cat.name);
+                                                        form.setValue("categoryId", cat.id, { shouldValidate: true });
+                                                        form.setValue("subcategory", "");
+                                                        form.setValue("subcategoryId", "");
+                                                    }}
+                                                >
+                                                    <Check className={cn("mr-2 h-4 w-4", cat.name === field.value ? "opacity-100" : "opacity-0")} />
+                                                    {cat.name}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
                         <FormMessage />
                     </FormItem>
                 )}/>
-                <FormField control={form.control} name="subcategory" render={({ field }) => (
-                     <FormItem>
-                        <FormLabel>Subcategoría</FormLabel>
-                        <Select onValueChange={(value) => {
-                             const selectedSub = subcategories.find(s => s.id === value);
-                             if(selectedSub) {
-                                field.onChange(selectedSub.name);
-                                form.setValue('subcategoryId', selectedSub.id);
-                             }
-                        }} value={form.getValues('subcategoryId')} disabled={!selectedCategoryId}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Selecciona una subcategoría"/></SelectTrigger></FormControl>
-                            <SelectContent>
-                                {subcategories.map(sub => <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                 <FormField control={form.control} name="subcategory" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Subcategoría (Opcional)</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Button variant="outline" role="combobox" disabled={!selectedCategoryId} className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                        {field.value ? subcategories.find(s => s.name === field.value)?.name : "Selecciona o crea una subcategoría"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <Command onKeyDown={(e) => {
+                                   if (e.key === 'Enter' && (e.target as HTMLInputElement).value) {
+                                     e.preventDefault();
+                                     handleCreateSubcategory((e.target as HTMLInputElement).value);
+                                   }
+                                }}>
+                                    <CommandInput placeholder="Buscar subcategoría..." />
+                                    <CommandList>
+                                        <CommandEmpty>No se encontró. Presiona Enter para crear.</CommandEmpty>
+                                        <CommandGroup>
+                                            {subcategories.map(sub => (
+                                                <CommandItem
+                                                    value={sub.name}
+                                                    key={sub.id}
+                                                    onSelect={() => {
+                                                        form.setValue("subcategory", sub.name);
+                                                        form.setValue("subcategoryId", sub.id, { shouldValidate: true });
+                                                    }}
+                                                >
+                                                    <Check className={cn("mr-2 h-4 w-4", sub.name === field.value ? "opacity-100" : "opacity-0")} />
+                                                    {sub.name}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
                         <FormMessage />
                     </FormItem>
                 )}/>
