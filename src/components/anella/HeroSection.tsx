@@ -44,18 +44,17 @@ export function HeroSection() {
   const heroImageUrl = "https://firebasestorage.googleapis.com/v0/b/anella-boutique.appspot.com/o/assets%2FGrupal.jpg?alt=media&token=11198e3d-1b47-4cf0-93ce-0fb471a0dad5";
 
   return (
-    <section id="hero" className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] overflow-hidden flex items-center justify-center bg-soft-gradient">
-      <div
-        className="absolute inset-0 z-0 animate-fade-in"
-        style={{ 
-          backgroundImage: `url(${heroImageUrl})`,
-          backgroundSize: 'contain',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          opacity: 0.2,
-        }}
-        data-ai-hint="team photo"
-      ></div>
+    <section 
+      id="hero" 
+      className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] overflow-hidden flex items-center justify-center bg-soft-gradient"
+      style={{
+        backgroundImage: `url(${heroImageUrl})`,
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+      data-ai-hint="team photo"
+    >
       <div className="absolute inset-0 bg-background/50"></div>
       
       {/* Floating Particles */}
