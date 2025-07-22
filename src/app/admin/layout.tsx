@@ -41,6 +41,7 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/compras', label: 'Compras', icon: ShoppingBasket },
   { href: '/admin/customers', label: 'Clientes', icon: Users },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },
+  { href: '/admin/statistics', label: 'Estadísticas', icon: LineChart },
 ];
 
 
@@ -139,10 +140,10 @@ const AdminNav = () => {
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
-                            isActive={pathname.startsWith('/admin/analytics')}
-                            tooltip={{ children: "Analytics" }}
+                            isActive={pathname.startsWith('/admin/statistics')}
+                            tooltip={{ children: "Estadísticas" }}
                         >
-                            <Link href="#"><LineChart /><span>Analytics</span></Link>
+                            <Link href="/admin/statistics"><LineChart /><span>Estadísticas</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
