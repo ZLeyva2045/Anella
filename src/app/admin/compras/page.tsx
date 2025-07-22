@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -23,6 +23,7 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Loader2, Save, Trash2, PlusCircle, CalendarIcon, ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ProductForm } from '@/components/admin/ProductForm';
 
 const loteItemSchema = z.object({
   productId: z.string().min(1, 'Debe seleccionar un producto.'),
@@ -36,15 +37,14 @@ const loteItemSchema = z.object({
 
 const loteSchema = z.object({
   loteItems: z.array(loteItemSchema).min(1, 'El lote debe tener al menos un producto.'),
-  // Campos adicionales para el lote general (proveedor, factura, etc.) podrían ir aquí
 });
 
 type LoteItemFormValues = z.infer<typeof loteItemSchema>;
-type LoteFormValues = z.infer<typeof loteSchema>;
 
 export default function IngresarLotePage() {
   const [inventory, setInventory] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isProductFormOpen, setIsProductFormOpen] = useState(false);
   const [temporalLote, setTemporalLote] = useState<LoteItemFormValues[]>([]);
   const { toast } = useToast();
 
@@ -120,6 +120,7 @@ export default function IngresarLotePage() {
   }, [temporalLote]);
 
   return (
+    <>
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Ingreso de Nuevo Lote de Compra</h1>
@@ -130,7 +131,13 @@ export default function IngresarLotePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Añadir Producto al Lote</CardTitle>
+          <div className="flex justify-between items-center">
+             <CardTitle>Añadir Producto al Lote</CardTitle>
+             <Button variant="outline" size="sm" onClick={() => setIsProductFormOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Crear Nuevo Producto
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...itemForm}>
@@ -329,7 +336,13 @@ export default function IngresarLotePage() {
               Guardar Lote en Inventario
           </Button>
       </div>
-
     </div>
+
+    <ProductForm
+        isOpen={isProductFormOpen}
+        setIsOpen={setIsProductFormOpen}
+        product={null}
+    />
+    </>
   );
 }
