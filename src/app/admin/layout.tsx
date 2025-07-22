@@ -12,6 +12,7 @@ import {
   Store,
   FileText,
   Gift,
+  ShoppingBasket,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -94,6 +95,15 @@ const AdminNav = () => {
                             tooltip={{ children: "Regalos" }}
                         >
                              <Link href="/admin/gifts"><Gift /><span>Regalos</span></Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname.startsWith('/admin/compras')}
+                            tooltip={{ children: "Compras" }}
+                        >
+                             <Link href="/admin/compras"><ShoppingBasket /><span>Compras</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
