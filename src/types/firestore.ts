@@ -183,3 +183,15 @@ export interface Compra {
   compradorId?: string;
   loteIds: string[]; // references to documents in the 'lotes' collection
 }
+
+/**
+ * Represents an operational expense in the 'expenses' collection.
+ */
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  date: Timestamp;
+  createdAt: Timestamp;
+}
