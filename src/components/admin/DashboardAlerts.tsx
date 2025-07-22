@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, PackageWarning, CalendarClock, ShoppingCart, Loader2 } from 'lucide-react';
+import { AlertTriangle, Package, CalendarClock, ShoppingCart, Loader2 } from 'lucide-react';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Product, Order } from '@/types/firestore';
@@ -108,7 +108,7 @@ export function DashboardAlerts() {
         ) : (
           <>
             <AlertItem
-              icon={PackageWarning}
+              icon={Package}
               title="Bajo Stock"
               count={lowStockProducts.length}
               linkHref="/admin/products"
