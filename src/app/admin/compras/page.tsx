@@ -141,9 +141,9 @@ export default function IngresarLotePage() {
     <>
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Ingreso de Nuevo Lote de Compra</h1>
+        <h1 className="text-3xl font-bold">Registrar Compra</h1>
         <p className="text-muted-foreground">
-          Registra los productos comprados para actualizar el inventario y los costos.
+          Añade los productos comprados para crear un nuevo lote de inventario.
         </p>
       </div>
 
