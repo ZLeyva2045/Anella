@@ -23,6 +23,7 @@ import { Loader2, Save, PlusCircle, CalendarIcon, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { saveExpense } from '@/services/expenseService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 const expenseCategories = [
   'Alquiler',
