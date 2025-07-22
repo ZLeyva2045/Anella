@@ -52,12 +52,15 @@ export function DashboardAlerts() {
     // Low stock listener
     const lowStockQuery = query(
         collection(db, 'products'), 
-        where('stock', '<=', LOW_STOCK_THRESHOLD),
-        where('productType', '!=', 'Servicios')
+        where('productType', '!=', 'Servicios'),
+        where('stock', '<=', LOW_STOCK_THRESHOLD)
     );
     const unsubLowStock = onSnapshot(lowStockQuery, (snapshot) => {
         setLowStockProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
         setLoading(false);
+    }, (error) => {
+      console.error("Error en listener de bajo stock:", error);
+      setLoading(false);
     });
 
     // Expiring products listener
@@ -71,6 +74,9 @@ export function DashboardAlerts() {
     const unsubExpiring = onSnapshot(expiringQuery, (snapshot) => {
         setExpiringProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
         setLoading(false);
+    }, (error) => {
+      console.error("Error en listener de productos por vencer:", error);
+      setLoading(false);
     });
     
     // Pending orders listener
@@ -78,6 +84,9 @@ export function DashboardAlerts() {
     const unsubPendingOrders = onSnapshot(pendingOrdersQuery, (snapshot) => {
         setPendingOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
         setLoading(false);
+    }, (error) => {
+      console.error("Error en listener de pedidos pendientes:", error);
+      setLoading(false);
     });
 
     return () => {
