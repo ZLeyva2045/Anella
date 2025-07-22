@@ -24,6 +24,9 @@ import { db } from '@/lib/firebase/config';
 import { Loader2, Save, Trash2, PlusCircle, CalendarIcon, ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProductForm } from '@/components/admin/ProductForm';
+import { savePurchaseLote } from '@/services/purchaseService';
+import type { LoteItem } from '@/types/firestore';
+
 
 const loteItemSchema = z.object({
   productId: z.string().min(1, 'Debe seleccionar un producto.'),
@@ -33,10 +36,6 @@ const loteItemSchema = z.object({
   expirationDate: z.date().optional().nullable(),
   noExpiration: z.boolean().default(false),
   barcode: z.string().optional(),
-});
-
-const loteSchema = z.object({
-  loteItems: z.array(loteItemSchema).min(1, 'El lote debe tener al menos un producto.'),
 });
 
 type LoteItemFormValues = z.infer<typeof loteItemSchema>;
@@ -105,14 +104,33 @@ export default function IngresarLotePage() {
       return;
     }
     setLoading(true);
-    // TODO: Implementar la lógica para guardar el lote en Firestore
-    // Esto implicaría crear un nuevo documento en una colección 'lotes' o 'compras'
-    // y luego actualizar el stock y el costo de cada producto en el inventario.
-    console.log('Guardando lote:', temporalLote);
-    await new Promise(res => setTimeout(res, 1500));
-    setLoading(false);
-    setTemporalLote([]);
-    toast({ title: 'Lote Guardado (Simulación)', description: 'El lote ha sido registrado y el stock actualizado.' });
+    try {
+        const loteItemsToSave: LoteItem[] = temporalLote.map(item => ({
+            productoId: item.productId,
+            cantidadInicial: item.quantity,
+            cantidadActual: item.quantity,
+            costoUnitarioCompra: item.costPerUnit,
+            fechaCompra: new Date(),
+            fechaVencimiento: item.expirationDate || null,
+            codigoBarrasLote: item.barcode || '',
+            estadoLote: 'activo',
+        }));
+
+        await savePurchaseLote(loteItemsToSave);
+        
+        setTemporalLote([]);
+        toast({ title: 'Lote Guardado', description: 'El lote ha sido registrado y el stock actualizado correctamente.' });
+
+    } catch (error: any) {
+        console.error("Error saving lote:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error al guardar',
+            description: error.message || 'No se pudo registrar el lote en el inventario.',
+        });
+    } finally {
+        setLoading(false);
+    }
   };
   
   const totalLoteCost = useMemo(() => {

@@ -151,3 +151,34 @@ export interface User {
   photoURL?: string; // foto del usuario
   loyaltyPoints?: number; // Puntos de fidelidad
 }
+
+/**
+ * Represents a specific batch of a purchased product.
+ */
+export interface Lote {
+  id?: string;
+  productoId: string;
+  cantidadInicial: number;
+  cantidadActual: number;
+  costoUnitarioCompra: number;
+  fechaCompra: Date | Timestamp;
+  fechaVencimiento: Date | Timestamp | null;
+  codigoBarrasLote?: string;
+  estadoLote: 'activo' | 'agotado' | 'vencido';
+  idCompra?: string; // Optional reference to a general purchase document
+}
+
+export type LoteItem = Omit<Lote, 'id'>;
+
+
+/**
+ * Represents a complete purchase transaction, which may include several lots.
+ */
+export interface Compra {
+  id: string;
+  fechaCompra: Date | Timestamp;
+  proveedor?: string;
+  totalCompra: number;
+  compradorId?: string;
+  loteIds: string[]; // references to documents in the 'lotes' collection
+}
