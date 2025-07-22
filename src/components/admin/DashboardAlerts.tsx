@@ -51,12 +51,14 @@ export function DashboardAlerts() {
 
     // Low stock listener
     const lowStockQuery = query(
-        collection(db, 'products'), 
-        where('productType', '!=', 'Servicios'),
+        collection(db, 'products'),
         where('stock', '<=', LOW_STOCK_THRESHOLD)
     );
     const unsubLowStock = onSnapshot(lowStockQuery, (snapshot) => {
-        setLowStockProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+        const allLowStock = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        // Filter out services on the client side
+        const filteredLowStock = allLowStock.filter(p => p.productType !== 'Servicios');
+        setLowStockProducts(filteredLowStock);
         setLoading(false);
     }, (error) => {
       console.error("Error en listener de bajo stock:", error);
@@ -68,7 +70,7 @@ export function DashboardAlerts() {
     thresholdDate.setDate(thresholdDate.getDate() + EXPIRATION_DAYS_THRESHOLD);
     const thresholdTimestamp = Timestamp.fromDate(thresholdDate);
     const expiringQuery = query(
-        collection(db, 'products'), 
+        collection(db, 'products'),
         where('expirationDate', '<=', thresholdTimestamp)
     );
     const unsubExpiring = onSnapshot(expiringQuery, (snapshot) => {
