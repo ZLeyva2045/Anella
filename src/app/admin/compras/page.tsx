@@ -49,58 +49,6 @@ export default function IngresarLotePage() {
   const [temporalLote, setTemporalLote] = useState<LoteItemFormValues[]>([]);
   const { toast } = useToast();
 
-  // --- Logic for Physical Barcode Scanner ---
-  const [barcodeBuffer, setBarcodeBuffer] = useState('');
-  const [lastKeystroke, setLastKeystroke] = useState(0);
-
-  const handleScanSuccess = useCallback((decodedText: string) => {
-    const foundProduct = inventory.find(p => p.barcode === decodedText || p.id === decodedText || p.supplier === decodedText || p.name === decodedText); 
-    if (foundProduct) {
-        itemForm.setValue('productId', foundProduct.id);
-        itemForm.setValue('productName', foundProduct.name);
-        itemForm.setValue('barcode', decodedText);
-        toast({ title: 'Producto Encontrado', description: `Se ha seleccionado "${foundProduct.name}".`});
-    } else {
-        itemForm.setValue('barcode', decodedText);
-        toast({ variant: 'destructive', title: 'Producto no encontrado', description: 'El código escaneado no coincide con ningún producto. Puedes añadirlo manualmente.'});
-    }
-    setIsScannerOpen(false);
-  }, [inventory, itemForm, toast]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-          return;
-      }
-      
-      const currentTime = new Date().getTime();
-      
-      setLastKeystroke(prevTime => {
-          if (currentTime - prevTime > 100) {
-              setBarcodeBuffer('');
-          }
-          return currentTime;
-      });
-
-      if (event.key === 'Enter') {
-        setBarcodeBuffer(prevBuffer => {
-          if (prevBuffer.length > 5) {
-            handleScanSuccess(prevBuffer);
-          }
-          return ''; 
-        });
-      } else if (event.key.length === 1) {
-        setBarcodeBuffer(prev => prev + event.key);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleScanSuccess]);
-  // --- End of Physical Scanner Logic ---
-
   const itemForm = useForm<LoteItemFormValues>({
     resolver: zodResolver(loteItemSchema),
     defaultValues: {
@@ -119,6 +67,58 @@ export default function IngresarLotePage() {
     name: 'noExpiration',
   });
 
+  // --- Logic for Physical Barcode Scanner ---
+  const [barcodeBuffer, setBarcodeBuffer] = useState('');
+  const [lastKeystroke, setLastKeystroke] = useState(0);
+
+  const handleScanSuccess = useCallback((decodedText: string) => {
+    const foundProduct = inventory.find(p => p.barcode === decodedText || p.id === decodedText || p.supplier === decodedText || p.name === decodedText);
+    if (foundProduct) {
+        itemForm.setValue('productId', foundProduct.id);
+        itemForm.setValue('productName', foundProduct.name);
+        itemForm.setValue('barcode', decodedText);
+        toast({ title: 'Producto Encontrado', description: `Se ha seleccionado "${foundProduct.name}".`});
+    } else {
+        itemForm.setValue('barcode', decodedText);
+        toast({ variant: 'destructive', title: 'Producto no encontrado', description: 'El código escaneado no coincide con ningún producto. Puedes añadirlo manualmente.'});
+    }
+    setIsScannerOpen(false);
+  }, [inventory, itemForm, toast]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+          return;
+      }
+
+      const currentTime = new Date().getTime();
+
+      setLastKeystroke(prevTime => {
+          if (currentTime - prevTime > 100) {
+              setBarcodeBuffer('');
+          }
+          return currentTime;
+      });
+
+      if (event.key === 'Enter') {
+        setBarcodeBuffer(prevBuffer => {
+          if (prevBuffer.length > 5) {
+            handleScanSuccess(prevBuffer);
+          }
+          return '';
+        });
+      } else if (event.key.length === 1) {
+        setBarcodeBuffer(prev => prev + event.key);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [barcodeBuffer, handleScanSuccess]);
+  // --- End of Physical Scanner Logic ---
+
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'products'), (snapshot) => {
       setInventory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
@@ -130,7 +130,7 @@ export default function IngresarLotePage() {
 
     return () => unsub();
   }, []);
-  
+
 
   const handleAddProductToLote = (data: LoteItemFormValues) => {
     const finalData = {
@@ -148,7 +148,7 @@ export default function IngresarLotePage() {
       barcode: '',
     });
   };
-  
+
   const handleRemoveFromLote = (index: number) => {
     setTemporalLote(prev => prev.filter((_, i) => i !== index));
   }
@@ -172,7 +172,7 @@ export default function IngresarLotePage() {
         }));
 
         await savePurchaseLote(loteItemsToSave);
-        
+
         setTemporalLote([]);
         toast({ title: 'Lote Guardado', description: 'El lote ha sido registrado y el stock actualizado correctamente.' });
 
@@ -187,7 +187,7 @@ export default function IngresarLotePage() {
         setLoading(false);
     }
   };
-  
+
   const totalLoteCost = useMemo(() => {
     return temporalLote.reduce((acc, item) => acc + (item.costPerUnit * item.quantity), 0);
   }, [temporalLote]);
