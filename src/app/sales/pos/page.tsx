@@ -21,12 +21,24 @@ import type { Product, Category, Subcategory } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { CompleteSaleDialog } from '@/components/shared/CompleteSaleDialog';
 import { cn } from '@/lib/utils';
+import { BottomNavBar, NavItem } from '@/components/shared/BottomNavBar';
+import { Home, Store, ShoppingCart, Users, Calculator, Package } from 'lucide-react';
+
 
 export interface PosCartItem extends Product {
   quantity: number;
 }
 
 type ViewState = 'categories' | 'subcategories' | 'products';
+
+const salesNavItems: NavItem[] = [
+  { href: '/sales', label: 'Dashboard', icon: Home },
+  { href: '/sales/pos', label: 'POS', icon: Store },
+  { href: '/sales/orders', label: 'Pedidos', icon: ShoppingCart },
+  { href: '/sales/customers', label: 'Clientes', icon: Users },
+  { href: '/sales/calculator', label: 'Calculadora', icon: Calculator },
+  { href: '/products', label: 'Catálogo', icon: Package },
+];
 
 export default function PosPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -389,6 +401,7 @@ export default function PosPage() {
         totalAmount={total}
         onSaleSuccess={handleSaleSuccess}
       />
+      <BottomNavBar navItems={salesNavItems} />
     </>
   );
 }

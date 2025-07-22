@@ -38,6 +38,9 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/orders', label: 'Pedidos', icon: ShoppingCart },
   { href: '/admin/gifts', label: 'Regalos', icon: Gift },
   { href: '/admin/products', label: 'Inventario', icon: Package },
+  { href: '/admin/compras', label: 'Compras', icon: ShoppingBasket },
+  { href: '/admin/customers', label: 'Clientes', icon: Users },
+  { href: '/admin/reports', label: 'Reportes', icon: FileText },
 ];
 
 

@@ -34,6 +34,7 @@ const salesNavItems: NavItem[] = [
   { href: '/sales/orders', label: 'Pedidos', icon: ShoppingCart },
   { href: '/sales/customers', label: 'Clientes', icon: Users },
   { href: '/sales/calculator', label: 'Calculadora', icon: Calculator },
+  { href: '/products', label: 'Catálogo', icon: Package },
 ];
 
 const SalesNav = () => {
