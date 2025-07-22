@@ -48,7 +48,7 @@ export default function IngresarLotePage() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [temporalLote, setTemporalLote] = useState<LoteItemFormValues[]>([]);
   const { toast } = useToast();
-
+  
   const itemForm = useForm<LoteItemFormValues>({
     resolver: zodResolver(loteItemSchema),
     defaultValues: {
@@ -67,10 +67,6 @@ export default function IngresarLotePage() {
     name: 'noExpiration',
   });
 
-  // --- Logic for Physical Barcode Scanner ---
-  const [barcodeBuffer, setBarcodeBuffer] = useState('');
-  const [lastKeystroke, setLastKeystroke] = useState(0);
-
   const handleScanSuccess = useCallback((decodedText: string) => {
     const foundProduct = inventory.find(p => p.barcode === decodedText || p.id === decodedText || p.supplier === decodedText || p.name === decodedText);
     if (foundProduct) {
@@ -85,38 +81,48 @@ export default function IngresarLotePage() {
     setIsScannerOpen(false);
   }, [inventory, itemForm, toast]);
 
+
+  // --- Logic for Physical Barcode Scanner ---
+  const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
+
   useEffect(() => {
+    let barcodeBuffer = '';
+    let lastKeystrokeTime = 0;
+  
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
           return;
       }
-
       const currentTime = new Date().getTime();
-
-      setLastKeystroke(prevTime => {
-          if (currentTime - prevTime > 100) {
-              setBarcodeBuffer('');
-          }
-          return currentTime;
-      });
-
-      if (event.key === 'Enter') {
-        setBarcodeBuffer(prevBuffer => {
-          if (prevBuffer.length > 5) {
-            handleScanSuccess(prevBuffer);
-          }
-          return '';
-        });
-      } else if (event.key.length === 1) {
-        setBarcodeBuffer(prev => prev + event.key);
+      
+      if (currentTime - lastKeystrokeTime > 100) {
+        barcodeBuffer = '';
       }
+      
+      if (event.key === 'Enter') {
+        if (barcodeBuffer.length > 5) {
+          setScannedBarcode(barcodeBuffer);
+        }
+        barcodeBuffer = '';
+      } else if (event.key.length === 1) {
+        barcodeBuffer += event.key;
+      }
+      
+      lastKeystrokeTime = currentTime;
     };
-
+  
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [barcodeBuffer, handleScanSuccess]);
+  }, []); 
+
+  useEffect(() => {
+    if (scannedBarcode) {
+      handleScanSuccess(scannedBarcode);
+      setScannedBarcode(null); // Reset after processing
+    }
+  }, [scannedBarcode, handleScanSuccess]);
   // --- End of Physical Scanner Logic ---
 
   useEffect(() => {
