@@ -23,6 +23,7 @@ import Link from 'next/link';
 import type { Order } from '@/types/firestore';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { DashboardAlerts } from '@/components/admin/DashboardAlerts';
 
 const MetricCard = ({ title, value, icon, description }: { title: string, value: string, icon: React.ElementType, description: string }) => {
   const Icon = icon;
@@ -57,9 +58,9 @@ const RecentOrdersTable = () => {
 
     const getStatusVariant = (status: Order['status']) => {
         switch (status) {
-        case 'delivered': return 'default';
+        case 'completed': return 'default';
         case 'processing': return 'secondary';
-        case 'shipped': return 'outline';
+        case 'finishing': return 'outline';
         case 'cancelled': return 'destructive';
         case 'pending': return 'secondary';
         default: return 'outline';
@@ -149,7 +150,14 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      <RecentOrdersTable />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2">
+           <RecentOrdersTable />
+        </div>
+        <div>
+          <DashboardAlerts />
+        </div>
+      </div>
     </div>
   );
 }
