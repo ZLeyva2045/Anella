@@ -32,6 +32,7 @@ export interface Product {
   rating?: number; 
   stock: number; // Cantidad en inventario
   supplier?: string; // Proveedor del producto (opcional)
+  barcode?: string; // Código de barras principal del producto
   productType?: ProductType;
   expirationDate?: Date | Timestamp; // Fecha de vencimiento para consumibles
   isBreakfast?: boolean; // Flag para productos como desayunos que no tienen fecha de vencimiento fija

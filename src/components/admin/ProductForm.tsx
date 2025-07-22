@@ -31,7 +31,7 @@ import { productTypes } from '@/types/firestore';
 import { saveProduct, addCategory, addSubcategory, uploadImage } from '@/services/productService';
 import { Loader2, Calendar as CalendarIcon, ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandInput, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -53,6 +53,7 @@ const baseProductSchema = z.object({
   images: z.array(z.string()).optional(),
   stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.').optional(),
   supplier: z.string().optional(),
+  barcode: z.string().optional(),
   expirationDate: z.date().optional(),
   isBreakfast: z.boolean().default(false),
 });
@@ -91,7 +92,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
     defaultValues: {
       name: '', description: '', costPrice: 0, price: 0, 
       category: '', categoryId: '', subcategory: '', subcategoryId: '',
-      productType: 'Bienes', images: [], stock: 0, supplier: '',
+      productType: 'Bienes', images: [], stock: 0, supplier: '', barcode: '',
       expirationDate: undefined, isBreakfast: false
     },
   });
@@ -134,7 +135,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
         form.reset({
           name: '', description: '', costPrice: 0, price: 0, 
           category: '', categoryId: '', subcategory: '', subcategoryId: '',
-          productType: 'Bienes', images: [], stock: 0, supplier: '',
+          productType: 'Bienes', images: [], stock: 0, supplier: '', barcode: '',
           expirationDate: undefined, isBreakfast: false
         });
       }
@@ -350,6 +351,8 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
               )}
                <FormField control={form.control} name="supplier" render={({ field }) => ( <FormItem><FormLabel>Proveedor (Opcional)</FormLabel><FormControl><Input placeholder="Nombre del proveedor" {...field} /></FormControl><FormMessage /></FormItem>)} />
             </div>
+
+             <FormField control={form.control} name="barcode" render={({ field }) => ( <FormItem><FormLabel>Código de Barras (Opcional)</FormLabel><FormControl><Input placeholder="Escanea o escribe el código" {...field} /></FormControl><FormMessage /></FormItem>)} />
             
             <FormItem>
               <FormLabel>Imagen Principal</FormLabel>
