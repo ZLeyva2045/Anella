@@ -23,43 +23,49 @@ export function BarcodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: Barco
   useEffect(() => {
     if (!isOpen) return;
 
-    // Asegurarse de que el elemento exista
-    const scannerElement = document.getElementById(SCANNER_REGION_ID);
-    if (!scannerElement) {
+    // We use a timeout to ensure the DOM element is rendered before initializing the scanner.
+    const timer = setTimeout(() => {
+      const scannerElement = document.getElementById(SCANNER_REGION_ID);
+      if (!scannerElement) {
         console.error(`Element with id ${SCANNER_REGION_ID} not found.`);
         return;
-    }
-
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      SCANNER_REGION_ID,
-      {
-        qrbox: { width: 250, height: 100 },
-        fps: 10,
-        rememberLastUsedCamera: true,
-      },
-      false // verbose
-    );
-
-    const handleSuccess = (decodedText: string, decodedResult: Html5QrcodeResult) => {
-      onScanSuccess(decodedText);
-      // No cerramos el diálogo aquí, lo hacemos en la página para dar feedback
-    };
-
-    const handleError = (errorMessage: string) => {
-      // Manejar errores o simplemente ignorarlos
-      // console.warn(errorMessage);
-    };
-
-    html5QrcodeScanner.render(handleSuccess, handleError);
-
-    return () => {
-      // Limpiar el escáner para liberar la cámara
-      if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear().catch(error => {
-            console.error("Failed to clear html5QrcodeScanner.", error);
-        });
       }
-    };
+      // Clear any existing content
+      scannerElement.innerHTML = '';
+
+
+      const html5QrcodeScanner = new Html5QrcodeScanner(
+        SCANNER_REGION_ID,
+        {
+          qrbox: { width: 250, height: 100 },
+          fps: 10,
+          rememberLastUsedCamera: true,
+        },
+        false // verbose
+      );
+
+      const handleSuccess = (decodedText: string, decodedResult: Html5QrcodeResult) => {
+        onScanSuccess(decodedText);
+      };
+
+      const handleError = (errorMessage: string) => {
+        // console.warn(errorMessage);
+      };
+
+      html5QrcodeScanner.render(handleSuccess, handleError);
+
+      return () => {
+        // Cleanup function for when the component unmounts or isOpen changes
+        if (html5QrcodeScanner) {
+          html5QrcodeScanner.clear().catch(error => {
+            console.error("Failed to clear html5QrcodeScanner.", error);
+          });
+        }
+      };
+    }, 0);
+
+    // This is the cleanup for the timeout itself
+    return () => clearTimeout(timer);
   }, [isOpen, onScanSuccess]);
 
   return (
