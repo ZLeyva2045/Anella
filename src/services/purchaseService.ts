@@ -40,10 +40,10 @@ export async function savePurchaseLote(loteItems: LoteItem[]): Promise<void> {
 
       // Increment stock and update cost price
       const updatedData: Partial<Product> = {
-          stock: increment(item.cantidadActual),
+          stock: increment(item.cantidadInicial), // Use cantidadInicial as it's a new lot
           costPrice: item.costoUnitarioCompra, // We'll just use the latest cost price for simplicity
           updatedAt: serverTimestamp()
-      }
+      } as any; // Cast because serverTimestamp is not a standard field
 
       transaction.update(productRef, updatedData);
     }
