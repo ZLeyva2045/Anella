@@ -13,6 +13,7 @@ import {
   FileText,
   Gift,
   ShoppingBasket,
+  BarChart3,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/customers', label: 'Clientes', icon: Users },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },
   { href: '/admin/statistics', label: 'Estadísticas', icon: LineChart },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
 
@@ -144,6 +146,15 @@ const AdminNav = () => {
                             tooltip={{ children: "Estadísticas" }}
                         >
                             <Link href="/admin/statistics"><LineChart /><span>Estadísticas</span></Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname.startsWith('/admin/analytics')}
+                            tooltip={{ children: "Analytics" }}
+                        >
+                            <Link href="/admin/analytics"><BarChart3 /><span>Analytics</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
