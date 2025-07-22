@@ -118,7 +118,7 @@ export default function IngresarLotePage() {
   }, []);
   
   const handleScanSuccess = (decodedText: string) => {
-    const foundProduct = inventory.find(p => p.id === decodedText || p.supplier === decodedText || p.name === decodedText); 
+    const foundProduct = inventory.find(p => p.barcode === decodedText || p.id === decodedText || p.supplier === decodedText || p.name === decodedText); 
     if (foundProduct) {
         itemForm.setValue('productId', foundProduct.id);
         itemForm.setValue('productName', foundProduct.name);
