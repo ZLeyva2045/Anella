@@ -83,28 +83,29 @@ export default function IngresarLotePage() {
 
 
   // --- Logic for Physical Barcode Scanner ---
-  const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
-
   useEffect(() => {
-    let barcodeBuffer = '';
-    let lastKeystrokeTime = 0;
-  
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't trigger when typing in inputs
        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
           return;
       }
+      
+      let barcodeBuffer = '';
+      let lastKeystrokeTime = 0;
+      
       const currentTime = new Date().getTime();
       
+      // Reset buffer if keystrokes are too far apart
       if (currentTime - lastKeystrokeTime > 100) {
         barcodeBuffer = '';
       }
       
       if (event.key === 'Enter') {
-        if (barcodeBuffer.length > 5) {
-          setScannedBarcode(barcodeBuffer);
+        if (barcodeBuffer.length > 5) { // Typical barcode length check
+          handleScanSuccess(barcodeBuffer);
         }
-        barcodeBuffer = '';
-      } else if (event.key.length === 1) {
+        barcodeBuffer = ''; // Reset after Enter
+      } else if (event.key.length === 1) { // Append alphanumeric characters
         barcodeBuffer += event.key;
       }
       
@@ -115,14 +116,7 @@ export default function IngresarLotePage() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []); 
-
-  useEffect(() => {
-    if (scannedBarcode) {
-      handleScanSuccess(scannedBarcode);
-      setScannedBarcode(null); // Reset after processing
-    }
-  }, [scannedBarcode, handleScanSuccess]);
+  }, [handleScanSuccess]); // Rerun if handleScanSuccess changes
   // --- End of Physical Scanner Logic ---
 
   useEffect(() => {
