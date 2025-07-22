@@ -21,11 +21,12 @@ import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/types/firestore';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, PlusCircle, CalendarIcon, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, Save, Trash2, PlusCircle, CalendarIcon, ChevronsUpDown, Check, ScanBarcode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { savePurchaseLote } from '@/services/purchaseService';
 import type { LoteItem } from '@/types/firestore';
+import { BarcodeScannerDialog } from '@/components/shared/BarcodeScannerDialog';
 
 
 const loteItemSchema = z.object({
@@ -44,6 +45,7 @@ export default function IngresarLotePage() {
   const [inventory, setInventory] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProductFormOpen, setIsProductFormOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [temporalLote, setTemporalLote] = useState<LoteItemFormValues[]>([]);
   const { toast } = useToast();
 
@@ -76,6 +78,20 @@ export default function IngresarLotePage() {
 
     return () => unsub();
   }, []);
+  
+  const handleScanSuccess = (decodedText: string) => {
+    const foundProduct = inventory.find(p => p.id === decodedText || p.supplier === decodedText); // Asumiendo que `supplier` puede contener el barcode
+    if (foundProduct) {
+        itemForm.setValue('productId', foundProduct.id);
+        itemForm.setValue('productName', foundProduct.name);
+        itemForm.setValue('barcode', decodedText);
+        toast({ title: 'Producto Encontrado', description: `Se ha seleccionado "${foundProduct.name}".`});
+    } else {
+        itemForm.setValue('barcode', decodedText);
+        toast({ variant: 'destructive', title: 'Producto no encontrado', description: 'El código escaneado no coincide con ningún producto. Puedes añadirlo manualmente.'});
+    }
+    setIsScannerOpen(false);
+  };
 
   const handleAddProductToLote = (data: LoteItemFormValues) => {
     const finalData = {
@@ -210,7 +226,12 @@ export default function IngresarLotePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Código de Barras (Opcional)</FormLabel>
-                        <FormControl><Input placeholder="Escanear o escribir código" {...field} /></FormControl>
+                        <div className="flex gap-2">
+                            <FormControl><Input placeholder="Escanear o escribir código" {...field} /></FormControl>
+                             <Button type="button" variant="outline" size="icon" onClick={() => setIsScannerOpen(true)}>
+                                <ScanBarcode />
+                            </Button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -360,6 +381,11 @@ export default function IngresarLotePage() {
         isOpen={isProductFormOpen}
         setIsOpen={setIsProductFormOpen}
         product={null}
+    />
+    <BarcodeScannerDialog 
+        isOpen={isScannerOpen}
+        setIsOpen={setIsScannerOpen}
+        onScanSuccess={handleScanSuccess}
     />
     </>
   );
