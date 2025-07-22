@@ -14,7 +14,7 @@ import {
 interface BarcodeScannerDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  onScanSuccess: (decodedText: string, decodedResult: Html5QrcodeResult) => void;
+  onScanSuccess: (decodedText: string) => void;
 }
 
 const SCANNER_REGION_ID = "barcode-scanner-region";
@@ -41,7 +41,7 @@ export function BarcodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: Barco
     );
 
     const handleSuccess = (decodedText: string, decodedResult: Html5QrcodeResult) => {
-      onScanSuccess(decodedText, decodedResult);
+      onScanSuccess(decodedText);
       // No cerramos el diálogo aquí, lo hacemos en la página para dar feedback
     };
 
@@ -54,9 +54,11 @@ export function BarcodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: Barco
 
     return () => {
       // Limpiar el escáner para liberar la cámara
-      html5QrcodeScanner.clear().catch(error => {
-        console.error("Failed to clear html5QrcodeScanner.", error);
-      });
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(error => {
+            console.error("Failed to clear html5QrcodeScanner.", error);
+        });
+      }
     };
   }, [isOpen, onScanSuccess]);
 

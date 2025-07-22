@@ -1,7 +1,7 @@
 // src/app/admin/compras/page.tsx
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -49,6 +49,44 @@ export default function IngresarLotePage() {
   const [temporalLote, setTemporalLote] = useState<LoteItemFormValues[]>([]);
   const { toast } = useToast();
 
+  // --- Logic for Physical Barcode Scanner ---
+  const [barcodeBuffer, setBarcodeBuffer] = useState('');
+  const [lastKeystroke, setLastKeystroke] = useState(0);
+
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // Ignore events from input fields to allow normal typing
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    
+    const currentTime = new Date().getTime();
+    
+    // If there's a significant delay, reset the buffer
+    if (currentTime - lastKeystroke > 100) {
+      setBarcodeBuffer('');
+    }
+
+    if (event.key === 'Enter') {
+      if (barcodeBuffer.length > 5) { // Minimum length for a barcode
+        handleScanSuccess(barcodeBuffer);
+      }
+      setBarcodeBuffer('');
+    } else if (event.key.length === 1) { // Add character to buffer
+      setBarcodeBuffer(prev => prev + event.key);
+    }
+    
+    setLastKeystroke(currentTime);
+
+  }, [barcodeBuffer, lastKeystroke]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+  // --- End of Physical Scanner Logic ---
+
   const itemForm = useForm<LoteItemFormValues>({
     resolver: zodResolver(loteItemSchema),
     defaultValues: {
@@ -80,7 +118,7 @@ export default function IngresarLotePage() {
   }, []);
   
   const handleScanSuccess = (decodedText: string) => {
-    const foundProduct = inventory.find(p => p.id === decodedText || p.supplier === decodedText); // Asumiendo que `supplier` puede contener el barcode
+    const foundProduct = inventory.find(p => p.id === decodedText || p.supplier === decodedText || p.name === decodedText); 
     if (foundProduct) {
         itemForm.setValue('productId', foundProduct.id);
         itemForm.setValue('productName', foundProduct.name);
@@ -385,7 +423,7 @@ export default function IngresarLotePage() {
     <BarcodeScannerDialog 
         isOpen={isScannerOpen}
         setIsOpen={setIsScannerOpen}
-        onScanSuccess={handleScanSuccess}
+        onScanSuccess={(decodedText) => handleScanSuccess(decodedText)}
     />
     </>
   );
