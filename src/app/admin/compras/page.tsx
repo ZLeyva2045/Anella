@@ -53,38 +53,52 @@ export default function IngresarLotePage() {
   const [barcodeBuffer, setBarcodeBuffer] = useState('');
   const [lastKeystroke, setLastKeystroke] = useState(0);
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // Ignore events from input fields to allow normal typing
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
+  const handleScanSuccess = useCallback((decodedText: string) => {
+    const foundProduct = inventory.find(p => p.barcode === decodedText || p.id === decodedText || p.supplier === decodedText || p.name === decodedText); 
+    if (foundProduct) {
+        itemForm.setValue('productId', foundProduct.id);
+        itemForm.setValue('productName', foundProduct.name);
+        itemForm.setValue('barcode', decodedText);
+        toast({ title: 'Producto Encontrado', description: `Se ha seleccionado "${foundProduct.name}".`});
+    } else {
+        itemForm.setValue('barcode', decodedText);
+        toast({ variant: 'destructive', title: 'Producto no encontrado', description: 'El código escaneado no coincide con ningún producto. Puedes añadirlo manualmente.'});
     }
-    
-    const currentTime = new Date().getTime();
-    
-    // If there's a significant delay, reset the buffer
-    if (currentTime - lastKeystroke > 100) {
-      setBarcodeBuffer('');
-    }
-
-    if (event.key === 'Enter') {
-      if (barcodeBuffer.length > 5) { // Minimum length for a barcode
-        handleScanSuccess(barcodeBuffer);
-      }
-      setBarcodeBuffer('');
-    } else if (event.key.length === 1) { // Add character to buffer
-      setBarcodeBuffer(prev => prev + event.key);
-    }
-    
-    setLastKeystroke(currentTime);
-
-  }, [barcodeBuffer, lastKeystroke]);
+    setIsScannerOpen(false);
+  }, [inventory, itemForm, toast]);
 
   useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+          return;
+      }
+      
+      const currentTime = new Date().getTime();
+      
+      setLastKeystroke(prevTime => {
+          if (currentTime - prevTime > 100) {
+              setBarcodeBuffer('');
+          }
+          return currentTime;
+      });
+
+      if (event.key === 'Enter') {
+        setBarcodeBuffer(prevBuffer => {
+          if (prevBuffer.length > 5) {
+            handleScanSuccess(prevBuffer);
+          }
+          return ''; 
+        });
+      } else if (event.key.length === 1) {
+        setBarcodeBuffer(prev => prev + event.key);
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleKeyDown]);
+  }, [handleScanSuccess]);
   // --- End of Physical Scanner Logic ---
 
   const itemForm = useForm<LoteItemFormValues>({
@@ -117,19 +131,6 @@ export default function IngresarLotePage() {
     return () => unsub();
   }, []);
   
-  const handleScanSuccess = (decodedText: string) => {
-    const foundProduct = inventory.find(p => p.barcode === decodedText || p.id === decodedText || p.supplier === decodedText || p.name === decodedText); 
-    if (foundProduct) {
-        itemForm.setValue('productId', foundProduct.id);
-        itemForm.setValue('productName', foundProduct.name);
-        itemForm.setValue('barcode', decodedText);
-        toast({ title: 'Producto Encontrado', description: `Se ha seleccionado "${foundProduct.name}".`});
-    } else {
-        itemForm.setValue('barcode', decodedText);
-        toast({ variant: 'destructive', title: 'Producto no encontrado', description: 'El código escaneado no coincide con ningún producto. Puedes añadirlo manualmente.'});
-    }
-    setIsScannerOpen(false);
-  };
 
   const handleAddProductToLote = (data: LoteItemFormValues) => {
     const finalData = {
