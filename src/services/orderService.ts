@@ -8,6 +8,8 @@ import {
   runTransaction,
   writeBatch,
   Transaction,
+  getDoc,
+  increment,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Order, User, Product } from '@/types/firestore';
@@ -21,11 +23,13 @@ export async function saveOrder(
 ) {
   return runTransaction(db, async (transaction) => {
     const productRefsAndData: { ref: any, data: Product }[] = [];
+    let userRef: any;
+    let customerDoc: any;
 
     // 1. READ PHASE: Perform all reads first.
     for (const item of data.items) {
       const productRef = doc(db, 'products', item.itemId);
-      const productDoc = await transaction.get(productRef);
+      const productDoc = await transaction.get(productRef); // READ
       if (!productDoc.exists()) {
         throw new Error(`Producto con ID ${item.itemId} no encontrado.`);
       }
@@ -41,32 +45,32 @@ export async function saveOrder(
     }
     
     // If order is completed, read the user for loyalty points.
-    if (data.status === 'completed' && !data.pointsAwarded) {
-        const customerId = data.userId;
-        if(customerId) {
-            const userRef = doc(db, 'users', customerId);
-            // This get is safe as it's still in the read phase.
-            await transaction.get(userRef);
-        }
+    if (data.status === 'completed' && !data.pointsAwarded && data.userId) {
+        userRef = doc(db, 'users', data.userId);
+        customerDoc = await transaction.get(userRef); // READ
     }
 
     // --- WRITE PHASE: All reads are done, now we can write. ---
 
     // 2. Save the order
     let finalOrderId = orderId;
-    if (orderId) {
-      const orderRef = doc(db, 'orders', orderId);
-      transaction.set(orderRef, data, { merge: true });
-    } else {
-      const newOrderData = { ...data, createdAt: serverTimestamp(), pointsAwarded: false };
-      const newOrderRef = doc(collection(db, 'orders'));
-      transaction.set(newOrderRef, newOrderData);
-      finalOrderId = newOrderRef.id;
+    const orderRef = orderId ? doc(db, 'orders', orderId) : doc(collection(db, 'orders'));
+    
+    if (!orderId) {
+        finalOrderId = orderRef.id;
     }
 
+    const finalOrderData = {
+        ...data,
+        createdAt: orderId ? undefined : serverTimestamp(), // Only set createdAt on new orders
+        pointsAwarded: data.pointsAwarded || false,
+    };
+    
+    transaction.set(orderRef, finalOrderData, { merge: true });
+    
     // 3. Update stock for all items
     for (const item of data.items) {
-      const productInfo = productRefsAndData.find(p => p.data.id === item.itemId || p.ref.id === item.itemId);
+      const productInfo = productRefsAndData.find(p => p.ref.id === item.itemId);
       if (productInfo && productInfo.data.productType !== 'Servicios') {
         const newStock = productInfo.data.stock - item.quantity;
         transaction.update(productInfo.ref, { stock: newStock });
@@ -74,12 +78,13 @@ export async function saveOrder(
     }
 
     // 4. Award points if the order is completed
-    if (data.status === 'completed' && !data.pointsAwarded) {
-      await awardPoints(transaction, data as Order);
-      if (finalOrderId) {
-        const orderRef = doc(db, 'orders', finalOrderId);
+    if (data.status === 'completed' && !data.pointsAwarded && customerDoc?.exists()) {
+        const userData = customerDoc.data() as User;
+        const currentPoints = userData.loyaltyPoints || 0;
+        const newPoints = Math.floor(data.totalAmount);
+        transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
+        // Also update the order to reflect points have been awarded
         transaction.update(orderRef, { pointsAwarded: true });
-      }
     }
 
     return finalOrderId;
@@ -97,42 +102,36 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   const orderRef = doc(db, 'orders', orderId);
 
   await runTransaction(db, async (transaction) => {
+    // --- READ PHASE ---
     const orderDoc = await transaction.get(orderRef);
     if (!orderDoc.exists()) {
       throw "El pedido no existe.";
     }
 
     const order = orderDoc.data() as Order;
+    let userRef;
+    let userDoc;
 
-    // Solo se otorgan puntos si el pedido se marca como completado
-    // y si no se han otorgado puntos previamente por este pedido.
-    if (status === 'completed' && !order.pointsAwarded) {
-      await awardPoints(transaction, order);
-      
-      // Marcar que los puntos ya fueron otorgados para este pedido
-      transaction.update(orderRef, { status, pointsAwarded: true });
+    // Only read the user doc if we need to award points
+    if (status === 'completed' && !order.pointsAwarded && order.userId) {
+        userRef = doc(db, 'users', order.userId);
+        userDoc = await transaction.get(userRef);
+    }
+    
+    // --- WRITE PHASE ---
+    
+    // Update the order status regardless
+    transaction.update(orderRef, { status });
 
-    } else {
-        // Si no es para completar, solo actualiza el estado
-        transaction.update(orderRef, { status });
+    // Award points if the conditions are met
+    if (status === 'completed' && !order.pointsAwarded && userRef && userDoc?.exists()) {
+        const userData = userDoc.data() as User;
+        const currentPoints = userData.loyaltyPoints || 0;
+        const newPoints = Math.floor(order.totalAmount);
+
+        transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
+        // Mark that points have been awarded for this order
+        transaction.update(orderRef, { pointsAwarded: true });
     }
   });
-}
-
-async function awardPoints(transaction: Transaction, order: Order) {
-    const customerId = order.userId;
-    if (customerId) {
-        const userRef = doc(db, 'users', customerId);
-        // We get the user doc again here because we can't pass it from the outer scope
-        // This read is safe because it's followed only by a write on the same doc.
-        const userDoc = await transaction.get(userRef);
-        
-        if (userDoc.exists()) {
-            const userData = userDoc.data() as User;
-            const currentPoints = userData.loyaltyPoints || 0;
-            // 1 punto por cada Sol gastado
-            const newPoints = Math.floor(order.totalAmount);
-            transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
-        }
-    }
 }
