@@ -7,6 +7,7 @@ import {
   serverTimestamp,
   runTransaction,
   writeBatch,
+  Transaction,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Order, User, Product } from '@/types/firestore';
@@ -19,7 +20,9 @@ export async function saveOrder(
   data: OrderData
 ) {
   return runTransaction(db, async (transaction) => {
-    // 1. Check stock for all items in the order
+    const productRefsAndData: { ref: any, data: Product }[] = [];
+
+    // 1. READ PHASE: Perform all reads first.
     for (const item of data.items) {
       const productRef = doc(db, 'products', item.itemId);
       const productDoc = await transaction.get(productRef);
@@ -28,52 +31,55 @@ export async function saveOrder(
       }
       const productData = productDoc.data() as Product;
       
-      // Stock check only applies to non-service products
+      // Stock check for non-service products
       if (productData.productType !== 'Servicios') {
         if (productData.stock < item.quantity) {
           throw new Error(`Stock insuficiente para ${productData.name}. Disponible: ${productData.stock}, solicitado: ${item.quantity}.`);
         }
       }
+      productRefsAndData.push({ ref: productRef, data: productData });
+    }
+    
+    // If order is completed, read the user for loyalty points.
+    if (data.status === 'completed' && !data.pointsAwarded) {
+        const customerId = data.userId;
+        if(customerId) {
+            const userRef = doc(db, 'users', customerId);
+            // This get is safe as it's still in the read phase.
+            await transaction.get(userRef);
+        }
     }
 
-    // 2. If stock is sufficient, proceed with saving the order and updating stock
+    // --- WRITE PHASE: All reads are done, now we can write. ---
+
+    // 2. Save the order
     let finalOrderId = orderId;
     if (orderId) {
-      // Update existing order
       const orderRef = doc(db, 'orders', orderId);
       transaction.set(orderRef, data, { merge: true });
     } else {
-      // Create new order
-      const newOrderData = {
-        ...data,
-        createdAt: serverTimestamp(),
-        pointsAwarded: false,
-      };
+      const newOrderData = { ...data, createdAt: serverTimestamp(), pointsAwarded: false };
       const newOrderRef = doc(collection(db, 'orders'));
       transaction.set(newOrderRef, newOrderData);
       finalOrderId = newOrderRef.id;
     }
 
-    // 3. Update stock for all items that are not services
+    // 3. Update stock for all items
     for (const item of data.items) {
-      const productRef = doc(db, 'products', item.itemId);
-      const productDoc = await transaction.get(productRef); 
-      const productData = productDoc.data() as Product;
-
-      if (productData.productType !== 'Servicios') {
-        const currentStock = productData.stock || 0;
-        const newStock = currentStock - item.quantity;
-        transaction.update(productRef, { stock: newStock });
+      const productInfo = productRefsAndData.find(p => p.data.id === item.itemId || p.ref.id === item.itemId);
+      if (productInfo && productInfo.data.productType !== 'Servicios') {
+        const newStock = productInfo.data.stock - item.quantity;
+        transaction.update(productInfo.ref, { stock: newStock });
       }
     }
 
-    // If order is completed, award points
+    // 4. Award points if the order is completed
     if (data.status === 'completed' && !data.pointsAwarded) {
-        await awardPoints(transaction, data as Order);
-        if (finalOrderId) {
-            const orderRef = doc(db, 'orders', finalOrderId);
-            transaction.update(orderRef, { pointsAwarded: true });
-        }
+      await awardPoints(transaction, data as Order);
+      if (finalOrderId) {
+        const orderRef = doc(db, 'orders', finalOrderId);
+        transaction.update(orderRef, { pointsAwarded: true });
+      }
     }
 
     return finalOrderId;
@@ -113,10 +119,12 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   });
 }
 
-async function awardPoints(transaction: any, order: Order) {
+async function awardPoints(transaction: Transaction, order: Order) {
     const customerId = order.userId;
     if (customerId) {
         const userRef = doc(db, 'users', customerId);
+        // We get the user doc again here because we can't pass it from the outer scope
+        // This read is safe because it's followed only by a write on the same doc.
         const userDoc = await transaction.get(userRef);
         
         if (userDoc.exists()) {
