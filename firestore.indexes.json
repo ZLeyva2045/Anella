@@ -16,6 +16,20 @@
       ]
     },
     {
+      "collectionGroup": "lotes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "estadoLote",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fechaVencimiento",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "orders",
       "queryScope": "COLLECTION",
       "fields": [
@@ -59,4 +73,5 @@
     }
   ]
 }
+
 
