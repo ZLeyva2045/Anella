@@ -1,0 +1,76 @@
+
+{
+  "indexes": [
+    {
+      "collectionGroup": "gifts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "themes",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "showInWebsite",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lotes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "estadoLote",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fechaVencimiento",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "sellerId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "productType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "stock",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "role",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ]
+}
+
