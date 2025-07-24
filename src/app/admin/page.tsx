@@ -20,12 +20,12 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, Users, CreditCard, Activity, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import type { Order } from '@/types/firestore';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import type { Order, User } from '@/types/firestore';
+import { collection, onSnapshot, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { DashboardAlerts } from '@/components/admin/DashboardAlerts';
 
-const MetricCard = ({ title, value, icon, description }: { title: string, value: string, icon: React.ElementType, description: string }) => {
+const MetricCard = ({ title, value, icon, description, loading }: { title: string, value: string, icon: React.ElementType, description: string, loading?: boolean }) => {
   const Icon = icon;
   return (
     <Card>
@@ -34,7 +34,11 @@ const MetricCard = ({ title, value, icon, description }: { title: string, value:
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        {loading ? (
+            <Loader2 className="h-6 w-6 animate-spin" />
+        ) : (
+            <div className="text-2xl font-bold">{value}</div>
+        )}
         <p className="text-xs text-muted-foreground">{description}</p>
       </CardContent>
     </Card>
@@ -56,7 +60,7 @@ const RecentOrdersTable = () => {
         return () => unsubscribe();
     }, []);
 
-    const getStatusVariant = (status: Order['status']) => {
+    const getStatusVariant = (status: Order['fulfillmentStatus']) => {
         switch (status) {
         case 'completed': return 'default';
         case 'processing': return 'secondary';
@@ -99,7 +103,7 @@ const RecentOrdersTable = () => {
                             <TableCell>{order.customerInfo.name}</TableCell>
                             <TableCell>S/{order.totalAmount.toFixed(2)}</TableCell>
                             <TableCell>
-                                <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                                <Badge variant={getStatusVariant(order.fulfillmentStatus)}>{order.fulfillmentStatus}</Badge>
                             </TableCell>
                             <TableCell>{new Date((order.createdAt as any).seconds * 1000).toLocaleDateString()}</TableCell>
                         </TableRow>
@@ -112,6 +116,55 @@ const RecentOrdersTable = () => {
 }
 
 export default function AdminDashboardPage() {
+  const [metrics, setMetrics] = useState({
+    totalRevenue: 0,
+    newCustomers: 0,
+    completedSales: 0,
+    completionRate: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Listener for orders
+    const ordersQuery = query(collection(db, "orders"));
+    const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
+      const ordersData = snapshot.docs.map(doc => doc.data() as Order);
+      
+      const completedOrders = ordersData.filter(o => o.fulfillmentStatus === 'completed');
+      const totalRevenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+      const completionRate = ordersData.length > 0 ? (completedOrders.length / ordersData.length) * 100 : 0;
+      
+      setMetrics(prev => ({
+        ...prev,
+        totalRevenue,
+        completedSales: completedOrders.length,
+        completionRate
+      }));
+      setLoading(false);
+    });
+
+    // Listener for new customers this month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const startOfMonthTimestamp = Timestamp.fromDate(startOfMonth);
+
+    const usersQuery = query(
+      collection(db, "users"),
+      where("role", "==", "customer"),
+      where("createdAt", ">=", startOfMonthTimestamp)
+    );
+    const unsubUsers = onSnapshot(usersQuery, (snapshot) => {
+      setMetrics(prev => ({ ...prev, newCustomers: snapshot.size }));
+      setLoading(false);
+    });
+
+    return () => {
+      unsubOrders();
+      unsubUsers();
+    };
+  }, []);
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -126,27 +179,31 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Ingresos Totales"
-          value="S/0.00"
+          value={`S/${metrics.totalRevenue.toFixed(2)}`}
           icon={DollarSign}
-          description="Calculando..."
+          description="Suma de pedidos completados"
+          loading={loading}
         />
         <MetricCard
-          title="Nuevos Clientes"
-          value="0"
+          title="Nuevos Clientes (Mes)"
+          value={`+${metrics.newCustomers}`}
           icon={Users}
-          description="Calculando..."
+          description="Clientes registrados este mes"
+          loading={loading}
         />
         <MetricCard
-          title="Ventas"
-          value="0"
+          title="Ventas Completadas"
+          value={`${metrics.completedSales}`}
           icon={CreditCard}
-          description="Calculando..."
+          description="Pedidos entregados y pagados"
+          loading={loading}
         />
         <MetricCard
-          title="Tasa de conversión"
-          value="0%"
+          title="Tasa de Pedidos Completados"
+          value={`${metrics.completionRate.toFixed(1)}%`}
           icon={Activity}
-          description="Calculando..."
+          description="Porcentaje de pedidos finalizados"
+          loading={loading}
         />
       </div>
 
