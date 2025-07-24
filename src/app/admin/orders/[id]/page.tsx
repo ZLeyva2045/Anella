@@ -1,7 +1,7 @@
 // src/app/admin/orders/[id]/page.tsx
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -47,6 +47,8 @@ import { AddPaymentDialog } from '@/components/shared/AddPaymentDialog';
 import { updateFulfillmentStatus } from '@/services/orderService';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 const getFulfillmentStatusInfo = (status: FulfillmentStatus) => {
     switch (status) {
@@ -111,9 +113,11 @@ export default function OrderDetailPage() {
   if (!order) {
     return <div className="text-center py-10">Pedido no encontrado.</div>;
   }
+  
+  const isPaid = order.paymentStatus === 'paid';
 
   return (
-    <>
+    <TooltipProvider>
     <div className="space-y-6">
        <Button variant="outline" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -221,7 +225,20 @@ export default function OrderDetailPage() {
             <CardContent className="space-y-3">
                 <Button className="w-full justify-start" variant={order.fulfillmentStatus === 'processing' ? 'default' : 'secondary'} onClick={() => handleUpdateStatus('processing')}><Clock className="mr-2"/>En Curso</Button>
                 <Button className="w-full justify-start" variant={order.fulfillmentStatus === 'finishing' ? 'default' : 'secondary'} onClick={() => handleUpdateStatus('finishing')}><Sparkles className="mr-2"/>Por Terminar</Button>
-                <Button className="w-full justify-start" variant={order.fulfillmentStatus === 'completed' ? 'default' : 'secondary'} onClick={() => handleUpdateStatus('completed')}><CheckCircle2 className="mr-2"/>Terminado y Entregado</Button>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="w-full">
+                            <Button className="w-full justify-start" variant={order.fulfillmentStatus === 'completed' ? 'default' : 'secondary'} onClick={() => handleUpdateStatus('completed')} disabled={!isPaid}>
+                                <CheckCircle2 className="mr-2"/>Terminado y Entregado
+                            </Button>
+                        </div>
+                    </TooltipTrigger>
+                    {!isPaid && (
+                        <TooltipContent>
+                            <p>El pedido debe estar pagado para marcarlo como entregado.</p>
+                        </TooltipContent>
+                    )}
+                 </Tooltip>
                 <Separator />
                 <Button className="w-full justify-start" variant='destructive' onClick={() => handleUpdateStatus('cancelled')}><XCircle className="mr-2"/>Cancelar Pedido</Button>
             </CardContent>
@@ -259,6 +276,6 @@ export default function OrderDetailPage() {
         orderId={orderId}
         amountDue={order.amountDue}
     />
-    </>
+    </TooltipProvider>
   );
 }

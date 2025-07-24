@@ -15,7 +15,7 @@ import { db } from '@/lib/firebase/config';
 import type { Order, User, Product, PaymentDetail, FulfillmentStatus } from '@/types/firestore';
 
 // Omit fields that are auto-generated or handled by the backend
-type OrderData = Omit<Order, 'id' | 'createdAt' | 'fulfillmentStatus' | 'paymentStatus' | 'paymentDetails' | 'amountPaid' | 'amountDue'>;
+type OrderData = Omit<Order, 'id' | 'createdAt' | 'paymentStatus' >;
 
 export async function saveOrder(
   orderId: string | undefined,
@@ -57,14 +57,21 @@ export async function saveOrder(
     } else {
         orderRef = doc(collection(db, 'orders'));
         finalOrderId = orderRef.id;
+
+        const amountPaid = data.amountPaid ?? 0;
+        const totalAmount = data.totalAmount ?? 0;
+        const amountDue = totalAmount - amountPaid;
+        const paymentStatus = amountPaid >= totalAmount ? 'paid' : (amountPaid > 0 ? 'partially-paid' : 'unpaid');
+
+
         const newOrderData: Partial<Order> = {
             ...data,
             createdAt: serverTimestamp() as Timestamp,
-            fulfillmentStatus: 'pending',
-            paymentStatus: 'unpaid',
-            paymentDetails: [],
-            amountPaid: 0,
-            amountDue: data.totalAmount,
+            fulfillmentStatus: data.fulfillmentStatus || 'pending',
+            paymentStatus: paymentStatus,
+            paymentDetails: data.paymentDetails || [],
+            amountPaid: amountPaid,
+            amountDue: amountDue,
             pointsAwarded: false,
         };
         transaction.set(orderRef, newOrderData);
@@ -92,6 +99,14 @@ export async function saveOrder(
  */
 export async function updateFulfillmentStatus(orderId: string, status: FulfillmentStatus) {
     const orderRef = doc(db, 'orders', orderId);
+
+    // If completing the order, ensure it's paid.
+    if (status === 'completed') {
+        const orderDoc = await getDoc(orderRef);
+        if (orderDoc.exists() && orderDoc.data().paymentStatus !== 'paid') {
+            throw new Error("El pedido debe estar completamente pagado para marcarlo como entregado.");
+        }
+    }
     await setDoc(orderRef, { fulfillmentStatus: status }, { merge: true });
 }
 

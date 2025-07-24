@@ -1,4 +1,3 @@
-
 // src/components/shared/CompleteSaleDialog.tsx
 'use client';
 
@@ -25,10 +24,10 @@ import {
 } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import type { User, OrderItem } from '@/types/firestore';
+import type { User, OrderItem, PaymentMethod, PaymentDetail } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
-import { Loader2, UserPlus, CheckCircle, Search } from 'lucide-react';
-import { collection, onSnapshot, query, where, addDoc } from 'firebase/firestore';
+import { Loader2, UserPlus, CheckCircle, Search, DollarSign } from 'lucide-react';
+import { collection, onSnapshot, query, where, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { PosCartItem } from '@/app/admin/pos/page';
 import { useAuth } from '@/hooks/useAuth';
@@ -39,9 +38,8 @@ import { useClickAway } from 'react-use';
 
 const saleSchema = z.object({
   customerId: z.string().min(1, 'Debe seleccionar un cliente.'),
-  paymentMethod: z.enum(['yapePlin', 'bankTransfer', 'card', 'mercadoPago', 'paypal'], {
-    required_error: 'Debe seleccionar un método de pago.'
-  }),
+  paymentMethod: z.custom<PaymentMethod>((val) => typeof val === 'string' && val.length > 0, 'Debe seleccionar un método de pago.'),
+  amountPaid: z.coerce.number().min(0, 'El monto pagado no puede ser negativo.'),
 });
 
 type SaleFormValues = z.infer<typeof saleSchema>;
@@ -82,9 +80,17 @@ export function CompleteSaleDialog({
     resolver: zodResolver(saleSchema),
     defaultValues: {
       customerId: '',
-      paymentMethod: 'yapePlin',
+      paymentMethod: 'cash',
+      amountPaid: 0,
     },
   });
+  
+   useEffect(() => {
+    if (isOpen) {
+      form.setValue('amountPaid', totalAmount);
+    }
+  }, [isOpen, totalAmount, form]);
+
 
   useEffect(() => {
     if (isOpen) {
@@ -124,6 +130,11 @@ export function CompleteSaleDialog({
         setLoading(false);
         return;
       }
+       if (data.amountPaid > totalAmount) {
+        toast({ variant: 'destructive', title: 'Error', description: 'El pago no puede ser mayor al total.' });
+        setLoading(false);
+        return;
+      }
       
       const orderItems: OrderItem[] = cartItems.map(item => ({
         itemId: item.id,
@@ -132,6 +143,15 @@ export function CompleteSaleDialog({
         quantity: item.quantity,
         image: item.images[0] || '',
       }));
+      
+      const paymentDetails: PaymentDetail[] = [];
+      if (data.amountPaid > 0) {
+        paymentDetails.push({
+            amount: data.amountPaid,
+            method: data.paymentMethod,
+            date: Timestamp.now(),
+        });
+      }
 
       await saveOrder(undefined, {
         userId: customer.id,
@@ -143,12 +163,12 @@ export function CompleteSaleDialog({
           phone: customer.phone || '',
           address: customer.address || '',
         },
-        status: 'completed',
-        paymentMethod: data.paymentMethod,
         deliveryMethod: 'localPickup',
         deliveryDate: new Date(),
         totalAmount: totalAmount,
-        pointsAwarded: false,
+        amountPaid: data.amountPaid, // Pass this to the service
+        paymentDetails, // Pass this to the service
+        fulfillmentStatus: 'completed'
       });
 
       onSaleSuccess();
@@ -244,29 +264,47 @@ export function CompleteSaleDialog({
                   <UserPlus className="mr-2 h-4 w-4" />
                   Añadir Nuevo Cliente
               </Button>
+              
+               <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="paymentMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Método de Pago</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                             <SelectItem value="cash">Efectivo</SelectItem>
+                            <SelectItem value="yapePlin">Yape/Plin</SelectItem>
+                            <SelectItem value="bankTransfer">Transferencia</SelectItem>
+                            <SelectItem value="card">Tarjeta</SelectItem>
+                            <SelectItem value="mercadoPago">Mercado Pago</SelectItem>
+                             <SelectItem value="paypal">Paypal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="amountPaid"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Adelanto (S/)</FormLabel>
+                             <div className="relative">
+                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <FormControl><Input type="number" step="0.01" className="pl-9" {...field} /></FormControl>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+               </div>
 
-              <FormField
-                control={form.control}
-                name="paymentMethod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Método de Pago</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="yapePlin">Yape/Plin</SelectItem>
-                        <SelectItem value="bankTransfer">Transferencia</SelectItem>
-                        <SelectItem value="card">Tarjeta (Comisión)</SelectItem>
-                        <SelectItem value="mercadoPago">Mercado Pago</SelectItem>
-                        <SelectItem value="paypal">Paypal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="text-right space-y-1 pt-4">
                 <p className="text-muted-foreground">Total a Pagar:</p>
