@@ -33,7 +33,7 @@ interface AddPaymentDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   orderId: string;
-  amountDue: number;
+  amountDue: number | undefined;
 }
 
 const paymentSchema = z.object({
@@ -50,14 +50,14 @@ export function AddPaymentDialog({ isOpen, setIsOpen, orderId, amountDue }: AddP
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      amount: amountDue,
+      amount: amountDue || 0,
       method: 'cash',
     },
   });
   
   React.useEffect(() => {
     if(isOpen) {
-        form.reset({ amount: amountDue, method: 'cash' });
+        form.reset({ amount: amountDue || 0, method: 'cash' });
     }
   }, [isOpen, amountDue, form]);
 
@@ -65,7 +65,7 @@ export function AddPaymentDialog({ isOpen, setIsOpen, orderId, amountDue }: AddP
   const onSubmit = async (data: PaymentFormValues) => {
     setLoading(true);
     try {
-        if (data.amount > amountDue) {
+        if (data.amount > (amountDue ?? 0)) {
             toast({
                 variant: 'destructive',
                 title: 'Monto inválido',
