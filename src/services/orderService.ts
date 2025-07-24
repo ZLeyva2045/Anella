@@ -173,7 +173,7 @@ export async function addPaymentToOrder(orderId: string, payment: Omit<PaymentDe
 
         const newAmountPaid = (order.amountPaid || 0) + newPayment.amount;
         const newAmountDue = order.totalAmount - newAmountPaid;
-        const newPaymentStatus = newAmountDue <= 0 ? 'paid' : 'partially-paid';
+        const newPaymentStatus = newAmountDue <= 0.001 ? 'paid' : 'partially-paid';
         
         transaction.update(orderRef, {
             paymentDetails: arrayUnion(newPayment),
