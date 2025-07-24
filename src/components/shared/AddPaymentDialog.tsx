@@ -57,7 +57,7 @@ export function AddPaymentDialog({ isOpen, setIsOpen, orderId, amountDue }: AddP
   
   React.useEffect(() => {
     if(isOpen) {
-        form.reset({ amount: amountDue || 0, method: 'cash' });
+        form.reset({ amount: amountDue ?? 0, method: 'cash' });
     }
   }, [isOpen, amountDue, form]);
 
@@ -65,7 +65,9 @@ export function AddPaymentDialog({ isOpen, setIsOpen, orderId, amountDue }: AddP
   const onSubmit = async (data: PaymentFormValues) => {
     setLoading(true);
     try {
-        if (data.amount > (amountDue ?? 0)) {
+        const due = amountDue ?? 0;
+        // Use a small epsilon for floating point comparison to avoid precision issues
+        if (data.amount - due > 0.001) {
             toast({
                 variant: 'destructive',
                 title: 'Monto inválido',
