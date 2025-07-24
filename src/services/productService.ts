@@ -9,6 +9,7 @@ import {
   where,
   serverTimestamp,
   writeBatch,
+  deleteDoc,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
@@ -63,12 +64,30 @@ export async function saveProduct(
 
 export async function deleteProducts(productIds: string[]): Promise<void> {
     const batch = writeBatch(db);
+    
+    // Check for dependencies in 'lotes'
+    const lotesRef = collection(db, 'lotes');
+    const lotesQuery = query(lotesRef, where('productoId', 'in', productIds));
+    const lotesSnapshot = await getDocs(lotesQuery);
+
+    if (!lotesSnapshot.empty) {
+        // If there are dependent lots, we should not delete the product.
+        // Or handle it differently (e.g., archive the product).
+        // For now, we will prevent deletion.
+        const productNamesInUse = new Set<string>();
+        const productsInUse = await getDocs(query(collection(db, 'products'), where('id', 'in', productIds)));
+        productsInUse.forEach(p => productNamesInUse.add(p.data().name));
+
+        throw new Error(`No se pueden eliminar productos que tienen lotes de compra asociados. Productos en uso: ${Array.from(productNamesInUse).join(', ')}`);
+    }
+
     productIds.forEach(id => {
         const docRef = doc(db, 'products', id);
         batch.delete(docRef);
     });
     await batch.commit();
 }
+
 
 export async function updateProductsInBatch(productIds: string[], data: Partial<Product>): Promise<void> {
     const batch = writeBatch(db);
