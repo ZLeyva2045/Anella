@@ -212,10 +212,10 @@ export default function OrderDetailPage() {
                   <CardTitle className="flex items-center gap-2"><DollarSign />Resumen Financiero</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                  <div className="flex justify-between"><span>Total Pedido:</span><span className="font-semibold">S/{order.totalAmount.toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span>Monto Pagado:</span><span className="font-semibold text-green-600">S/{order.amountPaid.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Total Pedido:</span><span className="font-semibold">S/{order.totalAmount?.toFixed(2) ?? '0.00'}</span></div>
+                  <div className="flex justify-between"><span>Monto Pagado:</span><span className="font-semibold text-green-600">S/{order.amountPaid?.toFixed(2) ?? '0.00'}</span></div>
                   <Separator />
-                  <div className="flex justify-between font-bold text-lg"><span>Saldo Pendiente:</span><span className="text-red-600">S/{order.amountDue.toFixed(2)}</span></div>
+                  <div className="flex justify-between font-bold text-lg"><span>Saldo Pendiente:</span><span className="text-red-600">S/{order.amountDue?.toFixed(2) ?? '0.00'}</span></div>
               </CardContent>
           </Card>
           <Card>
