@@ -23,8 +23,8 @@ export interface Product {
   costPrice?: number; // Precio de costo del producto
   category: string; // Nombre de la categoría
   categoryId?: string; // ID de la categoría
-  subcategory?: string; // Nombre de la subcategoría
-  subcategoryId?: string; // ID de la subcategoría
+  subcategory: string; // Nombre de la subcategoría
+  subcategoryId: string; // ID de la subcategoría
   images: string[]; 
   createdAt: Date | Timestamp; 
   updatedAt: Date | Timestamp; 
@@ -133,6 +133,7 @@ export interface Order {
   paymentDetails: PaymentDetail[];
   deliveryMethod: 'localPickup' | 'delivery'; // Método de entrega
   createdAt: Timestamp; // Fecha de creación del pedido
+  updatedAt: Timestamp; // Fecha de última actualización
   deliveryDate: Timestamp; // Fecha de entrega acordada
   totalAmount: number; // Monto total del pedido
   amountPaid: number; // Suma de los montos en paymentDetails
@@ -168,6 +169,7 @@ export interface User {
   role?: 'customer' | 'manager' | 'sales' | 'designer' | 'manufacturing' | 'creative'; // Rol del usuario
   photoURL?: string; // foto del usuario
   loyaltyPoints?: number; // Puntos de fidelidad
+  createdAt: Date | Timestamp;
 }
 
 /**

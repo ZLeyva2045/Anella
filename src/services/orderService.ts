@@ -53,16 +53,21 @@ export async function saveOrder(
     if (orderId) {
         finalOrderId = orderId;
         orderRef = doc(db, 'orders', orderId);
-        transaction.set(orderRef, data, { merge: true });
+        // For updates, we just merge the new data.
+        const updateData = {
+          ...data,
+          updatedAt: serverTimestamp(),
+        };
+        transaction.set(orderRef, updateData, { merge: true });
     } else {
         orderRef = doc(collection(db, 'orders'));
         finalOrderId = orderRef.id;
 
-        const amountPaid = data.amountPaid ?? 0;
+        // Ensure numeric fields are initialized to prevent 'undefined' errors
         const totalAmount = data.totalAmount ?? 0;
+        const amountPaid = data.amountPaid ?? 0;
         const amountDue = totalAmount - amountPaid;
         const paymentStatus = amountPaid >= totalAmount ? 'paid' : (amountPaid > 0 ? 'partially-paid' : 'unpaid');
-
 
         const newOrderData: Partial<Order> = {
             ...data,
@@ -70,6 +75,7 @@ export async function saveOrder(
             fulfillmentStatus: data.fulfillmentStatus || 'pending',
             paymentStatus: paymentStatus,
             paymentDetails: data.paymentDetails || [],
+            totalAmount: totalAmount,
             amountPaid: amountPaid,
             amountDue: amountDue,
             pointsAwarded: false,
@@ -107,7 +113,7 @@ export async function updateFulfillmentStatus(orderId: string, status: Fulfillme
         if (!orderDoc.exists()) {
             throw new Error("El pedido no existe.");
         }
-        const orderData = orderDoc.data();
+        const orderData = orderDoc.data() as Order;
 
         let userRef;
         let userDoc;
@@ -124,7 +130,7 @@ export async function updateFulfillmentStatus(orderId: string, status: Fulfillme
         }
         
         // --- WRITE PHASE ---
-        transaction.update(orderRef, { fulfillmentStatus: status });
+        transaction.update(orderRef, { fulfillmentStatus: status, updatedAt: serverTimestamp() });
 
         // Award points if conditions are met
         if (status === 'completed' && userRef && userDoc?.exists() && !orderData.pointsAwarded) {
@@ -160,7 +166,7 @@ export async function addPaymentToOrder(orderId: string, payment: Omit<PaymentDe
             date: Timestamp.now(),
         };
 
-        const newAmountPaid = order.amountPaid + newPayment.amount;
+        const newAmountPaid = (order.amountPaid || 0) + newPayment.amount;
         const newAmountDue = order.totalAmount - newAmountPaid;
         const newPaymentStatus = newAmountDue <= 0 ? 'paid' : 'partially-paid';
         
@@ -169,6 +175,7 @@ export async function addPaymentToOrder(orderId: string, payment: Omit<PaymentDe
             amountPaid: newAmountPaid,
             amountDue: newAmountDue,
             paymentStatus: newPaymentStatus,
+            updatedAt: serverTimestamp(),
         });
     });
 }
