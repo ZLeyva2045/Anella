@@ -125,6 +125,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     // Listener for orders
     const ordersQuery = query(collection(db, "orders"));
     const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
@@ -140,24 +141,29 @@ export default function AdminDashboardPage() {
         completedSales: completedOrders.length,
         completionRate
       }));
-      setLoading(false);
+      if(!loading) setLoading(false);
     });
 
     // Listener for new customers this month
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
-    const startOfMonthTimestamp = Timestamp.fromDate(startOfMonth);
 
     const usersQuery = query(
       collection(db, "users"),
-      where("role", "==", "customer"),
-      where("createdAt", ">=", startOfMonthTimestamp)
+      where("role", "==", "customer")
     );
     const unsubUsers = onSnapshot(usersQuery, (snapshot) => {
-      setMetrics(prev => ({ ...prev, newCustomers: snapshot.size }));
-      setLoading(false);
+      const usersData = snapshot.docs.map(doc => doc.data() as User);
+      const newCustomersThisMonth = usersData.filter(user => {
+        const createdAt = (user.createdAt as Timestamp)?.toDate();
+        return createdAt && createdAt >= startOfMonth;
+      });
+      setMetrics(prev => ({ ...prev, newCustomers: newCustomersThisMonth.length }));
+      if(!loading) setLoading(false);
     });
+    
+    setLoading(false);
 
     return () => {
       unsubOrders();
