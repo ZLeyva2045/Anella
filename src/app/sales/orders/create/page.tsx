@@ -104,6 +104,7 @@ export default function CreateOrderPage() {
   });
   
   const deliveryMethodWatcher = useWatch({ control: form.control, name: 'deliveryMethod' });
+  const itemsWatcher = useWatch({ control: form.control, name: 'items' });
   
   const addProductToOrder = (product: Product) => {
     const existingItem = fields.find(item => item.itemId === product.id);
@@ -172,12 +173,12 @@ export default function CreateOrderPage() {
 
 
   const subtotal = useMemo(() => {
-    return form.watch('items').reduce((acc, p) => acc + p.price * p.quantity, 0);
-  }, [form.watch('items')]);
+    return itemsWatcher.reduce((acc, p) => acc + p.price * p.quantity, 0);
+  }, [itemsWatcher]);
   
   const shippingCost = useMemo(() => {
     return deliveryMethodWatcher === 'delivery' ? Number(form.watch('shippingCost')) || 0 : 0;
-  }, [deliveryMethodWatcher, form]);
+  }, [deliveryMethodWatcher, form.watch('shippingCost')]);
 
   const totalAmount = useMemo(() => {
     return subtotal + shippingCost;
