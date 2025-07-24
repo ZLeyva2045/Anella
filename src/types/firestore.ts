@@ -11,7 +11,6 @@ export const productTypes = [
 
 export type ProductType = (typeof productTypes)[number];
 
-
 /**
  * Representa un producto en la colección 'products' de Firestore.
  * Esto funciona como el inventario base.
@@ -100,6 +99,20 @@ export interface Theme {
     name: string; // Nombre de la temática, ej: "Harry Potter"
 }
 
+export type PaymentMethod = 'yapePlin' | 'bankTransfer' | 'card' | 'mercadoPago' | 'paypal' | 'cash';
+export type FulfillmentStatus = 'pending' | 'processing' | 'finishing' | 'completed' | 'cancelled';
+export type PaymentStatus = 'unpaid' | 'partially-paid' | 'paid' | 'refunded';
+
+
+/**
+ * Representa el detalle de un pago realizado para un pedido.
+ */
+export interface PaymentDetail {
+  method: PaymentMethod;
+  amount: number;
+  date: Timestamp;
+  reference?: string; // Opcional, para guardar un ID de transacción
+}
 
 /**
  * Representa un pedido en la colección 'orders' de Firestore.
@@ -115,14 +128,18 @@ export interface Order {
     phone: string;
     address: string;
   };
-  status: 'pending' | 'processing' | 'finishing' | 'completed' | 'cancelled';
-  paymentMethod: 'yapePlin' | 'bankTransfer' | 'card' | 'mercadoPago' | 'paypal';
+  fulfillmentStatus: FulfillmentStatus;
+  paymentStatus: PaymentStatus;
+  paymentDetails: PaymentDetail[];
   deliveryMethod: 'localPickup' | 'delivery'; // Método de entrega
-  createdAt: Date | Timestamp; // Fecha de creación del pedido
-  deliveryDate: Date | Timestamp; // Fecha de entrega acordada
+  createdAt: Timestamp; // Fecha de creación del pedido
+  deliveryDate: Timestamp; // Fecha de entrega acordada
   totalAmount: number; // Monto total del pedido
+  amountPaid: number; // Suma de los montos en paymentDetails
+  amountDue: number; // totalAmount - amountPaid
   pointsAwarded?: boolean; // Flag para saber si ya se otorgaron los puntos de este pedido
 }
+
 
 /**
  * Representa un item (producto o regalo) dentro de un pedido.

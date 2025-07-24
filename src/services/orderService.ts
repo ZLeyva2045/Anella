@@ -7,131 +7,142 @@ import {
   serverTimestamp,
   runTransaction,
   writeBatch,
-  Transaction,
   getDoc,
-  increment,
+  arrayUnion,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { Order, User, Product } from '@/types/firestore';
+import type { Order, User, Product, PaymentDetail, FulfillmentStatus } from '@/types/firestore';
 
 // Omit fields that are auto-generated or handled by the backend
-type OrderData = Omit<Order, 'id' | 'createdAt'>;
+type OrderData = Omit<Order, 'id' | 'createdAt' | 'fulfillmentStatus' | 'paymentStatus' | 'paymentDetails' | 'amountPaid' | 'amountDue'>;
 
 export async function saveOrder(
   orderId: string | undefined,
-  data: OrderData
-) {
+  data: Partial<OrderData>
+): Promise<string> {
   return runTransaction(db, async (transaction) => {
-    const productRefsAndData: { ref: any, data: Product }[] = [];
-    let userRef: any;
-    let customerDoc: any;
+    const productRefsAndData: { ref: any; data: Product }[] = [];
 
     // 1. READ PHASE: Perform all reads first.
-    for (const item of data.items) {
-      const productRef = doc(db, 'products', item.itemId);
-      const productDoc = await transaction.get(productRef); // READ
-      if (!productDoc.exists()) {
-        throw new Error(`Producto con ID ${item.itemId} no encontrado.`);
-      }
-      const productData = productDoc.data() as Product;
-      
-      // Stock check for non-service products
-      if (productData.productType !== 'Servicios') {
-        if (productData.stock < item.quantity) {
-          throw new Error(`Stock insuficiente para ${productData.name}. Disponible: ${productData.stock}, solicitado: ${item.quantity}.`);
+    if (data.items) {
+        for (const item of data.items) {
+            const productRef = doc(db, 'products', item.itemId);
+            const productDoc = await transaction.get(productRef); // READ
+            if (!productDoc.exists()) {
+                throw new Error(`Producto con ID ${item.itemId} no encontrado.`);
+            }
+            const productData = productDoc.data() as Product;
+            
+            // Stock check for non-service products
+            if (productData.productType !== 'Servicios') {
+                if (productData.stock < item.quantity) {
+                throw new Error(`Stock insuficiente para ${productData.name}. Disponible: ${productData.stock}, solicitado: ${item.quantity}.`);
+                }
+            }
+            productRefsAndData.push({ ref: productRef, data: productData });
         }
-      }
-      productRefsAndData.push({ ref: productRef, data: productData });
-    }
-    
-    // If order is completed, read the user for loyalty points.
-    if (data.status === 'completed' && !data.pointsAwarded && data.userId) {
-        userRef = doc(db, 'users', data.userId);
-        customerDoc = await transaction.get(userRef); // READ
     }
 
     // --- WRITE PHASE: All reads are done, now we can write. ---
 
     // 2. Save the order
-    let finalOrderId = orderId;
-    const orderRef = orderId ? doc(db, 'orders', orderId) : doc(collection(db, 'orders'));
+    let finalOrderId: string;
+    let orderRef;
     
-    if (!orderId) {
+    if (orderId) {
+        finalOrderId = orderId;
+        orderRef = doc(db, 'orders', orderId);
+        transaction.set(orderRef, data, { merge: true });
+    } else {
+        orderRef = doc(collection(db, 'orders'));
         finalOrderId = orderRef.id;
+        const newOrderData: Partial<Order> = {
+            ...data,
+            createdAt: serverTimestamp() as Timestamp,
+            fulfillmentStatus: 'pending',
+            paymentStatus: 'unpaid',
+            paymentDetails: [],
+            amountPaid: 0,
+            amountDue: data.totalAmount,
+            pointsAwarded: false,
+        };
+        transaction.set(orderRef, newOrderData);
     }
-
-    const finalOrderData = {
-        ...data,
-        createdAt: orderId ? undefined : serverTimestamp(), // Only set createdAt on new orders
-        pointsAwarded: data.pointsAwarded || false,
-    };
     
-    transaction.set(orderRef, finalOrderData, { merge: true });
-    
-    // 3. Update stock for all items
-    for (const item of data.items) {
-      const productInfo = productRefsAndData.find(p => p.ref.id === item.itemId);
-      if (productInfo && productInfo.data.productType !== 'Servicios') {
-        const newStock = productInfo.data.stock - item.quantity;
-        transaction.update(productInfo.ref, { stock: newStock });
+    // 3. Update stock for all items on new order creation
+    if (!orderId && data.items) {
+      for (const item of data.items) {
+        const productInfo = productRefsAndData.find(p => p.ref.id === item.itemId);
+        if (productInfo && productInfo.data.productType !== 'Servicios') {
+          const newStock = productInfo.data.stock - item.quantity;
+          transaction.update(productInfo.ref, { stock: newStock });
+        }
       }
-    }
-
-    // 4. Award points if the order is completed
-    if (data.status === 'completed' && !data.pointsAwarded && customerDoc?.exists()) {
-        const userData = customerDoc.data() as User;
-        const currentPoints = userData.loyaltyPoints || 0;
-        const newPoints = Math.floor(data.totalAmount);
-        transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
-        // Also update the order to reflect points have been awarded
-        transaction.update(orderRef, { pointsAwarded: true });
     }
 
     return finalOrderId;
   });
 }
 
+/**
+ * Updates an order's fulfillment status.
+ * @param orderId The ID of the order to update.
+ * @param status The new fulfillment status for the order.
+ */
+export async function updateFulfillmentStatus(orderId: string, status: FulfillmentStatus) {
+    const orderRef = doc(db, 'orders', orderId);
+    await setDoc(orderRef, { fulfillmentStatus: status }, { merge: true });
+}
+
 
 /**
- * Updates an order's status and, if the status is 'completed',
- * adds loyalty points to the customer.
- * @param orderId The ID of the order to update.
- * @param status The new status for the order.
+ * Adds a payment to an order and updates its payment status.
+ * @param orderId The ID of the order.
+ * @param payment The payment detail to add.
  */
-export async function updateOrderStatus(orderId: string, status: Order['status']) {
-  const orderRef = doc(db, 'orders', orderId);
-
-  await runTransaction(db, async (transaction) => {
-    // --- READ PHASE ---
-    const orderDoc = await transaction.get(orderRef);
-    if (!orderDoc.exists()) {
-      throw "El pedido no existe.";
-    }
-
-    const order = orderDoc.data() as Order;
-    let userRef;
-    let userDoc;
-
-    // Only read the user doc if we need to award points
-    if (status === 'completed' && !order.pointsAwarded && order.userId) {
-        userRef = doc(db, 'users', order.userId);
-        userDoc = await transaction.get(userRef);
-    }
+export async function addPaymentToOrder(orderId: string, payment: Omit<PaymentDetail, 'date'>) {
+    const orderRef = doc(db, 'orders', orderId);
     
-    // --- WRITE PHASE ---
-    
-    // Update the order status regardless
-    transaction.update(orderRef, { status });
+    await runTransaction(db, async (transaction) => {
+        // --- READ PHASE ---
+        const orderDoc = await transaction.get(orderRef);
+        if (!orderDoc.exists()) {
+            throw new Error("El pedido no existe.");
+        }
+        const order = orderDoc.data() as Order;
+        
+        let userRef;
+        let userDoc;
 
-    // Award points if the conditions are met
-    if (status === 'completed' && !order.pointsAwarded && userRef && userDoc?.exists()) {
-        const userData = userDoc.data() as User;
-        const currentPoints = userData.loyaltyPoints || 0;
-        const newPoints = Math.floor(order.totalAmount);
+        // --- WRITE PHASE ---
+        const newPayment: PaymentDetail = {
+            ...payment,
+            date: Timestamp.now(),
+        };
 
-        transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
-        // Mark that points have been awarded for this order
-        transaction.update(orderRef, { pointsAwarded: true });
-    }
-  });
+        const newAmountPaid = order.amountPaid + newPayment.amount;
+        const newAmountDue = order.totalAmount - newAmountPaid;
+        const newPaymentStatus = newAmountDue <= 0 ? 'paid' : 'partially-paid';
+        
+        transaction.update(orderRef, {
+            paymentDetails: arrayUnion(newPayment),
+            amountPaid: newAmountPaid,
+            amountDue: newAmountDue,
+            paymentStatus: newPaymentStatus,
+        });
+        
+        // Award points if the order becomes fully paid
+        if (newPaymentStatus === 'paid' && !order.pointsAwarded && order.userId) {
+            userRef = doc(db, 'users', order.userId);
+            userDoc = await transaction.get(userRef); // Read user just before writing to it
+            if (userDoc.exists()) {
+                const userData = userDoc.data() as User;
+                const currentPoints = userData.loyaltyPoints || 0;
+                const newPoints = Math.floor(order.totalAmount);
+                transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
+                transaction.update(orderRef, { pointsAwarded: true });
+            }
+        }
+    });
 }

@@ -58,9 +58,7 @@ const orderSchema = z.object({
     address: z.string(),
   }),
   items: z.array(orderItemSchema).min(1, 'El pedido debe tener al menos un producto.'),
-  paymentMethod: z.enum(['yapePlin', 'bankTransfer', 'card', 'mercadoPago', 'paypal']),
   deliveryMethod: z.enum(['localPickup', 'delivery']),
-  status: z.enum(['pending', 'processing', 'finishing', 'completed', 'cancelled']),
   deliveryDate: z.date({
     required_error: "La fecha de entrega es requerida.",
   }),
@@ -93,9 +91,7 @@ export default function CreateOrderPage() {
     defaultValues: {
       customer: { id: '', name: '', email: '', phone: '', address: '' },
       items: [],
-      paymentMethod: 'yapePlin',
       deliveryMethod: 'localPickup',
-      status: 'pending',
       deliveryDate: new Date(),
     },
   });
@@ -182,7 +178,7 @@ export default function CreateOrderPage() {
     }
     setLoading(true);
     try {
-        await saveOrder(undefined, {
+        const newOrderId = await saveOrder(undefined, {
             ...data,
             totalAmount: totalAmount,
             userId: data.customer.id,
@@ -193,9 +189,9 @@ export default function CreateOrderPage() {
                 phone: data.customer.phone,
                 address: data.customer.address,
             },
-        });
-        toast({ title: 'Pedido Creado', description: 'El nuevo pedido se ha guardado correctamente.' });
-        router.push('/sales/orders');
+        } as any); // Cast because we are intentionally creating an incomplete order
+        toast({ title: 'Pedido Creado', description: 'El nuevo pedido se ha guardado correctamente. Ahora puedes gestionar los pagos.' });
+        router.push(`/sales/orders/${newOrderId}`);
     } catch (error) {
         console.error("Error creating order: ", error);
         toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear el pedido.' });
@@ -374,7 +370,7 @@ export default function CreateOrderPage() {
                 </Card>
                  <Card>
                     <CardHeader>
-                        <CardTitle>Detalles del Pedido</CardTitle>
+                        <CardTitle>Detalles de Entrega</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <FormField control={form.control} name="deliveryDate" render={({ field }) => (
@@ -396,9 +392,7 @@ export default function CreateOrderPage() {
                                 <FormMessage />
                             </FormItem>
                         )} />
-                        <FormField control={form.control} name="paymentMethod" render={({ field }) => ( <FormItem><FormLabel>Método de Pago</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="yapePlin">Yape/Plin</SelectItem><SelectItem value="bankTransfer">Transferencia</SelectItem><SelectItem value="card">Tarjeta (Comisión)</SelectItem><SelectItem value="mercadoPago">Mercado Pago</SelectItem><SelectItem value="paypal">Paypal</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
                         <FormField control={form.control} name="deliveryMethod" render={({ field }) => ( <FormItem><FormLabel>Método de Entrega</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="localPickup">Recojo en Local</SelectItem><SelectItem value="delivery">Delivery</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                        <FormField control={form.control} name="status" render={({ field }) => ( <FormItem><FormLabel>Estado del Pedido</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="pending">Pendiente</SelectItem><SelectItem value="processing">En Curso</SelectItem><SelectItem value="finishing">Por Terminar</SelectItem><SelectItem value="completed">Terminado</SelectItem><SelectItem value="cancelled">Cancelado</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
                     </CardContent>
                 </Card>
 
@@ -414,7 +408,7 @@ export default function CreateOrderPage() {
                 <Button type="submit" size="lg" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 animate-spin" />}
                     <Save className="mr-2"/>
-                    Guardar Pedido
+                    Crear Pedido y Gestionar Pago
                 </Button>
             </div>
           </form>
