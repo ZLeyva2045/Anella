@@ -239,7 +239,7 @@ export default function OrderDetailPage() {
               <CardContent className="space-y-2">
                   <div className="flex justify-between"><span>Subtotal:</span><span>S/{subtotal.toFixed(2)}</span></div>
                    {order.shippingCost && order.shippingCost > 0 && (
-                      <div className="flex justify-between"><span>Envío:</span><span>S/{order.shippingCost.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span>Envío:</span><span>S/{Number(order.shippingCost).toFixed(2)}</span></div>
                   )}
                   <div className="flex justify-between font-semibold"><span>Total Pedido:</span><span>S/{order.totalAmount?.toFixed(2) ?? '0.00'}</span></div>
                   <Separator/>

@@ -176,8 +176,8 @@ export default function CreateOrderPage() {
   }, [form.watch('items')]);
   
   const shippingCost = useMemo(() => {
-    return deliveryMethodWatcher === 'delivery' ? form.watch('shippingCost') || 0 : 0;
-  }, [deliveryMethodWatcher, form.watch('shippingCost')]);
+    return deliveryMethodWatcher === 'delivery' ? Number(form.watch('shippingCost')) || 0 : 0;
+  }, [deliveryMethodWatcher, form]);
 
   const totalAmount = useMemo(() => {
     return subtotal + shippingCost;

@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "studio"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "anella-details-db"
+      cloudSql:
+        instanceId: "anella-details"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
