@@ -15,7 +15,7 @@ import { db } from '@/lib/firebase/config';
 import type { Order, User, Product, PaymentDetail, FulfillmentStatus } from '@/types/firestore';
 
 // Omit fields that are auto-generated or handled by the backend
-type OrderData = Omit<Order, 'id' | 'createdAt' | 'paymentStatus' >;
+type OrderData = Omit<Order, 'id' | 'createdAt' >;
 
 export async function saveOrder(
   orderId: string | undefined,
@@ -67,7 +67,11 @@ export async function saveOrder(
         const totalAmount = data.totalAmount ?? 0;
         const amountPaid = data.amountPaid ?? 0;
         const amountDue = totalAmount - amountPaid;
-        const paymentStatus = amountPaid >= totalAmount ? 'paid' : (amountPaid > 0 ? 'partially-paid' : 'unpaid');
+        
+        // Determine paymentStatus based on what's passed in, or calculate it
+        const paymentStatus = data.paymentStatus 
+            ? data.paymentStatus 
+            : amountPaid >= totalAmount ? 'paid' : (amountPaid > 0 ? 'partially-paid' : 'unpaid');
 
         const newOrderData: Partial<Order> = {
             ...data,
