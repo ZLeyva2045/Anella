@@ -1,7 +1,7 @@
 // src/app/sales/orders/[id]/page.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -102,9 +102,36 @@ export default function OrderDetailPage() {
     }
   }
 
-  const fulfillmentStatusInfo = order ? getFulfillmentStatusInfo(order.fulfillmentStatus) : null;
-  const paymentStatusInfo = order ? getPaymentStatusInfo(order.paymentStatus) : null;
-  const paymentDetails = order?.paymentDetails || [];
+  const {
+    fulfillmentStatusInfo,
+    paymentStatusInfo,
+    paymentDetails,
+    isPaid,
+    subtotal,
+    amountDue
+  } = useMemo(() => {
+    if (!order) {
+      return {
+        fulfillmentStatusInfo: null,
+        paymentStatusInfo: null,
+        paymentDetails: [],
+        isPaid: false,
+        subtotal: 0,
+        amountDue: 0,
+      };
+    }
+    const currentAmountDue = (order.totalAmount || 0) - (order.amountPaid || 0);
+
+    return {
+      fulfillmentStatusInfo: getFulfillmentStatusInfo(order.fulfillmentStatus),
+      paymentStatusInfo: getPaymentStatusInfo(order.paymentStatus),
+      paymentDetails: order.paymentDetails || [],
+      isPaid: order.paymentStatus === 'paid',
+      subtotal: order.items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+      amountDue: currentAmountDue,
+    };
+  }, [order]);
+
 
   if (loading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-16 w-16 animate-spin" /></div>;
@@ -114,9 +141,6 @@ export default function OrderDetailPage() {
     return <div className="text-center py-10">Pedido no encontrado.</div>;
   }
   
-  const isPaid = order.paymentStatus === 'paid';
-  const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-
   return (
     <TooltipProvider>
     <div className="space-y-6">
@@ -221,7 +245,7 @@ export default function OrderDetailPage() {
                   <Separator/>
                   <div className="flex justify-between"><span>Monto Pagado:</span><span className="font-semibold text-green-600">S/{order.amountPaid?.toFixed(2) ?? '0.00'}</span></div>
                   <Separator />
-                  <div className="flex justify-between font-bold text-lg"><span>Saldo Pendiente:</span><span className="text-red-600">S/{order.amountDue?.toFixed(2) ?? '0.00'}</span></div>
+                  <div className="flex justify-between font-bold text-lg"><span>Saldo Pendiente:</span><span className="text-red-600">S/{amountDue.toFixed(2)}</span></div>
               </CardContent>
           </Card>
           <Card>
@@ -280,7 +304,7 @@ export default function OrderDetailPage() {
         isOpen={isPaymentDialogOpen}
         setIsOpen={setIsPaymentDialogOpen}
         orderId={orderId}
-        amountDue={order.amountDue}
+        amountDue={amountDue}
     />
     </TooltipProvider>
   );
