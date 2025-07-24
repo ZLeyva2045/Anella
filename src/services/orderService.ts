@@ -92,6 +92,7 @@ export async function saveOrder(
   });
 }
 
+
 /**
  * Updates an order's fulfillment status.
  * @param orderId The ID of the order to update.
@@ -99,15 +100,41 @@ export async function saveOrder(
  */
 export async function updateFulfillmentStatus(orderId: string, status: FulfillmentStatus) {
     const orderRef = doc(db, 'orders', orderId);
-
-    // If completing the order, ensure it's paid.
-    if (status === 'completed') {
-        const orderDoc = await getDoc(orderRef);
-        if (orderDoc.exists() && orderDoc.data().paymentStatus !== 'paid') {
-            throw new Error("El pedido debe estar completamente pagado para marcarlo como entregado.");
+    
+    return runTransaction(db, async (transaction) => {
+        // --- READ PHASE ---
+        const orderDoc = await transaction.get(orderRef);
+        if (!orderDoc.exists()) {
+            throw new Error("El pedido no existe.");
         }
-    }
-    await setDoc(orderRef, { fulfillmentStatus: status }, { merge: true });
+        const orderData = orderDoc.data();
+
+        let userRef;
+        let userDoc;
+
+        // If completing the order, ensure it's paid and get user for points.
+        if (status === 'completed') {
+            if (orderData.paymentStatus !== 'paid') {
+                throw new Error("El pedido debe estar completamente pagado para marcarlo como entregado.");
+            }
+            if (orderData.userId && !orderData.pointsAwarded) {
+                userRef = doc(db, 'users', orderData.userId);
+                userDoc = await transaction.get(userRef);
+            }
+        }
+        
+        // --- WRITE PHASE ---
+        transaction.update(orderRef, { fulfillmentStatus: status });
+
+        // Award points if conditions are met
+        if (status === 'completed' && userRef && userDoc?.exists() && !orderData.pointsAwarded) {
+             const userData = userDoc.data() as User;
+             const currentPoints = userData.loyaltyPoints || 0;
+             const newPoints = Math.floor(orderData.totalAmount);
+             transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
+             transaction.update(orderRef, { pointsAwarded: true });
+        }
+    });
 }
 
 
@@ -127,9 +154,6 @@ export async function addPaymentToOrder(orderId: string, payment: Omit<PaymentDe
         }
         const order = orderDoc.data() as Order;
         
-        let userRef;
-        let userDoc;
-
         // --- WRITE PHASE ---
         const newPayment: PaymentDetail = {
             ...payment,
@@ -146,18 +170,5 @@ export async function addPaymentToOrder(orderId: string, payment: Omit<PaymentDe
             amountDue: newAmountDue,
             paymentStatus: newPaymentStatus,
         });
-        
-        // Award points if the order becomes fully paid
-        if (newPaymentStatus === 'paid' && !order.pointsAwarded && order.userId) {
-            userRef = doc(db, 'users', order.userId);
-            userDoc = await transaction.get(userRef); // Read user just before writing to it
-            if (userDoc.exists()) {
-                const userData = userDoc.data() as User;
-                const currentPoints = userData.loyaltyPoints || 0;
-                const newPoints = Math.floor(order.totalAmount);
-                transaction.update(userRef, { loyaltyPoints: currentPoints + newPoints });
-                transaction.update(orderRef, { pointsAwarded: true });
-            }
-        }
     });
 }

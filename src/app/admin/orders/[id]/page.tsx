@@ -105,6 +105,8 @@ export default function OrderDetailPage() {
 
   const fulfillmentStatusInfo = order ? getFulfillmentStatusInfo(order.fulfillmentStatus) : null;
   const paymentStatusInfo = order ? getPaymentStatusInfo(order.paymentStatus) : null;
+  const paymentDetails = order?.paymentDetails || [];
+
 
   if (loading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-16 w-16 animate-spin" /></div>;
@@ -183,10 +185,10 @@ export default function OrderDetailPage() {
                           </TableRow>
                       </TableHeader>
                       <TableBody>
-                           {order.paymentDetails.length === 0 && (
+                           {paymentDetails.length === 0 && (
                                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No hay pagos registrados.</TableCell></TableRow>
                            )}
-                          {order.paymentDetails.map((p, i) => (
+                          {paymentDetails.map((p, i) => (
                             <TableRow key={i}>
                                 <TableCell>{new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(p.date.toDate())}</TableCell>
                                 <TableCell className="capitalize">{p.method}</TableCell>
