@@ -68,10 +68,18 @@ export async function saveOrder(
         const amountPaid = data.amountPaid ?? 0;
         const amountDue = totalAmount - amountPaid;
         
-        // Determine paymentStatus based on what's passed in, or calculate it
-        const paymentStatus = data.paymentStatus 
-            ? data.paymentStatus 
-            : amountPaid >= totalAmount ? 'paid' : (amountPaid > 0 ? 'partially-paid' : 'unpaid');
+        let paymentStatus;
+        if (data.paymentStatus) {
+          paymentStatus = data.paymentStatus;
+        } else {
+          if (amountPaid >= totalAmount) {
+            paymentStatus = 'paid';
+          } else if (amountPaid > 0) {
+            paymentStatus = 'partially-paid';
+          } else {
+            paymentStatus = 'unpaid';
+          }
+        }
 
         const newOrderData: Partial<Order> = {
             ...data,
