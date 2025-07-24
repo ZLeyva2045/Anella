@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -31,7 +31,7 @@ import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
 import { collection, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search } from 'lucide-react';
+import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search, DollarSign } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
 import { useClickAway } from 'react-use';
@@ -59,6 +59,7 @@ const orderSchema = z.object({
   }),
   items: z.array(orderItemSchema).min(1, 'El pedido debe tener al menos un producto.'),
   deliveryMethod: z.enum(['localPickup', 'delivery']),
+  shippingCost: z.coerce.number().optional(),
   deliveryDate: z.date({
     required_error: "La fecha de entrega es requerida.",
   }),
@@ -92,6 +93,7 @@ export default function CreateOrderPage() {
       customer: { id: '', name: '', email: '', phone: '', address: '' },
       items: [],
       deliveryMethod: 'localPickup',
+      shippingCost: 0,
       deliveryDate: new Date(),
     },
   });
@@ -100,6 +102,8 @@ export default function CreateOrderPage() {
     control: form.control,
     name: "items",
   });
+  
+  const deliveryMethodWatcher = useWatch({ control: form.control, name: 'deliveryMethod' });
   
   const addProductToOrder = (product: Product) => {
     const existingItem = fields.find(item => item.itemId === product.id);
@@ -167,9 +171,17 @@ export default function CreateOrderPage() {
   }, [customerSearchQuery, allCustomers]);
 
 
-  const totalAmount = useMemo(() => {
+  const subtotal = useMemo(() => {
     return form.watch('items').reduce((acc, p) => acc + p.price * p.quantity, 0);
   }, [form.watch('items')]);
+  
+  const shippingCost = useMemo(() => {
+    return deliveryMethodWatcher === 'delivery' ? form.watch('shippingCost') || 0 : 0;
+  }, [deliveryMethodWatcher, form.watch('shippingCost')]);
+
+  const totalAmount = useMemo(() => {
+    return subtotal + shippingCost;
+  }, [subtotal, shippingCost]);
 
   const onSubmit = async (data: OrderFormValues) => {
     if (!user) {
@@ -178,9 +190,10 @@ export default function CreateOrderPage() {
     }
     setLoading(true);
     try {
-        const newOrderId = await saveOrder(undefined, {
+        await saveOrder(undefined, {
             ...data,
             totalAmount: totalAmount,
+            shippingCost: shippingCost,
             userId: data.customer.id,
             sellerId: user.uid,
             customerInfo: {
@@ -189,9 +202,9 @@ export default function CreateOrderPage() {
                 phone: data.customer.phone,
                 address: data.customer.address,
             },
-        } as any); // Cast because we are intentionally creating an incomplete order
+        });
         toast({ title: 'Pedido Creado', description: 'El nuevo pedido se ha guardado correctamente. Ahora puedes gestionar los pagos.' });
-        router.push(`/sales/orders/${newOrderId}`);
+        router.push(`/sales/orders`);
     } catch (error) {
         console.error("Error creating order: ", error);
         toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear el pedido.' });
@@ -393,6 +406,20 @@ export default function CreateOrderPage() {
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="deliveryMethod" render={({ field }) => ( <FormItem><FormLabel>Método de Entrega</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="localPickup">Recojo en Local</SelectItem><SelectItem value="delivery">Delivery</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
+                        {deliveryMethodWatcher === 'delivery' && (
+                            <FormField control={form.control} name="shippingCost" render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Costo de Envío</FormLabel>
+                                <div className="relative">
+                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <FormControl>
+                                        <Input type="number" step="0.5" className="pl-9" {...field} />
+                                    </FormControl>
+                                </div>
+                                <FormMessage />
+                                </FormItem>
+                            )} />
+                        )}
                     </CardContent>
                 </Card>
 
@@ -401,14 +428,24 @@ export default function CreateOrderPage() {
                          <CardTitle>Resumen</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        <div className="flex justify-between font-bold text-lg pt-2"><span>Total</span><span>S/{totalAmount.toFixed(2)}</span></div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span>S/{subtotal.toFixed(2)}</span>
+                        </div>
+                        {deliveryMethodWatcher === 'delivery' && (
+                            <div className="flex justify-between">
+                            <span className="text-muted-foreground">Envío</span>
+                            <span>S/{shippingCost.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Total</span><span>S/{totalAmount.toFixed(2)}</span></div>
                     </CardContent>
                 </Card>
 
                 <Button type="submit" size="lg" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 animate-spin" />}
                     <Save className="mr-2"/>
-                    Crear Pedido y Gestionar Pago
+                    Crear Pedido
                 </Button>
             </div>
           </form>

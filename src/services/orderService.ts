@@ -82,6 +82,7 @@ export async function saveOrder(
             totalAmount: totalAmount,
             amountPaid: amountPaid,
             amountDue: amountDue,
+            shippingCost: data.shippingCost || 0,
             pointsAwarded: false,
         };
         transaction.set(orderRef, newOrderData);

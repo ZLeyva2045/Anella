@@ -132,10 +132,11 @@ export interface Order {
   paymentStatus: PaymentStatus;
   paymentDetails: PaymentDetail[];
   deliveryMethod: 'localPickup' | 'delivery'; // Método de entrega
+  shippingCost?: number; // Costo de envío
   createdAt: Timestamp; // Fecha de creación del pedido
   updatedAt: Timestamp; // Fecha de última actualización
   deliveryDate: Timestamp; // Fecha de entrega acordada
-  totalAmount: number; // Monto total del pedido
+  totalAmount: number; // Monto total del pedido (subtotal + shippingCost)
   amountPaid: number; // Suma de los montos en paymentDetails
   amountDue: number; // totalAmount - amountPaid
   pointsAwarded?: boolean; // Flag para saber si ya se otorgaron los puntos de este pedido
