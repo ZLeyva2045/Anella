@@ -407,9 +407,7 @@ export default function CreateOrderPage() {
                          <CardTitle>Resumen</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        <div className="flex justify-between"><span>Subtotal</span><span>S/{totalAmount.toFixed(2)}</span></div>
-                        <div className="flex justify-between"><span>IGV (18%)</span><span>S/{(totalAmount * 0.18).toFixed(2)}</span></div>
-                         <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Total</span><span>S/{(totalAmount * 1.18).toFixed(2)}</span></div>
+                        <div className="flex justify-between font-bold text-lg pt-2"><span>Total</span><span>S/{totalAmount.toFixed(2)}</span></div>
                     </CardContent>
                 </Card>
 
