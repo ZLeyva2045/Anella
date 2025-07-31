@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { DollarSign, Users, CreditCard, Loader2 } from 'lucide-react';
 import type { Order, User } from '@/types/firestore';
-import { collection, onSnapshot, query, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { DashboardAlerts } from '@/components/admin/DashboardAlerts';
 
@@ -113,6 +113,8 @@ export default function AdminDashboardPage() {
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
+      
+      // Filtramos en el cliente para evitar el error de indice compuesto
       const newCustomersThisMonth = usersData.filter(user => {
         const createdAt = (user.createdAt as Timestamp)?.toDate();
         return createdAt && createdAt >= startOfMonth;
@@ -120,11 +122,13 @@ export default function AdminDashboardPage() {
       setMetrics(prev => ({ ...prev, newCustomers: newCustomersThisMonth.length }));
     });
     
-    setLoading(false);
+    // Un simple temporizador para evitar un cambio de estado de carga demasiado rápido
+    const timer = setTimeout(() => setLoading(false), 500);
 
     return () => {
       unsubOrders();
       unsubUsers();
+      clearTimeout(timer);
     };
   }, []);
 
