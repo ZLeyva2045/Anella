@@ -5,10 +5,10 @@ import { TopCustomersList } from "@/components/admin/analytics/TopCustomersList"
 
 export default function AnalyticsPage() {
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Analytics y Estrategia</h1>
-        <p className="text-muted-foreground">
+    <div className="space-y-8 max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Análisis y Estrategia</h1>
+        <p className="text-gray-500 mt-1">
           Análisis profundos para optimizar tu negocio y tomar decisiones informadas.
         </p>
       </div>

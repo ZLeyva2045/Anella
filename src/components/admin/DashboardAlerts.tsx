@@ -26,12 +26,13 @@ const AlertItem = ({ icon: Icon, title, count, linkHref, linkText, colorClass }:
   if (count === 0) return null;
 
   return (
-    <div className={`flex items-start gap-4 p-3 rounded-lg border-l-4 ${colorClass}`}>
-      <Icon className="h-6 w-6 mt-1" />
-      <div>
-        <p className="font-semibold">{title}</p>
-        <p className="text-sm text-muted-foreground">{count} {count === 1 ? 'item necesita' : 'items necesitan'} atención.</p>
-        <Button variant="link" asChild className="p-0 h-auto text-sm mt-1">
+    <div className={`flex items-center gap-4`}>
+      <div className={`p-2 rounded-full ${colorClass}`}>
+         <Icon className="h-5 w-5" />
+      </div>
+      <div className="flex-1">
+        <p className="font-semibold text-sm">{count} {title}</p>
+        <Button variant="link" asChild className="p-0 h-auto text-xs text-muted-foreground">
           <Link href={linkHref}>{linkText}</Link>
         </Button>
       </div>
@@ -45,131 +46,123 @@ export function DashboardAlerts() {
   const [expiringProducts, setExpiringProducts] = useState<Product[]>([]);
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [inProgressOrders, setInProgressOrders] = useState<Order[]>([]);
-  const [loadingStates, setLoadingStates] = useState({
-      lowStock: true,
-      expiring: true,
-      pending: true,
-      inProgress: true,
-  });
+  const [loading, setLoading] = useState(true);
 
-  const isLoading = Object.values(loadingStates).some(state => state);
 
   useEffect(() => {
-    // Low stock listener
-    const lowStockQuery = query(
-        collection(db, 'products'),
-        where('stock', '<=', LOW_STOCK_THRESHOLD)
-    );
-    const unsubLowStock = onSnapshot(lowStockQuery, (snapshot) => {
-        const allLowStock = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-        const filteredLowStock = allLowStock.filter(p => p.productType !== 'Servicios');
-        setLowStockProducts(filteredLowStock);
-        setLoadingStates(prev => ({ ...prev, lowStock: false }));
-    }, (error) => {
-      console.error("Error en listener de bajo stock:", error);
-      setLoadingStates(prev => ({ ...prev, lowStock: false }));
-    });
+    let active = true;
+    const loadAlerts = async () => {
+        const lowStockQuery = query(
+            collection(db, 'products'),
+            where('stock', '<=', LOW_STOCK_THRESHOLD)
+        );
+        const thresholdDate = new Date();
+        thresholdDate.setDate(thresholdDate.getDate() + EXPIRATION_DAYS_THRESHOLD);
+        const thresholdTimestamp = Timestamp.fromDate(thresholdDate);
+        const expiringQuery = query(
+            collection(db, 'lotes'),
+            where('fechaVencimiento', '<=', thresholdTimestamp),
+            where('estadoLote', '==', 'activo')
+        );
+        const pendingOrdersQuery = query(collection(db, 'orders'), where('fulfillmentStatus', '==', 'pending'));
+        const inProgressOrdersQuery = query(collection(db, 'orders'), where('fulfillmentStatus', 'in', ['processing', 'finishing']));
 
-    // Expiring products listener
-    const thresholdDate = new Date();
-    thresholdDate.setDate(thresholdDate.getDate() + EXPIRATION_DAYS_THRESHOLD);
-    const thresholdTimestamp = Timestamp.fromDate(thresholdDate);
-    const expiringQuery = query(
-        collection(db, 'lotes'),
-        where('fechaVencimiento', '<=', thresholdTimestamp),
-        where('estadoLote', '==', 'activo')
-    );
-    const unsubExpiring = onSnapshot(expiringQuery, (snapshot) => {
-        setExpiringProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
-        setLoadingStates(prev => ({ ...prev, expiring: false }));
-    }, (error) => {
-      console.error("Error en listener de productos por vencer:", error);
-      setLoadingStates(prev => ({ ...prev, expiring: false }));
-    });
-    
-    // Pending orders listener
-    const pendingOrdersQuery = query(collection(db, 'orders'), where('fulfillmentStatus', '==', 'pending'));
-    const unsubPendingOrders = onSnapshot(pendingOrdersQuery, (snapshot) => {
-        setPendingOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
-        setLoadingStates(prev => ({ ...prev, pending: false }));
-    }, (error) => {
-      console.error("Error en listener de pedidos pendientes:", error);
-      setLoadingStates(prev => ({ ...prev, pending: false }));
-    });
+        const unsubLowStock = onSnapshot(lowStockQuery, (snapshot) => {
+            if (!active) return;
+            const filteredLowStock = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)).filter(p => p.productType !== 'Servicios');
+            setLowStockProducts(filteredLowStock);
+        });
 
-    // In Progress orders listener
-    const inProgressOrdersQuery = query(collection(db, 'orders'), where('fulfillmentStatus', 'in', ['processing', 'finishing']));
-    const unsubInProgressOrders = onSnapshot(inProgressOrdersQuery, (snapshot) => {
-        setInProgressOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
-        setLoadingStates(prev => ({...prev, inProgress: false}));
-    }, (error) => {
-      console.error("Error en listener de pedidos en curso:", error);
-      setLoadingStates(prev => ({...prev, inProgress: false}));
-    });
+        const unsubExpiring = onSnapshot(expiringQuery, (snapshot) => {
+            if (!active) return;
+            setExpiringProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
+        });
 
-    return () => {
-      unsubLowStock();
-      unsubExpiring();
-      unsubPendingOrders();
-      unsubInProgressOrders();
-    };
+        const unsubPending = onSnapshot(pendingOrdersQuery, (snapshot) => {
+            if (!active) return;
+            setPendingOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
+        });
+        
+        const unsubInProgress = onSnapshot(inProgressOrdersQuery, (snapshot) => {
+            if (!active) return;
+            setInProgressOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
+        });
+
+        // This is a simple way to set loading to false after initial load
+        setTimeout(() => { if(active) setLoading(false) }, 1500);
+
+        return () => {
+            active = false;
+            unsubLowStock();
+            unsubExpiring();
+            unsubPending();
+            unsubInProgress();
+        };
+    }
+
+    loadAlerts();
+
   }, []);
-
+  
   const totalAlerts = lowStockProducts.length + expiringProducts.length + pendingOrders.length + inProgressOrders.length;
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-            <AlertTriangle className="h-6 w-6 text-amber-500" />
-            <CardTitle>Centro de Alertas</CardTitle>
-        </div>
-        <CardDescription>Atenciones prioritarias para tu negocio.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoading ? (
-           <div className="flex justify-center items-center h-24">
+
+  if (loading) {
+    return (
+        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        ) : totalAlerts === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-4">¡Todo en orden! No hay alertas por ahora.</p>
-        ) : (
-          <>
-            <AlertItem
+        </div>
+    )
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center h-full">
+        <div className="flex items-center gap-3 mb-4">
+             <div className="p-3 rounded-full bg-amber-100 text-amber-500">
+                <AlertTriangle className="h-7 w-7" />
+             </div>
+             <div>
+                <p className="text-sm font-medium text-gray-500">Alertas Activas</p>
+                <p className="text-2xl font-bold text-gray-900">{totalAlerts}</p>
+             </div>
+        </div>
+        <div className="space-y-3">
+             <AlertItem
               icon={ShoppingCart}
               title="Pedidos Pendientes"
               count={pendingOrders.length}
               linkHref="/admin/orders"
-              linkText="Procesar pedidos"
-              colorClass="border-blue-500 bg-blue-500/10 text-blue-700"
+              linkText="Procesar"
+              colorClass="bg-blue-100 text-blue-600"
             />
              <AlertItem
               icon={Sparkles}
               title="Pedidos en Curso"
               count={inProgressOrders.length}
               linkHref="/admin/orders"
-              linkText="Ver pedidos en curso"
-              colorClass="border-purple-500 bg-purple-500/10 text-purple-700"
+              linkText="Ver en curso"
+              colorClass="bg-purple-100 text-purple-600"
             />
             <AlertItem
               icon={Package}
               title="Bajo Stock"
               count={lowStockProducts.length}
               linkHref="/admin/products"
-              linkText="Ver inventario"
-              colorClass="border-amber-500 bg-amber-500/10 text-amber-700"
+              linkText="Revisar"
+              colorClass="bg-amber-100 text-amber-600"
             />
             <AlertItem
               icon={CalendarClock}
               title="Próximos a Vencer"
               count={expiringProducts.length}
               linkHref="/admin/compras"
-              linkText="Gestionar lotes"
-              colorClass="border-red-500 bg-red-500/10 text-red-700"
+              linkText="Ver lotes"
+              colorClass="bg-red-100 text-red-600"
             />
-          </>
+        </div>
+        {totalAlerts === 0 && (
+             <p className="text-center text-sm text-muted-foreground pt-4">¡Todo en orden!</p>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }
