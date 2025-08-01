@@ -10,7 +10,7 @@ interface ProductGridProps {
   loading: boolean;
 }
 
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 8;
 
 export function ProductGrid({ gifts, loading }: ProductGridProps) {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
@@ -23,10 +23,10 @@ export function ProductGrid({ gifts, loading }: ProductGridProps) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, index) => (
+      <div className="mt-12 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+        {Array.from({ length: 8 }).map((_, index) => (
            <div key={index} className="flex flex-col space-y-3">
-              <Skeleton className="h-[200px] w-full rounded-lg" />
+              <Skeleton className="h-[250px] w-full rounded-lg" />
               <div className="space-y-2">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
@@ -48,13 +48,13 @@ export function ProductGrid({ gifts, loading }: ProductGridProps) {
 
   return (
     <div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mt-12 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
             {gifts.slice(0, visibleCount).map(gift => (
                 <ProductCard key={gift.id} gift={gift} />
             ))}
         </div>
         {hasMoreGifts && (
-            <div className="mt-8 text-center">
+            <div className="mt-12 text-center">
                 <Button onClick={handleLoadMore} size="lg">
                     Cargar más regalos
                 </Button>

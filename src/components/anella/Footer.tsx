@@ -1,57 +1,30 @@
-import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
-import Image from 'next/image';
+import Link from 'next/link';
+import { Instagram, Facebook, Twitter } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer id="contact" className="bg-secondary/50 border-t mt-16">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-          <div>
-            <div className="flex justify-center md:justify-start mb-3">
-               <Image
-                src="https://i.ibb.co/MyXzBh0r/Anella.png"
-                alt="Anella Boutique Logo"
-                width={160}
-                height={40}
-                className="object-contain"
-              />
-            </div>
-            <p className="text-muted-foreground text-sm">
-              Creando regalos personalizados con amor desde Cajamarca, Perú.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Contáctanos</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center justify-center md:justify-start gap-2">
-                <Mail className="h-4 w-4 text-primary" />
-                <span>hola@anella.pe</span>
-              </li>
-              <li className="flex items-center justify-center md:justify-start gap-2">
-                <Phone className="h-4 w-4 text-primary" />
-                <span>+51 987 771 610</span>
-              </li>
-              <li className="flex items-center justify-center md:justify-start gap-2">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span>Jr. El Maestro 393, Cajamarca</span>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Síguenos</h3>
-            <div className="flex justify-center md:justify-start gap-4">
-              <a href="#" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors">
-                <Instagram className="h-6 w-6" />
-              </a>
-              <a href="#" aria-label="Facebook" className="text-muted-foreground hover:text-primary transition-colors">
-                <Facebook className="h-6 w-6" />
-              </a>
-            </div>
-          </div>
+    <footer className="bg-white">
+      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+        <nav aria-label="Footer" className="flex flex-wrap justify-center gap-x-6 gap-y-4">
+          <Link className="text-sm leading-6 text-gray-600 hover:text-primary transition-colors" href="#">Política de privacidad</Link>
+          <Link className="text-sm leading-6 text-gray-600 hover:text-primary transition-colors" href="#">Términos de servicio</Link>
+          <Link className="text-sm leading-6 text-gray-600 hover:text-primary transition-colors" href="#">Contacto</Link>
+        </nav>
+        <div className="mt-10 flex justify-center space-x-6">
+          <a className="text-gray-400 hover:text-primary transition-colors" href="#">
+            <span className="sr-only">Instagram</span>
+            <Instagram className="h-6 w-6" />
+          </a>
+          <a className="text-gray-400 hover:text-primary transition-colors" href="#">
+            <span className="sr-only">Facebook</span>
+            <Facebook className="h-6 w-6" />
+          </a>
+          <a className="text-gray-400 hover:text-primary transition-colors" href="#">
+            <span className="sr-only">Twitter</span>
+            <Twitter className="h-6 w-6" />
+          </a>
         </div>
-        <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Anella Boutique. Todos los derechos reservados.</p>
-        </div>
+        <p className="mt-10 text-center text-xs leading-5 text-gray-500">© 2024 Anella. Todos los derechos reservados.</p>
       </div>
     </footer>
   );

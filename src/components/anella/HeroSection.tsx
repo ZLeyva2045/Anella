@@ -1,87 +1,27 @@
 // src/components/anella/HeroSection.tsx
-"use client";
-
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, Star } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-const useTypewriter = (text: string, speed = 50, startDelay = 0) => {
-  const [displayText, setDisplayText] = useState('');
-
-  useEffect(() => {
-    let i = 0;
-    const initialTimeout = setTimeout(() => {
-      const typingInterval = setInterval(() => {
-        if (i < text.length) {
-          setDisplayText(text.substring(0, i + 1));
-          i++;
-        } else {
-          clearInterval(typingInterval);
-        }
-      }, speed);
-      return () => clearInterval(typingInterval);
-    }, startDelay);
-
-    return () => clearTimeout(initialTimeout);
-
-  }, [text, speed, startDelay]);
-
-  return displayText;
-};
-
-const FloatingParticle = ({ icon: Icon, className, style }: { icon: React.ElementType, className?: string, style?: React.CSSProperties }) => (
-    <div className={cn("absolute text-primary/40 animate-pulse", className)} style={style}>
-        <Icon className="h-full w-full" />
-    </div>
-);
-
+import Link from 'next/link';
 
 export function HeroSection() {
-  const title = useTypewriter("El regalo perfecto", 50, 500);
-  const subtitle = useTypewriter("Miles de productos personalizados con fotos y frases únicas.", 30, 2500);
-
-  const heroImageUrl = "https://firebasestorage.googleapis.com/v0/b/anella-boutique.appspot.com/o/assets%2FGrupal.jpg?alt=media&token=11198e3d-1b47-4cf0-93ce-0fb471a0dad5";
+  const heroImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBBmepZ4vywjzbZSwDzf2wmUyW4ovLs0Jxyzm003ryyUUJ5TaqpkCdWd5HUHNCKA_fsGqybs5XGLnH98QspijCA9D4CdjZbyUGIpByQHvy641LTFhyC6M-MMhn8pEZdD4SZ_NhG5f9EoeRqgOZLvQ8_cKfBnv45oJraCDIRnqgwuwYyF6bGCxkPwd1SBt6oBlaKSDJL8OrE6oNri95Pa6DAvJkSKkf33J_nJHW5py0TnE0NQDiAPABtKvTFSJsPep_qAc0YJ5FLHCBb";
 
   return (
-    <section 
-      id="hero" 
-      className="relative w-full h-[85vh] min-h-[600px] max-h-[800px] flex items-center justify-center bg-soft-gradient"
-      style={{
-        backgroundImage: `url(${heroImageUrl})`,
-        backgroundSize: 'contain',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-      data-ai-hint="team photo"
-    >
-      <div className="absolute inset-0 bg-background/50"></div>
-      
-      {/* Floating Particles */}
-      <FloatingParticle icon={Heart} className="w-12 h-12 top-[15%] left-[10%] animate-[bounce_10s_ease-in-out_infinite]" />
-      <FloatingParticle icon={Star} className="w-8 h-8 top-[20%] right-[15%] animate-[bounce_12s_ease-in-out_infinite]" />
-      <FloatingParticle icon={Heart} className="w-10 h-10 bottom-[25%] right-[20%] animate-[bounce_9s_ease-in-out_infinite]" />
-      <FloatingParticle icon={Star} className="w-6 h-6 bottom-[15%] left-[25%] animate-[bounce_11s_ease-in-out_infinite]" />
-      <FloatingParticle icon={Heart} className="w-16 h-16 top-[50%] left-[30%] opacity-20 animate-[bounce_15s_ease-in-out_infinite]" />
-      <FloatingParticle icon={Star} className="w-14 h-14 top-[60%] right-[40%] opacity-20 animate-[bounce_13s_ease-in-out_infinite]" />
-
-
-      <div className="relative z-10 text-center px-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
-        <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4 drop-shadow-md min-h-[5rem] md:min-h-[6rem]">
-            {title}
-            <span className="inline-block w-1 bg-primary animate-ping ml-1"></span>
-        </h1>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 drop-shadow-sm min-h-[3rem]">
-          {subtitle}
-        </p>
-        <Button 
-            size="lg" 
-            className="text-lg py-7 px-10 transition-transform duration-300 ease-out hover:scale-105 hover:rotate-[-2deg] hover:shadow-floating"
-            onClick={() => document.getElementById('recommendations')?.scrollIntoView({ behavior: 'smooth' })}
-        >
-          Descubre tu regalo ideal
-        </Button>
-      </div>
+     <section className="px-4 py-16 sm:px-8 lg:px-16 xl:px-40">
+        <div className="mx-auto max-w-7xl">
+            <div className="relative min-h-[520px] rounded-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage: `url(${heroImageUrl})`}} data-ai-hint="gift giving celebration"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/10"></div>
+                <div className="relative flex flex-col items-center justify-center h-full p-8 text-center text-white">
+                    <h1 className="text-4xl font-extrabold leading-tight tracking-tighter sm:text-5xl lg:text-6xl">Encuentra el regalo perfecto</h1>
+                    <p className="mt-4 max-w-2xl text-lg text-gray-200">Explora nuestra colección de regalos cuidadosamente seleccionados para cada ocasión.</p>
+                    <Button asChild size="lg" className="mt-8 text-base font-bold shadow-lg transition-transform hover:scale-105">
+                        <Link href="/products">
+                            <span className="truncate">Ver colección</span>
+                        </Link>
+                    </Button>
+                </div>
+            </div>
+        </div>
     </section>
   );
 }

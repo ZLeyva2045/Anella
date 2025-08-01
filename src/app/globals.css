@@ -4,65 +4,80 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%; /* #fafafa similar to #FEF2F2 but more neutral */
-    --foreground: 222.2 47.4% 11.2%;
+    /* Nueva Paleta para el sitio público */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
- 
+    --card-foreground: 224 71.4% 4.1%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
- 
-    --primary: 330 84% 70%; /* #F472B6 */
-    --primary-foreground: 330 100% 10%;
- 
-    --secondary: 330 83% 95%; /* #FCE7F3 */
-    --secondary-foreground: 330 84% 70%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --accent: 207 100% 82%; /* #A5D8FF */
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
+    --popover-foreground: 224 71.4% 4.1%;
+
+    --primary: 336 84% 60%; /* #ea47b4 */
+    --primary-foreground: 355.7 100% 97.3%;
+
+    --secondary: 330 60% 98%; /* #f8f5f7 */
+    --secondary-foreground: 336 84% 60%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 330 84% 70%;
- 
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71.4% 4.1%;
+
     --radius: 0.5rem;
   }
- 
+
   .dark {
-    --background: 222.2 47.4% 11.2%;
-    --foreground: 210 40% 98%;
- 
-    --card: 222.2 47.4% 11.2%;
-    --card-foreground: 210 40% 98%;
- 
-    --popover: 222.2 47.4% 11.2%;
-    --popover-foreground: 210 40% 98%;
- 
-    --primary: 330 84% 70%;
-    --primary-foreground: 330 100% 10%;
- 
-    --secondary: 330 83% 95%;
-    --secondary-foreground: 330 84% 70%;
- 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
- 
-    --accent: 207 100% 82%;
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 330 84% 70%;
+    /* Mantener el modo oscuro sin cambios si es necesario, o adaptarlo */
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 336 72.2% 53.5%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 336 72.2% 53.5%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 215 25% 65.1%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 336 72.2% 53.5%;
+  }
+
+  /* Estilos específicos para los dashboards de admin/sales */
+  .admin-dashboard, .sales-dashboard {
+      --background: 0 0% 98%;
+      --foreground: 222.2 47.4% 11.2%;
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 47.4% 11.2%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 222.2 47.4% 11.2%;
+      --primary: 330 84% 70%;
+      --primary-foreground: 330 100% 10%;
+      --secondary: 330 83% 95%;
+      --secondary-foreground: 330 84% 70%;
+      --accent: 207 100% 82%;
+      --accent-foreground: 222.2 47.4% 11.2%;
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 330 84% 70%;
   }
 }
 
@@ -72,12 +87,12 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans', sans-serif;
   }
 }
 
 @layer utilities {
     .bg-soft-pink {
-        background-color: #FEF2F2;
+        background-color: #FEF2F2; /* Mantener para los dashboards */
     }
 }

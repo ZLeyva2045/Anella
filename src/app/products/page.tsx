@@ -105,6 +105,7 @@ export default function ProductsPage() {
             />
           </aside>
           <div className="lg:col-span-3">
+            <h2 className="text-3xl font-bold text-center text-foreground tracking-tight mb-12">Todos los Regalos</h2>
             <Toolbar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
