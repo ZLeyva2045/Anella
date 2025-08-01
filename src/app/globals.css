@@ -5,7 +5,7 @@
 @layer base {
   :root {
     /* Nueva Paleta para el sitio público */
-    --background: 48 83% 95%; /* #FCF9EC - Cream/Gold */
+    --background: 48 83% 95%; /* #fcf9ec - Pale Gold */
     --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
@@ -17,7 +17,7 @@
     --primary: 336 84% 60%; /* #ea47b4 */
     --primary-foreground: 355.7 100% 97.3%;
 
-    --secondary: 330 60% 98%; /* #f8f5f7 */
+    --secondary: 330 60% 98%; /* #fdf7fa */
     --secondary-foreground: 336 84% 60%;
 
     --muted: 220 14.3% 95.9%;
