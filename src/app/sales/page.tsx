@@ -25,19 +25,22 @@ import { db } from '@/lib/firebase/config';
 import type { Order } from '@/types/firestore';
 import Link from 'next/link';
 
-const MetricCard = ({ title, value, icon, description }: { title: string, value: string, icon: React.ElementType, description: string }) => {
+const MetricCard = ({ title, value, icon, loading }: { title: string, value: string, icon: React.ElementType, loading?: boolean }) => {
   const Icon = icon;
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
+    <div className="bg-white p-6 rounded-lg shadow-sm flex items-center gap-6">
+       <div className="p-3 rounded-full bg-secondary text-primary">
+            <Icon className="h-7 w-7" />
+       </div>
+       <div>
+            <p className="text-sm font-medium text-gray-500">{title}</p>
+            {loading ? (
+                <Loader2 className="h-8 w-8 animate-spin mt-1" />
+            ) : (
+                <p className="text-2xl font-bold text-gray-900">{value}</p>
+            )}
+       </div>
+    </div>
   );
 };
 
@@ -66,7 +69,7 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
         return () => unsubscribe();
     }, [sellerId]);
     
-     const getStatusVariant = (status: Order['status']) => {
+     const getStatusVariant = (status: Order['fulfillmentStatus']) => {
         switch (status) {
         case 'completed': return 'default';
         case 'processing': return 'secondary';
@@ -81,19 +84,12 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
         return <div className="flex justify-center items-center h-40"><Loader2 className="animate-spin" /></div>;
     }
 
-    if (orders.length === 0) {
-        return <p className="text-center text-muted-foreground py-4">No has gestionado pedidos recientes.</p>;
-    }
-
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Mis Pedidos Recientes</CardTitle>
-                <CardDescription>Un resumen de los pedidos que has gestionado.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <Table>
-                    <TableHeader>
+        <div className="mt-10 bg-white rounded-lg shadow-sm overflow-hidden">
+            <h2 className="text-lg font-semibold text-gray-900 p-6">Mis Pedidos Recientes</h2>
+             <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader className="text-xs text-gray-700 uppercase bg-pink-50">
                         <TableRow>
                             <TableHead>Pedido</TableHead>
                             <TableHead>Cliente</TableHead>
@@ -103,61 +99,61 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {orders.map((order) => (
+                        {orders.length === 0 ? (
+                             <TableRow>
+                                <TableCell colSpan={5} className="text-center text-muted-foreground py-4">No has gestionado pedidos recientes.</TableCell>
+                            </TableRow>
+                        ) : orders.map((order) => (
                         <TableRow key={order.id}>
                             <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
                             <TableCell>{order.customerInfo.name}</TableCell>
                             <TableCell>S/{order.totalAmount.toFixed(2)}</TableCell>
                             <TableCell>
-                                <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                                <Badge variant={getStatusVariant(order.fulfillmentStatus)}>{order.fulfillmentStatus}</Badge>
                             </TableCell>
                             <TableCell>{new Date((order.createdAt as any).seconds * 1000).toLocaleDateString()}</TableCell>
                         </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }
 
 export default function SalesDashboardPage() {
     const { user } = useAuth();
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard de Ventas</h1>
-         <div className="flex items-center space-x-2">
-            <Button asChild>
-                <Link href="/sales/orders/create">+ Crear Pedido</Link>
-            </Button>
+    <div className="max-w-7xl mx-auto">
+       <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard de Ventas</h1>
+            <p className="text-gray-500 mt-1">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Mis Ingresos (Mes)"
           value="S/0.00"
           icon={DollarSign}
-          description="Calculando..."
+          loading={true}
         />
         <MetricCard
           title="Nuevos Clientes (Mes)"
           value="0"
           icon={Users}
-          description="Asignados a tu cartera"
+          loading={true}
         />
         <MetricCard
           title="Mis Ventas (Mes)"
           value="0"
           icon={CreditCard}
-          description="Calculando..."
+          loading={true}
         />
         <MetricCard
           title="Mi Tasa de Cierre"
           value="0%"
           icon={Activity}
-          description="Calculando..."
+          loading={true}
         />
       </div>
 
