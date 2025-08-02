@@ -8,14 +8,14 @@ import { Map, Pin, Store, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
-import { useJsApiLoader, GoogleMap, AdvancedMarker, Pin as GooglePin } from '@react-google-maps/api';
+import { useJsApiLoader, GoogleMap, Marker, Circle } from '@react-google-maps/api';
 
 interface DeliveryMapProps {
   onLocationSelect: (address: string, cost: number) => void;
 }
 
-const STORE_LOCATION = { lat: -7.15879, lng: -78.5114 }; // Ubicación precisa de Anella
-const LIBRARIES: ('places' | 'geometry' | 'marker')[] = ['geometry', 'marker'];
+const STORE_LOCATION = { lat: -7.15879, lng: -78.5114 };
+const LIBRARIES: ('places' | 'geometry' | 'marker')[] = ['geometry'];
 
 const ZONES = [
     { name: 'Zona 1', radius: 2500, cost: 10, color: "#10b981" },
@@ -38,17 +38,17 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
   const calculateCostAndDistance = useCallback((location: google.maps.LatLngLiteral) => {
     if (typeof google === 'undefined' || !google.maps.geometry) return;
     
-    const kmDistance = google.maps.geometry.spherical.computeDistanceBetween(
+    const metersDistance = google.maps.geometry.spherical.computeDistanceBetween(
       new google.maps.LatLng(STORE_LOCATION),
       new google.maps.LatLng(location)
-    ) / 1000;
+    );
 
     let cost = 25; // Costo base para más de 5km
-    if (kmDistance <= 2.5) cost = 10;
-    else if (kmDistance <= 3.5) cost = 15;
-    else if (kmDistance <= 5) cost = 20;
+    if (metersDistance <= ZONES[0].radius) cost = ZONES[0].cost;
+    else if (metersDistance <= ZONES[1].radius) cost = ZONES[1].cost;
+    else if (metersDistance <= ZONES[2].radius) cost = ZONES[2].cost;
 
-    setDistance(kmDistance);
+    setDistance(metersDistance / 1000); // en km
     setDeliveryCost(cost);
   }, []);
 
@@ -70,9 +70,9 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
   
   const zoneInfo = useMemo(() => {
     const mDistance = distance * 1000;
-    if (mDistance <= ZONES[0].radius) return ZONES[0];
-    if (mDistance <= ZONES[1].radius) return ZONES[1];
-    return ZONES[2];
+    if (mDistance === 0) return ZONES[0];
+    const foundZone = ZONES.find(z => mDistance <= z.radius);
+    return foundZone || { name: 'Fuera de Zona', radius: Infinity, cost: 25, color: '#9ca3af' };
   }, [distance]);
 
   const renderMap = () => {
@@ -85,16 +85,39 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
         center={STORE_LOCATION}
         zoom={14}
         onClick={handleMapClick}
-        mapId={'DEMO_MAP_ID'}
         options={{
           disableDefaultUI: true,
           zoomControl: true,
         }}
       >
-        <AdvancedMarker position={STORE_LOCATION}>
-           <GooglePin background={'#ea47b4'} borderColor={'#c026d3'} glyph={<Store className="text-white" />} />
-        </AdvancedMarker>
-        {selectedLocation && <AdvancedMarker position={selectedLocation} />}
+        <Marker 
+          position={STORE_LOCATION} 
+          icon={{
+            path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+            fillColor: '#ea47b4',
+            fillOpacity: 1,
+            strokeWeight: 0,
+            scale: 1.5,
+            anchor: new google.maps.Point(12, 24),
+          }}
+          zIndex={10}
+        />
+        {selectedLocation && <Marker position={selectedLocation} />}
+
+        {ZONES.map(zone => (
+          <Circle
+            key={zone.name}
+            center={STORE_LOCATION}
+            radius={zone.radius}
+            options={{
+              strokeColor: zone.color,
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: zone.color,
+              fillOpacity: 0.1
+            }}
+          />
+        ))}
       </GoogleMap>
     );
   };
