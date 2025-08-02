@@ -1,86 +1,131 @@
 // src/components/shared/DeliveryMap.tsx
 'use client';
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Map, Pin, Store } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Map, Pin, Store, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
+import { useJsApiLoader, GoogleMap, Marker, Circle } from '@react-google-maps/api';
 
 interface DeliveryMapProps {
   onLocationSelect: (address: string, cost: number) => void;
 }
 
-interface Location {
-  x: number;
-  y: number;
-}
+const STORE_LOCATION = { lat: -7.1634, lng: -78.5132 }; // Plaza de Armas de Cajamarca (aprox)
+const LIBRARIES: ('places' | 'geometry')[] = ['geometry'];
+
+const ZONES = [
+    { name: 'Zona 1', radius: 2500, cost: 10, color: "#10b981" },
+    { name: 'Zona 2', radius: 3500, cost: 15, color: "#f59e0b" },
+    { name: 'Zona 3', radius: 5000, cost: 20, color: "#ef4444" },
+];
 
 export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries: LIBRARIES,
+  });
+
   const [showMap, setShowMap] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<google.maps.LatLngLiteral | null>(null);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [deliveryCost, setDeliveryCost] = useState(0);
   const [distance, setDistance] = useState(0);
   
-  const mapAreaRef = useRef<HTMLDivElement>(null);
+  const calculateCostAndDistance = useCallback((location: google.maps.LatLngLiteral) => {
+    if (typeof google === 'undefined') return;
+    
+    const kmDistance = google.maps.geometry.spherical.computeDistanceBetween(
+      new google.maps.LatLng(STORE_LOCATION),
+      new google.maps.LatLng(location)
+    ) / 1000;
 
-  const getZoneInfo = (km: number) => {
-    if (km <= 2.5) return { name: 'Zona 1', number: 1 };
-    if (km <= 3.5) return { name: 'Zona 2', number: 2 };
-    return { name: 'Zona 3', number: 3 };
-  };
+    let cost = 25; // Costo base para más de 5km
+    if (kmDistance <= 2.5) cost = 10;
+    else if (kmDistance <= 3.5) cost = 15;
+    else if (kmDistance <= 5) cost = 20;
 
-  const calculateDeliveryCost = (km: number) => {
-    if (km <= 2.5) return 10;
-    if (km <= 3.5) return 15;
-    return 15 + Math.floor(km - 3.5) * 5;
-  };
-
-  const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const pixelDistance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-
-    const kmDistance = (pixelDistance / (rect.width / 2)) * 5; // Escala simulada: borde del mapa = 5km
-    const cost = calculateDeliveryCost(kmDistance);
-
-    setSelectedLocation({ x, y });
     setDistance(kmDistance);
     setDeliveryCost(cost);
-  };
+  }, []);
+
+  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const newLocation = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      setSelectedLocation(newLocation);
+      calculateCostAndDistance(newLocation);
+    }
+  }, [calculateCostAndDistance]);
   
   const confirmLocation = () => {
+    if (!selectedLocation) return;
     const address = `Ubicación seleccionada (${distance.toFixed(1)} km)`;
     setSelectedAddress(address);
     onLocationSelect(address, deliveryCost);
     setShowMap(false);
-  }
+  };
+  
+  const zoneInfo = useMemo(() => {
+    const mDistance = distance * 1000;
+    if (mDistance <= ZONES[0].radius) return ZONES[0];
+    if (mDistance <= ZONES[1].radius) return ZONES[1];
+    return ZONES[2];
+  }, [distance]);
 
-  const zoneInfo = useMemo(() => getZoneInfo(distance), [distance]);
-
+  const renderMap = () => {
+    if (loadError) return <p className="text-center text-destructive">Error al cargar el mapa. Verifica la API Key.</p>;
+    if (!isLoaded) return <div className="h-80 flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+    
+    return (
+      <GoogleMap
+        mapContainerClassName="w-full h-80"
+        center={STORE_LOCATION}
+        zoom={13}
+        onClick={handleMapClick}
+        options={{
+          disableDefaultUI: true,
+          zoomControl: true,
+          styles: [{ stylers: [{ "saturation": -100 }, { "gamma": 1 }] }]
+        }}
+      >
+        <Marker position={STORE_LOCATION} label={{ text: "Anella", color: "white" }} icon={{url: 'http://maps.google.com/mapfiles/ms/icons/pink-dot.png'}} />
+        {selectedLocation && <Marker position={selectedLocation} />}
+        {ZONES.map(zone => (
+            <Circle 
+                key={zone.name}
+                center={STORE_LOCATION}
+                radius={zone.radius}
+                options={{
+                    strokeColor: zone.color,
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: zone.color,
+                    fillOpacity: 0.1
+                }}
+            />
+        ))}
+      </GoogleMap>
+    );
+  };
 
   return (
-    <div className="space-y-2 relative">
+    <div className="space-y-2">
       <Label>Dirección de Entrega</Label>
-      <div className="relative overflow-hidden rounded-lg border-2 border-gray-200 focus-within:border-pink-500 focus-within:ring-2 focus-within:ring-pink-500/20 transition-all duration-300 bg-white">
+      <div className="relative overflow-hidden rounded-lg border-2 border-gray-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-300 bg-white">
         <Input
           type="text"
           value={selectedAddress}
           placeholder="Selecciona ubicación en el mapa"
           readOnly
-          className="w-full p-4 border-none bg-pink-50 text-sm"
+          className="w-full p-4 border-none bg-secondary/30 text-sm"
         />
          <Button
           type="button"
           onClick={() => setShowMap(!showMap)}
-          className="w-full rounded-none bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-semibold hover:from-fuchsia-600 hover:to-purple-700 hover:-translate-y-px transition-all"
+          className="w-full rounded-none bg-gradient-to-r from-primary to-fuchsia-600 text-white font-semibold hover:from-fuchsia-600 hover:to-purple-700 hover:-translate-y-px transition-all"
         >
           <Map className="mr-2 h-4 w-4" /> {showMap ? 'Ocultar Mapa' : 'Seleccionar en Mapa'}
         </Button>
@@ -88,69 +133,37 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
 
       {showMap && (
         <Card className="shadow-inner animate-in fade-in-50">
-          <div className="map-container overflow-hidden rounded-lg">
-            <div className="map-header p-4 bg-gradient-to-r from-pink-50 to-fuchsia-50 border-b border-fuchsia-100">
-              <h4 className="font-bold text-center">Selecciona tu ubicación</h4>
-              <div className="flex gap-2 mt-2 justify-center flex-wrap">
-                <div className="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">0-2.5km: S/10</div>
-                <div className="text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">2.5-3.5km: S/15</div>
-                <div className="text-xs font-medium px-2 py-1 rounded-full bg-red-100 text-red-800">+3.5km: S/15 + S/5/km</div>
-              </div>
-            </div>
-
-            <div ref={mapAreaRef} className="map-area relative h-64 md:h-80 bg-gradient-to-br from-pink-50 to-purple-100 cursor-crosshair overflow-hidden" onClick={handleMapClick}>
-              {/* Zonas */}
-              <div className="zone-circle absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 pointer-events-none w-[90%] h-[90%] border-red-500 bg-red-500/10" />
-              <div className="zone-circle absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 pointer-events-none w-[60%] h-[60%] border-yellow-500 bg-yellow-500/10" />
-              <div className="zone-circle absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 pointer-events-none w-[30%] h-[30%] border-green-500 bg-green-500/10" />
-              
-              {/* Tienda */}
-              <div className="store-marker absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 bg-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
-                <Store className="h-4 w-4" />
-                <span>Anella</span>
-              </div>
-              
-              {/* Destino */}
-              {selectedLocation && (
-                <div
-                  className="destination-marker absolute -translate-x-1/2 -translate-y-full text-pink-600 z-20"
-                  style={{
-                    left: selectedLocation.x,
-                    top: selectedLocation.y,
-                    animation: 'bounce 1s infinite'
-                  }}
-                >
-                  <Pin className="h-8 w-8 drop-shadow-lg" />
+          <div className="map-header p-4 bg-gradient-to-r from-pink-50 to-fuchsia-50 border-b border-fuchsia-100">
+            <h4 className="font-bold text-center">Selecciona la ubicación de entrega</h4>
+            <div className="flex gap-2 mt-2 justify-center flex-wrap">
+              {ZONES.map(zone=>(
+                <div key={zone.name} className="text-xs font-medium px-2 py-1 rounded-full" style={{backgroundColor: `${zone.color}20`, color: zone.color}}>
+                  {zone.name}: S/{zone.cost}
                 </div>
-              )}
+              ))}
             </div>
-            
-            {deliveryCost > 0 && (
-                <div className="map-footer p-4 bg-purple-50 flex flex-col items-center gap-4">
-                     <div className="delivery-cost-info w-full bg-white p-3 rounded-lg shadow-md flex items-center justify-between">
-                        <div className="text-center">
-                            <div className="font-bold text-lg text-pink-600">S/{deliveryCost.toFixed(2)}</div>
-                            <div className="text-xs text-muted-foreground">Costo de envío</div>
-                        </div>
-                         <div className="text-center">
-                            <div className="font-bold text-lg">{distance.toFixed(1)}km</div>
-                            <div className="text-xs text-muted-foreground">Distancia Aprox.</div>
-                        </div>
-                        <div 
-                            className={cn("text-xs font-bold px-3 py-1 rounded-full", {
-                                'bg-green-100 text-green-800': zoneInfo.number === 1,
-                                'bg-yellow-100 text-yellow-800': zoneInfo.number === 2,
-                                'bg-red-100 text-red-800': zoneInfo.number === 3,
-                            })}>
-                            {zoneInfo.name}
-                        </div>
-                    </div>
-                     <Button type="button" className="w-full confirm-location-btn font-semibold" onClick={confirmLocation}>
-                        Confirmar Ubicación y Costo
-                    </Button>
-                </div>
-            )}
           </div>
+          {renderMap()}
+          {selectedLocation && (
+              <div className="map-footer p-4 bg-purple-50 flex flex-col items-center gap-4">
+                  <div className="w-full bg-white p-3 rounded-lg shadow-md flex items-center justify-between">
+                    <div className="text-center">
+                        <div className="font-bold text-lg text-primary">S/{deliveryCost.toFixed(2)}</div>
+                        <div className="text-xs text-muted-foreground">Costo de envío</div>
+                    </div>
+                      <div className="text-center">
+                        <div className="font-bold text-lg">{distance.toFixed(1)}km</div>
+                        <div className="text-xs text-muted-foreground">Distancia Aprox.</div>
+                    </div>
+                    <div className={cn("text-xs font-bold px-3 py-1 rounded-full")} style={{backgroundColor: `${zoneInfo.color}20`, color: zoneInfo.color}}>
+                        {zoneInfo.name}
+                    </div>
+                  </div>
+                  <Button type="button" className="w-full font-semibold" onClick={confirmLocation}>
+                    Confirmar Ubicación y Costo
+                  </Button>
+              </div>
+          )}
         </Card>
       )}
     </div>
