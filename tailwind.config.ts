@@ -92,7 +92,17 @@ export default {
           '0%': { transform: 'scale(1)' },
           '50%': { transform: 'scale(0.95)' },
           '100%': { transform: 'scale(1)' },
-        }
+        },
+        bounce: {
+          '0%, 100%': {
+            transform: 'translateY(-25%) translateX(-50%)',
+            animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
+          },
+          '50%': {
+            transform: 'translateY(0) translateX(-50%)',
+            animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.3s ease-out',
@@ -101,6 +111,7 @@ export default {
         'soft-glow': 'soft-glow 4s ease-in-out infinite',
         'subtle-bounce': 'subtle-bounce 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
         'button-press': 'button-press 0.2s ease-in-out',
+        bounce: 'bounce 1s infinite',
       },
       backgroundImage: {
         'soft-gradient': 'linear-gradient(120deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1), hsl(var(--background)))',

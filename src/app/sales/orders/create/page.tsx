@@ -36,6 +36,7 @@ import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
 import { useClickAway } from 'react-use';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DeliveryMap } from '@/components/shared/DeliveryMap';
 
 
 interface CartItem extends Product {
@@ -53,7 +54,7 @@ const orderItemSchema = z.object({
 const deliveryDetailsSchema = z.object({
   recipientName: z.string().min(3, 'El nombre es muy corto'),
   recipientPhone: z.string().min(7, 'El teléfono no es válido'),
-  address: z.string().min(10, 'La dirección es muy corta'),
+  address: z.string().min(1, 'La dirección es requerida.'),
   reference: z.string().optional(),
 });
 
@@ -75,7 +76,7 @@ const orderSchema = z.object({
   sameRecipient: z.boolean().optional(),
 }).refine(data => {
   if (data.deliveryMethod === 'delivery') {
-    return !!data.deliveryDetails;
+    return !!data.deliveryDetails && data.deliveryDetails.address.length > 0;
   }
   return true;
 }, {
@@ -134,12 +135,11 @@ export default function CreateOrderPage() {
   const customerWatcher = useWatch({ control: form.control, name: 'customer' });
   
   useEffect(() => {
-    if (sameRecipientWatcher) {
+    if (sameRecipientWatcher && deliveryMethodWatcher === 'delivery') {
       form.setValue('deliveryDetails.recipientName', customerWatcher.name);
       form.setValue('deliveryDetails.recipientPhone', customerWatcher.phone);
-      form.setValue('deliveryDetails.address', customerWatcher.address);
     }
-  }, [sameRecipientWatcher, customerWatcher, form]);
+  }, [sameRecipientWatcher, customerWatcher, form, deliveryMethodWatcher]);
   
   const addProductToOrder = (product: Product) => {
     const existingItem = fields.find(item => item.itemId === product.id);
@@ -269,6 +269,11 @@ export default function CreateOrderPage() {
        console.error("Error saving customer: ", error);
        toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el cliente." });
     }
+  }
+
+  const handleLocationSelect = (address: string, cost: number) => {
+    form.setValue('deliveryDetails.address', address);
+    form.setValue('shippingCost', cost, { shouldDirty: true });
   }
   
   return (
@@ -406,17 +411,14 @@ export default function CreateOrderPage() {
                             <FormMessage />
                           </FormItem>
                         )} />
-                        <FormField control={form.control} name="deliveryDetails.address" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Dirección de Entrega</FormLabel>
-                            <FormControl><Input {...field} disabled={sameRecipientWatcher} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
+                        
+                         <DeliveryMap onLocationSelect={handleLocationSelect} />
+                         <FormMessage>{form.formState.errors.deliveryDetails?.address?.message}</FormMessage>
+
                          <FormField control={form.control} name="deliveryDetails.reference" render={({ field }) => (
                           <FormItem>
                             <FormLabel>Referencia (Opcional)</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
+                            <FormControl><Input {...field} placeholder="Ej: Casa de 2 pisos, puerta de madera." /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -500,20 +502,6 @@ export default function CreateOrderPage() {
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="deliveryMethod" render={({ field }) => ( <FormItem><FormLabel>Método de Entrega</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="localPickup">Recojo en Local</SelectItem><SelectItem value="delivery">Delivery</SelectItem></SelectContent></Select><FormMessage /></FormItem> )} />
-                        {deliveryMethodWatcher === 'delivery' && (
-                            <FormField control={form.control} name="shippingCost" render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Costo de Envío</FormLabel>
-                                <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <FormControl>
-                                        <Input type="number" step="0.5" className="pl-9" {...field} />
-                                    </FormControl>
-                                </div>
-                                <FormMessage />
-                                </FormItem>
-                            )} />
-                        )}
                     </CardContent>
                 </Card>
 
