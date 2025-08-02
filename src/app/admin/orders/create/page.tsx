@@ -31,10 +31,11 @@ import type { User, Product } from '@/types/firestore';
 import { saveOrder } from '@/services/orderService';
 import { collection, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search, DollarSign } from 'lucide-react';
+import { Loader2, Save, Trash2, UserPlus, CalendarIcon, Search, DollarSign, PackagePlus } from 'lucide-react';
 import { CustomerForm } from '@/components/shared/CustomerForm';
 import { cn } from '@/lib/utils';
 import { useClickAway } from 'react-use';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 interface CartItem extends Product {
@@ -47,6 +48,13 @@ const orderItemSchema = z.object({
   price: z.number(),
   quantity: z.number().min(1),
   image: z.string(),
+});
+
+const deliveryDetailsSchema = z.object({
+  recipientName: z.string().min(3, 'El nombre es muy corto'),
+  recipientPhone: z.string().min(7, 'El teléfono no es válido'),
+  address: z.string().min(10, 'La dirección es muy corta'),
+  reference: z.string().optional(),
 });
 
 const orderSchema = z.object({
@@ -63,6 +71,16 @@ const orderSchema = z.object({
   deliveryDate: z.date({
     required_error: "La fecha de entrega es requerida.",
   }),
+  deliveryDetails: deliveryDetailsSchema.optional(),
+  sameRecipient: z.boolean().optional(),
+}).refine(data => {
+  if (data.deliveryMethod === 'delivery') {
+    return !!data.deliveryDetails;
+  }
+  return true;
+}, {
+  message: 'Los detalles de entrega son requeridos para el delivery.',
+  path: ['deliveryDetails'],
 });
 
 type OrderFormValues = z.infer<typeof orderSchema>;
@@ -95,6 +113,13 @@ export default function CreateOrderPage() {
       deliveryMethod: 'localPickup',
       shippingCost: 0,
       deliveryDate: new Date(),
+      deliveryDetails: {
+        recipientName: '',
+        recipientPhone: '',
+        address: '',
+        reference: '',
+      },
+      sameRecipient: false,
     },
   });
 
@@ -105,6 +130,16 @@ export default function CreateOrderPage() {
   
   const deliveryMethodWatcher = useWatch({ control: form.control, name: 'deliveryMethod' });
   const itemsWatcher = useWatch({ control: form.control, name: 'items' });
+  const sameRecipientWatcher = useWatch({ control: form.control, name: 'sameRecipient' });
+  const customerWatcher = useWatch({ control: form.control, name: 'customer' });
+  
+  useEffect(() => {
+    if (sameRecipientWatcher) {
+      form.setValue('deliveryDetails.recipientName', customerWatcher.name);
+      form.setValue('deliveryDetails.recipientPhone', customerWatcher.phone);
+      form.setValue('deliveryDetails.address', customerWatcher.address);
+    }
+  }, [sameRecipientWatcher, customerWatcher, form]);
   
   const addProductToOrder = (product: Product) => {
     const existingItem = fields.find(item => item.itemId === product.id);
@@ -203,6 +238,7 @@ export default function CreateOrderPage() {
                 phone: data.customer.phone,
                 address: data.customer.address,
             },
+            deliveryDetails: data.deliveryMethod === 'delivery' ? data.deliveryDetails : undefined,
         });
         toast({ title: 'Pedido Creado', description: 'El nuevo pedido se ha guardado correctamente. Ahora puedes gestionar los pagos.' });
         router.push(`/admin/orders`);
@@ -251,7 +287,7 @@ export default function CreateOrderPage() {
             <div className="lg:col-span-2 space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Productos del Pedido</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><PackagePlus />Productos del Pedido</CardTitle>
                         <CardDescription>Busca y añade productos del inventario al pedido.</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -330,6 +366,63 @@ export default function CreateOrderPage() {
                          <FormMessage>{form.formState.errors.items?.message}</FormMessage>
                     </CardContent>
                 </Card>
+                
+                {deliveryMethodWatcher === 'delivery' && (
+                  <Card>
+                      <CardHeader>
+                          <CardTitle>Detalles del Destinatario</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="sameRecipient"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel>
+                                  Lo recibirá el mismo cliente
+                                </FormLabel>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField control={form.control} name="deliveryDetails.recipientName" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nombre del Destinatario</FormLabel>
+                            <FormControl><Input {...field} disabled={sameRecipientWatcher} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="deliveryDetails.recipientPhone" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Teléfono del Destinatario</FormLabel>
+                            <FormControl><Input {...field} disabled={sameRecipientWatcher} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="deliveryDetails.address" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Dirección de Entrega</FormLabel>
+                            <FormControl><Input {...field} disabled={sameRecipientWatcher} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                         <FormField control={form.control} name="deliveryDetails.reference" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Referencia (Opcional)</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </CardContent>
+                  </Card>
+                )}
             </div>
             {/* Sidebar */}
             <div className="lg:col-span-1 space-y-6">
@@ -379,7 +472,7 @@ export default function CreateOrderPage() {
                         <Separator />
                          <FormField control={form.control} name="customer.name" render={({ field }) => ( <FormItem><FormLabel>Nombre</FormLabel><FormControl><Input {...field} readOnly /></FormControl></FormItem> )} />
                          <FormField control={form.control} name="customer.email" render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input {...field} readOnly /></FormControl></FormItem> )} />
-                         <FormField control={form.control} name="customer.address" render={({ field }) => ( <FormItem><FormLabel>Dirección</FormLabel><FormControl><Input {...field} /></FormControl></FormItem> )} />
+                         <FormField control={form.control} name="customer.address" render={({ field }) => ( <FormItem><FormLabel>Dirección del Cliente</FormLabel><FormControl><Input {...field} /></FormControl></FormItem> )} />
                     </CardContent>
                 </Card>
                  <Card>

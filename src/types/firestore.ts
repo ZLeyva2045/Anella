@@ -115,6 +115,20 @@ export interface PaymentDetail {
 }
 
 /**
+ * Detalles de la persona que recibe el envío
+ */
+export interface DeliveryDetails {
+    recipientName: string;
+    recipientPhone: string;
+    address: string;
+    location?: {
+        lat: number;
+        lng: number;
+    };
+    reference?: string;
+}
+
+/**
  * Representa un pedido en la colección 'orders' de Firestore.
  */
 export interface Order {
@@ -132,6 +146,7 @@ export interface Order {
   paymentStatus: PaymentStatus;
   paymentDetails: PaymentDetail[];
   deliveryMethod: 'localPickup' | 'delivery'; // Método de entrega
+  deliveryDetails?: DeliveryDetails; // Detalles del envío si es delivery
   shippingCost?: number; // Costo de envío
   createdAt: Timestamp; // Fecha de creación del pedido
   updatedAt: Timestamp; // Fecha de última actualización

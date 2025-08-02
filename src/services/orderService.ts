@@ -64,7 +64,7 @@ export async function saveOrder(
         finalOrderId = orderRef.id;
 
         // Ensure numeric fields are initialized to prevent 'undefined' errors
-        const totalAmount = data.totalAmount ?? 0;
+        const totalAmount = (data.totalAmount ?? 0);
         const amountPaid = data.amountPaid ?? 0;
         const amountDue = totalAmount - amountPaid;
         
@@ -91,6 +91,7 @@ export async function saveOrder(
             amountPaid: amountPaid,
             amountDue: amountDue,
             shippingCost: data.shippingCost || 0,
+            deliveryDetails: data.deliveryDetails || undefined,
             pointsAwarded: false,
         };
         transaction.set(orderRef, newOrderData);
