@@ -8,14 +8,14 @@ import { Map, Pin, Store, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
-import { useJsApiLoader, GoogleMap, Marker, Circle } from '@react-google-maps/api';
+// import { useJsApiLoader, GoogleMap, Marker, Circle } from '@react-google-maps/api';
 
 interface DeliveryMapProps {
   onLocationSelect: (address: string, cost: number) => void;
 }
 
 const STORE_LOCATION = { lat: -7.15879, lng: -78.5114 };
-const LIBRARIES: ('places' | 'geometry' | 'marker')[] = ['geometry', 'places'];
+// const LIBRARIES: ('geometry' | 'places' | 'marker')[] = ['geometry', 'places'];
 
 const ZONES = [
     { name: 'Zona 1', radius: 2500, cost: 10, color: "#10b981" },
@@ -24,41 +24,39 @@ const ZONES = [
 ];
 
 export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: LIBRARIES,
-  });
+  // const { isLoaded, loadError } = useJsApiLoader({
+  //   googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+  //   libraries: LIBRARIES,
+  // });
 
   const [showMap, setShowMap] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<google.maps.LatLngLiteral | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{x:number, y:number} | null>(null);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [deliveryCost, setDeliveryCost] = useState(0);
   const [distance, setDistance] = useState(0);
   
-  const calculateCostAndDistance = useCallback((location: google.maps.LatLngLiteral) => {
-    if (typeof google === 'undefined' || !google.maps.geometry) return;
+  const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
     
-    const metersDistance = google.maps.geometry.spherical.computeDistanceBetween(
-      new google.maps.LatLng(STORE_LOCATION),
-      new google.maps.LatLng(location)
-    );
-
+    // Simular distancia y costo
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const pixelDistance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+    
+    // Escala aproximada: 60px = 2.5km (zona 1 radio)
+    const kmDistance = (pixelDistance / 60) * 2.5; 
+    
     let cost = 25; // Costo base para más de 5km
-    if (metersDistance <= ZONES[0].radius) cost = ZONES[0].cost;
-    else if (metersDistance <= ZONES[1].radius) cost = ZONES[1].cost;
-    else if (metersDistance <= ZONES[2].radius) cost = ZONES[2].cost;
+    if (kmDistance * 1000 <= ZONES[0].radius) cost = ZONES[0].cost;
+    else if (kmDistance * 1000 <= ZONES[1].radius) cost = ZONES[1].cost;
+    else if (kmDistance * 1000 <= ZONES[2].radius) cost = ZONES[2].cost;
 
-    setDistance(metersDistance / 1000); // en km
+    setDistance(kmDistance);
     setDeliveryCost(cost);
-  }, []);
-
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      const newLocation = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-      setSelectedLocation(newLocation);
-      calculateCostAndDistance(newLocation);
-    }
-  }, [calculateCostAndDistance]);
+    setSelectedLocation({ x, y });
+  };
   
   const confirmLocation = () => {
     if (!selectedLocation) return;
@@ -75,54 +73,24 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
     return foundZone || { name: 'Fuera de Zona', radius: Infinity, cost: 25, color: '#9ca3af' };
   }, [distance]);
 
-  const renderMap = () => {
-    if (loadError) return <p className="text-center text-destructive">Error al cargar el mapa. Verifica la API Key y que las APIs estén habilitadas.</p>;
-    if (!isLoaded) return <div className="h-80 flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
-    
-    return (
-      <GoogleMap
-        mapContainerClassName="w-full h-80"
-        center={STORE_LOCATION}
-        zoom={14}
-        onClick={handleMapClick}
-        options={{
-          disableDefaultUI: true,
-          zoomControl: true,
-        }}
-      >
-        <Marker 
-          position={STORE_LOCATION} 
-          options={{
-            icon: {
-                path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-                fillColor: '#ea47b4',
-                fillOpacity: 1,
-                strokeWeight: 0,
-                scale: 1.5,
-                anchor: new google.maps.Point(12, 24),
-            },
-            zIndex: 10,
-          }}
-        />
-        {selectedLocation && <Marker position={selectedLocation} />}
+  const renderSimulatedMap = () => (
+     <div className="relative map-area cursor-crosshair h-[300px] bg-gradient-to-br from-pink-50 to-fuchsia-100 overflow-hidden" onClick={handleMapClick}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] h-[240px] rounded-full border-2 border-red-500 bg-red-500/10 pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] h-[180px] rounded-full border-2 border-amber-500 bg-amber-500/10 pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120px] h-[120px] rounded-full border-2 border-green-500 bg-green-500/10 pointer-events-none" />
 
-        {ZONES.map(zone => (
-          <Circle
-            key={zone.name}
-            center={STORE_LOCATION}
-            radius={zone.radius}
-            options={{
-              strokeColor: zone.color,
-              strokeOpacity: 0.8,
-              strokeWeight: 2,
-              fillColor: zone.color,
-              fillOpacity: 0.1
-            }}
-          />
-        ))}
-      </GoogleMap>
-    );
-  };
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
+            <Store className="h-4 w-4" />
+            <span>Tienda</span>
+        </div>
+
+        {selectedLocation && (
+            <div className="absolute z-5" style={{ left: selectedLocation.x, top: selectedLocation.y, transform: 'translate(-50%, -100%)' }}>
+                <Pin className="h-8 w-8 text-primary fill-primary animate-bounce" />
+            </div>
+        )}
+    </div>
+  );
 
   return (
     <div className="space-y-2">
@@ -156,7 +124,8 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
               ))}
             </div>
           </div>
-          {renderMap()}
+          {/* {isLoaded ? renderMap() : renderSimulatedMap()} */}
+          {renderSimulatedMap()}
           {selectedLocation && (
               <div className="map-footer p-4 bg-purple-50 flex flex-col items-center gap-4">
                   <div className="w-full bg-white p-3 rounded-lg shadow-md flex items-center justify-between">
