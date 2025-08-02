@@ -8,14 +8,14 @@ import { Map, Pin, Store, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
-import { useJsApiLoader, GoogleMap, Marker, Circle } from '@react-google-maps/api';
+import { useJsApiLoader, GoogleMap, AdvancedMarker, Pin as GooglePin } from '@react-google-maps/api';
 
 interface DeliveryMapProps {
   onLocationSelect: (address: string, cost: number) => void;
 }
 
-const STORE_LOCATION = { lat: -7.1634, lng: -78.5132 }; // Plaza de Armas de Cajamarca (aprox)
-const LIBRARIES: ('places' | 'geometry')[] = ['geometry'];
+const STORE_LOCATION = { lat: -7.15879, lng: -78.5114 }; // Ubicación precisa de Anella
+const LIBRARIES: ('places' | 'geometry' | 'marker')[] = ['geometry', 'marker'];
 
 const ZONES = [
     { name: 'Zona 1', radius: 2500, cost: 10, color: "#10b981" },
@@ -36,7 +36,7 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
   const [distance, setDistance] = useState(0);
   
   const calculateCostAndDistance = useCallback((location: google.maps.LatLngLiteral) => {
-    if (typeof google === 'undefined') return;
+    if (typeof google === 'undefined' || !google.maps.geometry) return;
     
     const kmDistance = google.maps.geometry.spherical.computeDistanceBetween(
       new google.maps.LatLng(STORE_LOCATION),
@@ -83,30 +83,18 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
       <GoogleMap
         mapContainerClassName="w-full h-80"
         center={STORE_LOCATION}
-        zoom={13}
+        zoom={14}
         onClick={handleMapClick}
+        mapId={'DEMO_MAP_ID'}
         options={{
           disableDefaultUI: true,
           zoomControl: true,
-          styles: [{ stylers: [{ "saturation": -100 }, { "gamma": 1 }] }]
         }}
       >
-        <Marker position={STORE_LOCATION} label={{ text: "Anella", color: "white" }} icon={{url: 'http://maps.google.com/mapfiles/ms/icons/pink-dot.png'}} />
-        {selectedLocation && <Marker position={selectedLocation} />}
-        {ZONES.map(zone => (
-            <Circle 
-                key={zone.name}
-                center={STORE_LOCATION}
-                radius={zone.radius}
-                options={{
-                    strokeColor: zone.color,
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: zone.color,
-                    fillOpacity: 0.1
-                }}
-            />
-        ))}
+        <AdvancedMarker position={STORE_LOCATION}>
+           <GooglePin background={'#ea47b4'} borderColor={'#c026d3'} glyph={<Store className="text-white" />} />
+        </AdvancedMarker>
+        {selectedLocation && <AdvancedMarker position={selectedLocation} />}
       </GoogleMap>
     );
   };
@@ -135,7 +123,7 @@ export function DeliveryMap({ onLocationSelect }: DeliveryMapProps) {
         <Card className="shadow-inner animate-in fade-in-50">
           <div className="map-header p-4 bg-gradient-to-r from-pink-50 to-fuchsia-50 border-b border-fuchsia-100">
             <h4 className="font-bold text-center">Selecciona la ubicación de entrega</h4>
-            <div className="flex gap-2 mt-2 justify-center flex-wrap">
+             <div className="flex gap-2 mt-2 justify-center flex-wrap">
               {ZONES.map(zone=>(
                 <div key={zone.name} className="text-xs font-medium px-2 py-1 rounded-full" style={{backgroundColor: `${zone.color}20`, color: zone.color}}>
                   {zone.name}: S/{zone.cost}
