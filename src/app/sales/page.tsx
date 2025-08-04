@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, Users, CreditCard, Activity, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Order } from '@/types/firestore';
 import Link from 'next/link';
@@ -52,13 +52,14 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
         if (!sellerId) return;
 
         const q = query(
-            collection(db, "orders"), 
+            collection(db, "orders"),
+            where("sellerId", "==", sellerId),
             orderBy("createdAt", "desc"),
             limit(5)
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)).filter(order => order.sellerId === sellerId);
+            const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
             setOrders(ordersData);
             setLoading(false);
         }, (error) => {
@@ -123,41 +124,89 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
 
 export default function SalesDashboardPage() {
     const { user } = useAuth();
-  return (
-    <div className="max-w-7xl mx-auto">
-       <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard de Ventas</h1>
-            <p className="text-gray-500 mt-1">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    const [metrics, setMetrics] = useState({
+        monthlyRevenue: 0,
+        monthlySalesCount: 0,
+        newCustomersCount: 0,
+        closeRate: 0,
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!user) return;
+        setLoading(true);
+
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const startOfMonthTimestamp = Timestamp.fromDate(startOfMonth);
+
+        const ordersQuery = query(
+            collection(db, "orders"),
+            where("sellerId", "==", user.uid),
+            where("createdAt", ">=", startOfMonthTimestamp)
+        );
+
+        const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+            const monthlyOrders = snapshot.docs.map(doc => doc.data() as Order);
+            
+            const completedOrders = monthlyOrders.filter(o => o.fulfillmentStatus === 'completed');
+            
+            const revenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+            const salesCount = completedOrders.length;
+            
+            setMetrics(prev => ({
+                ...prev,
+                monthlyRevenue: revenue,
+                monthlySalesCount: salesCount,
+            }));
+            
+            // Simple timer to avoid flickering
+            setTimeout(() => setLoading(false), 500);
+        });
+
+        // Note: newCustomers and closeRate are placeholders for now.
+        // A more complex query or logic would be needed.
+        
+        return () => unsubscribe();
+
+    }, [user]);
+
+    return (
+        <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Dashboard de Ventas</h1>
+                <p className="text-gray-500 mt-1">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <MetricCard
+                    title="Mis Ingresos (Mes)"
+                    value={`S/${metrics.monthlyRevenue.toFixed(2)}`}
+                    icon={DollarSign}
+                    loading={loading}
+                />
+                <MetricCard
+                    title="Nuevos Clientes (Mes)"
+                    value={`${metrics.newCustomersCount}`}
+                    icon={Users}
+                    loading={true} // Placeholder
+                />
+                <MetricCard
+                    title="Mis Ventas (Mes)"
+                    value={`${metrics.monthlySalesCount}`}
+                    icon={CreditCard}
+                    loading={loading}
+                />
+                <MetricCard
+                    title="Mi Tasa de Cierre"
+                    value={`${metrics.closeRate}%`}
+                    icon={Activity}
+                    loading={true} // Placeholder
+                />
+            </div>
+
+            {user && <RecentOrdersTable sellerId={user.uid} />}
         </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Mis Ingresos (Mes)"
-          value="S/0.00"
-          icon={DollarSign}
-          loading={true}
-        />
-        <MetricCard
-          title="Nuevos Clientes (Mes)"
-          value="0"
-          icon={Users}
-          loading={true}
-        />
-        <MetricCard
-          title="Mis Ventas (Mes)"
-          value="0"
-          icon={CreditCard}
-          loading={true}
-        />
-        <MetricCard
-          title="Mi Tasa de Cierre"
-          value="0%"
-          icon={Activity}
-          loading={true}
-        />
-      </div>
-
-      {user && <RecentOrdersTable sellerId={user.uid} />}
-    </div>
-  );
+    );
 }
