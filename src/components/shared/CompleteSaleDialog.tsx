@@ -152,7 +152,8 @@ export function CompleteSaleDialog({
         amountPaid: totalAmount, // For POS, payment is always full
         paymentDetails,
         fulfillmentStatus: 'completed', // POS sale is completed immediately
-        paymentStatus: 'paid'
+        paymentStatus: 'paid',
+        deliveryDetails: undefined, // Explicitly set to undefined
       });
 
       onSaleSuccess();

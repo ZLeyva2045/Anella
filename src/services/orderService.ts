@@ -50,12 +50,18 @@ export async function saveOrder(
     let finalOrderId: string;
     let orderRef;
     
+    // Clean up the data to remove any undefined fields before saving
+    const cleanData = { ...data };
+    if (cleanData.deliveryDetails === undefined) {
+      delete cleanData.deliveryDetails;
+    }
+    
     if (orderId) {
         finalOrderId = orderId;
         orderRef = doc(db, 'orders', orderId);
         // For updates, we just merge the new data.
         const updateData = {
-          ...data,
+          ...cleanData,
           updatedAt: serverTimestamp(),
         };
         transaction.set(orderRef, updateData, { merge: true });
@@ -64,13 +70,13 @@ export async function saveOrder(
         finalOrderId = orderRef.id;
 
         // Ensure numeric fields are initialized to prevent 'undefined' errors
-        const totalAmount = (data.totalAmount ?? 0);
-        const amountPaid = data.amountPaid ?? 0;
+        const totalAmount = (cleanData.totalAmount ?? 0);
+        const amountPaid = cleanData.amountPaid ?? 0;
         const amountDue = totalAmount - amountPaid;
         
         let paymentStatus;
-        if (data.paymentStatus) {
-          paymentStatus = data.paymentStatus;
+        if (cleanData.paymentStatus) {
+          paymentStatus = cleanData.paymentStatus;
         } else {
           if (amountPaid >= totalAmount) {
             paymentStatus = 'paid';
@@ -82,24 +88,23 @@ export async function saveOrder(
         }
 
         const newOrderData: Partial<Order> = {
-            ...data,
+            ...cleanData,
             createdAt: serverTimestamp() as Timestamp,
-            fulfillmentStatus: data.fulfillmentStatus || 'pending',
+            fulfillmentStatus: cleanData.fulfillmentStatus || 'pending',
             paymentStatus: paymentStatus,
-            paymentDetails: data.paymentDetails || [],
+            paymentDetails: cleanData.paymentDetails || [],
             totalAmount: totalAmount,
             amountPaid: amountPaid,
             amountDue: amountDue,
-            shippingCost: data.shippingCost || 0,
-            deliveryDetails: data.deliveryDetails || undefined,
+            shippingCost: cleanData.shippingCost || 0,
             pointsAwarded: false,
         };
         transaction.set(orderRef, newOrderData);
     }
     
     // 3. Update stock for all items on new order creation
-    if (!orderId && data.items) {
-      for (const item of data.items) {
+    if (!orderId && cleanData.items) {
+      for (const item of cleanData.items) {
         const productInfo = productRefsAndData.find(p => p.ref.id === item.itemId);
         if (productInfo && productInfo.data.productType !== 'Servicios') {
           const newStock = productInfo.data.stock - item.quantity;
