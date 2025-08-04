@@ -16,7 +16,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { ClipboardUser, PlusCircle } from 'lucide-react';
+import { ClipboardList, PlusCircle } from 'lucide-react';
 
 export default function PayrollPage() {
   return (

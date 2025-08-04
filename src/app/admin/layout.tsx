@@ -16,7 +16,7 @@ import {
   LineChart,
   Receipt,
   Bell,
-  ClipboardUser,
+  ClipboardList,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -46,7 +46,7 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/compras', label: 'Compras', icon: ShoppingBasket },
   { href: '/admin/expenses', label: 'Gastos', icon: Receipt },
   { href: '/admin/customers', label: 'Clientes', icon: Users },
-  { href: '/admin/payroll', label: 'Nómina', icon: ClipboardUser },
+  { href: '/admin/payroll', label: 'Nómina', icon: ClipboardList },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },
   { href: '/admin/statistics', label: 'Estadísticas', icon: LineChart },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
@@ -96,7 +96,7 @@ const AdminNav = () => {
                     <SidebarMenuButton asChild isActive={isActive('/admin/expenses')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Gastos"}}><Link href="/admin/expenses"><Receipt /><span>Gastos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/payroll')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Nómina"}}><Link href="/admin/payroll"><ClipboardUser /><span>RR.HH. / Nómina</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/payroll')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Nómina"}}><Link href="/admin/payroll"><ClipboardList /><span>RR.HH. / Nómina</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive('/admin/analytics')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Análisis"}}><Link href="/admin/analytics"><BarChart2 /><span>Análisis</span></Link></SidebarMenuButton>
