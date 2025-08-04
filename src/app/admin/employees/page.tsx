@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,6 +27,7 @@ import {
   UserCog,
   Loader2,
   Badge,
+  CreditCard,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -35,7 +37,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/types/firestore';
 import { EmployeeForm } from '@/components/admin/EmployeeForm';
-import { collection, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { deleteEmployee } from '@/services/employeeService';
@@ -47,12 +49,12 @@ export default function AdminEmployeesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<User | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
-    const usersCollection = collection(db, 'users');
     const employeeRoles = ['manager', 'sales', 'designer', 'manufacturing', 'creative'];
-    const employeesQuery = query(usersCollection, where('role', 'in', employeeRoles));
+    const employeesQuery = query(collection(db, 'users'), where('role', 'in', employeeRoles));
     
     const unsubscribe = onSnapshot(employeesQuery, (snapshot) => {
       const employeesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
@@ -75,6 +77,10 @@ export default function AdminEmployeesPage() {
   const handleEditEmployee = (employee: User) => {
     setSelectedEmployee(employee);
     setIsFormOpen(true);
+  };
+
+  const handleGenerateCard = (employeeId: string) => {
+    router.push(`/admin/employees/${employeeId}/card`);
   };
 
   const handleDeleteEmployee = async (employeeId: string) => {
@@ -171,8 +177,8 @@ export default function AdminEmployeesPage() {
                                   <UserCog className="mr-2 h-4 w-4" />
                                   Editar
                                 </DropdownMenuItem>
-                                 <DropdownMenuItem>
-                                  <Badge className="mr-2 h-4 w-4" />
+                                 <DropdownMenuItem onClick={() => handleGenerateCard(employee.id)}>
+                                  <CreditCard className="mr-2 h-4 w-4" />
                                   Generar Carnet
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteEmployee(employee.id)}>
