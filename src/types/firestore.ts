@@ -103,6 +103,10 @@ export type PaymentMethod = 'yapePlin' | 'bankTransfer' | 'card' | 'mercadoPago'
 export type FulfillmentStatus = 'pending' | 'processing' | 'finishing' | 'completed' | 'cancelled';
 export type PaymentStatus = 'unpaid' | 'partially-paid' | 'paid' | 'refunded';
 
+export const employeeRoles = ['manager', 'sales', 'designer', 'manufacturing', 'creative'] as const;
+export type EmployeeRole = (typeof employeeRoles)[number];
+export type UserRole = 'customer' | EmployeeRole;
+
 
 /**
  * Representa el detalle de un pago realizado para un pedido.
@@ -182,7 +186,7 @@ export interface User {
   dni_ruc?: string; // DNI o RUC del cliente
   birthDate?: Date | Timestamp; // Fecha de nacimiento
   orders: string[]; // Array de IDs de los pedidos del usuario
-  role?: 'customer' | 'manager' | 'sales' | 'designer' | 'manufacturing' | 'creative'; // Rol del usuario
+  role?: UserRole; // Rol del usuario
   photoURL?: string; // foto del usuario
   loyaltyPoints?: number; // Puntos de fidelidad
   createdAt: Date | Timestamp;

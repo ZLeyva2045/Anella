@@ -17,6 +17,7 @@ import {
   Receipt,
   Bell,
   ClipboardList,
+  UserCog,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -46,6 +47,7 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/compras', label: 'Compras', icon: ShoppingBasket },
   { href: '/admin/expenses', label: 'Gastos', icon: Receipt },
   { href: '/admin/customers', label: 'Clientes', icon: Users },
+  { href: '/admin/employees', label: 'Empleados', icon: UserCog },
   { href: '/admin/payroll', label: 'Nómina', icon: ClipboardList },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },
   { href: '/admin/statistics', label: 'Estadísticas', icon: LineChart },
@@ -79,6 +81,9 @@ const AdminNav = () => {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive('/admin/customers')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Clientes"}}><Link href="/admin/customers"><Users /><span>Clientes</span></Link></SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/employees')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Empleados"}}><Link href="/admin/employees"><UserCog /><span>Empleados</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive('/admin/products')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Productos"}}><Link href="/admin/products"><Package /><span>Productos</span></Link></SidebarMenuButton>
