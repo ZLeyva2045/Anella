@@ -16,6 +16,7 @@ import {
   LineChart,
   Receipt,
   Bell,
+  ClipboardUser,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -45,6 +46,7 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/compras', label: 'Compras', icon: ShoppingBasket },
   { href: '/admin/expenses', label: 'Gastos', icon: Receipt },
   { href: '/admin/customers', label: 'Clientes', icon: Users },
+  { href: '/admin/payroll', label: 'Nómina', icon: ClipboardUser },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },
   { href: '/admin/statistics', label: 'Estadísticas', icon: LineChart },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
@@ -55,7 +57,7 @@ const AdminNav = () => {
     const pathname = usePathname();
     const { firestoreUser } = useAuth();
     
-    const isActive = (path: string) => pathname === path;
+    const isActive = (path: string) => pathname.startsWith(path);
     
     return (
       <Sidebar>
@@ -73,37 +75,40 @@ const AdminNav = () => {
         <SidebarContent>
              <SidebarMenu className="px-4">
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Inicio"}}><Link href="/admin"><Home /><span>Inicio</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={pathname === '/admin'} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Inicio"}}><Link href="/admin"><Home /><span>Inicio</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/customers')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Clientes"}}><Link href="/admin/customers"><Users /><span>Clientes</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/customers')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Clientes"}}><Link href="/admin/customers"><Users /><span>Clientes</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/products')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Productos"}}><Link href="/admin/products"><Package /><span>Productos</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/products')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Productos"}}><Link href="/admin/products"><Package /><span>Productos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/gifts')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Regalos"}}><Link href="/admin/gifts"><Gift /><span>Regalos</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/gifts')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Regalos"}}><Link href="/admin/gifts"><Gift /><span>Regalos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/orders')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Pedidos"}}><Link href="/admin/orders"><ShoppingCart /><span>Pedidos</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/orders')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Pedidos"}}><Link href="/admin/orders"><ShoppingCart /><span>Pedidos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/compras')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Compras"}}><Link href="/admin/compras"><ShoppingBasket /><span>Compras</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/compras')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Compras"}}><Link href="/admin/compras"><ShoppingBasket /><span>Compras</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/expenses')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Gastos"}}><Link href="/admin/expenses"><Receipt /><span>Gastos</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/expenses')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Gastos"}}><Link href="/admin/expenses"><Receipt /><span>Gastos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/analytics')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Análisis"}}><Link href="/admin/analytics"><BarChart2 /><span>Análisis</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/payroll')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Nómina"}}><Link href="/admin/payroll"><ClipboardUser /><span>RR.HH. / Nómina</span></Link></SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/analytics')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Análisis"}}><Link href="/admin/analytics"><BarChart2 /><span>Análisis</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/statistics')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Estadísticas"}}><Link href="/admin/statistics"><LineChart /><span>Estadísticas</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/statistics')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Estadísticas"}}><Link href="/admin/statistics"><LineChart /><span>Estadísticas</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/reports')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Reportes"}}><Link href="/admin/reports"><FileText /><span>Reportes</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/reports')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Reportes"}}><Link href="/admin/reports"><FileText /><span>Reportes</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith('/admin/pos')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Punto de Venta"}}><Link href="/admin/pos"><Store /><span>Punto de Venta</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/pos')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Punto de Venta"}}><Link href="/admin/pos"><Store /><span>Punto de Venta</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
         </SidebarContent>
