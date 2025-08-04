@@ -25,14 +25,8 @@ export default function PayrollPage() {
         <div>
           <h1 className="text-3xl font-bold">Gestión de RR.HH. y Nómina</h1>
           <p className="text-muted-foreground">
-            Administra empleados, asistencias, evaluaciones y genera reportes.
+            Controla asistencias, gestiona evaluaciones y genera reportes de desempeño para el personal.
           </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Añadir Empleado
-          </Button>
         </div>
       </div>
 
