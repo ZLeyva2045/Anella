@@ -10,6 +10,7 @@ import {
   orderBy,
   limit,
   addDoc,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { User } from '@/types/firestore';
@@ -17,10 +18,16 @@ import type { User } from '@/types/firestore';
 /**
  * Records an attendance event for a given employee.
  * It checks for the last record of the day to determine if it's a check-in or check-out.
- * @param registrarId - The ID of the user who is performing the scan.
+ * The registrar must be the same as the employee whose QR code is being scanned.
+ * @param registrarId - The ID of the user who is performing the scan (logged-in user).
  * @param employeeIdFromQR - The ID of the employee from the scanned QR code.
  */
 export async function recordAttendance(registrarId: string, employeeIdFromQR: string) {
+  // Security check: Ensure the logged-in user is scanning their own ID card.
+  if (registrarId !== employeeIdFromQR) {
+    throw new Error('No puedes registrar la asistencia de otro empleado. Escanea tu propio carnet.');
+  }
+
   // Verify if the scanned ID corresponds to a valid employee
   const employeeRef = doc(db, 'users', employeeIdFromQR);
   const employeeSnap = await getDoc(employeeRef);
@@ -64,13 +71,7 @@ export async function recordAttendance(registrarId: string, employeeIdFromQR: st
     type: recordType,
   };
   
-  await addDoc(attendanceRef, newRecord);
+  const newDocRef = await addDoc(attendanceRef, newRecord);
 
-  return { ...newRecord, id: (await addDoc(attendanceRef, newRecord)).id };
-}
-
-// Function to get a document, since it's not present in your code.
-async function getDoc(ref: any) {
-  const snapshot = await getDocs(query(ref));
-  return snapshot.docs.length > 0 ? snapshot.docs[0] : { exists: () => false, data: () => null };
+  return { ...newRecord, id: newDocRef.id };
 }

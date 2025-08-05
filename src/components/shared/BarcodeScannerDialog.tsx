@@ -75,9 +75,9 @@ export function BarcodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: Barco
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Escanear Código de Barras</DialogTitle>
+          <DialogTitle>Escanear Código QR</DialogTitle>
           <DialogDescription>
-            Apunta la cámara al código de barras del producto.
+            Apunta la cámara al código QR de tu carnet.
           </DialogDescription>
         </DialogHeader>
         <div id={SCANNER_REGION_ID} className="w-full"></div>
