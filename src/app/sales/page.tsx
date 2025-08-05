@@ -1,6 +1,6 @@
 // src/app/sales/page.tsx
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -173,7 +173,7 @@ export default function SalesDashboardPage() {
 
     }, [user]);
 
-    const handleScanSuccess = async (qrContent: string) => {
+    const handleScanSuccess = useCallback(async (qrContent: string) => {
       setIsScannerOpen(false);
       if (!firestoreUser) return;
   
@@ -190,7 +190,7 @@ export default function SalesDashboardPage() {
           description: error.message,
         });
       }
-    };
+    }, [firestoreUser, toast]);
 
 
     return (

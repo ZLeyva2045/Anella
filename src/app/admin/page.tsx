@@ -1,6 +1,6 @@
 // src/app/admin/page.tsx
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
     };
   }, []);
 
-  const handleScanSuccess = async (qrContent: string) => {
+  const handleScanSuccess = useCallback(async (qrContent: string) => {
     setIsScannerOpen(false);
     if (!firestoreUser) return;
 
@@ -156,7 +156,7 @@ export default function AdminDashboardPage() {
         description: error.message,
       });
     }
-  };
+  }, [firestoreUser, toast]);
 
   return (
     <>
