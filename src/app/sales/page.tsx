@@ -24,7 +24,7 @@ import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from 
 import { db } from '@/lib/firebase/config';
 import type { Order } from '@/types/firestore';
 import Link from 'next/link';
-import { BarcodeScannerDialog } from '@/components/shared/BarcodeScannerDialog';
+import { QrCodeScannerDialog } from '@/components/shared/QrCodeScannerDialog';
 import { useToast } from '@/hooks/use-toast';
 import { recordAttendance } from '@/services/attendanceService';
 
@@ -231,7 +231,7 @@ export default function SalesDashboardPage() {
 
             {user && <RecentOrdersTable sellerId={user.uid} />}
         </div>
-        <BarcodeScannerDialog
+        <QrCodeScannerDialog
           isOpen={isScannerOpen}
           setIsOpen={setIsScannerOpen}
           onScanSuccess={handleScanSuccess}

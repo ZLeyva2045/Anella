@@ -15,7 +15,7 @@ import { collection, onSnapshot, query, orderBy, limit, Timestamp, where } from 
 import { db } from '@/lib/firebase/config';
 import { DashboardAlerts } from '@/components/admin/DashboardAlerts';
 import { Button } from '@/components/ui/button';
-import { BarcodeScannerDialog } from '@/components/shared/BarcodeScannerDialog';
+import { QrCodeScannerDialog } from '@/components/shared/QrCodeScannerDialog';
 import { useToast } from '@/hooks/use-toast';
 import { recordAttendance } from '@/services/attendanceService';
 import { useAuth } from '@/hooks/useAuth';
@@ -201,7 +201,7 @@ export default function AdminDashboardPage() {
           <RecentActivityTable />
       </div>
 
-      <BarcodeScannerDialog
+      <QrCodeScannerDialog
         isOpen={isScannerOpen}
         setIsOpen={setIsScannerOpen}
         onScanSuccess={handleScanSuccess}

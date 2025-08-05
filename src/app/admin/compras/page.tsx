@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { savePurchaseLote } from '@/services/purchaseService';
 import type { LoteItem } from '@/types/firestore';
-import { BarcodeScannerDialog } from '@/components/shared/BarcodeScannerDialog';
+import { QrCodeScannerDialog } from '@/components/shared/QrCodeScannerDialog';
 
 
 const loteItemSchema = z.object({
@@ -421,7 +421,7 @@ export default function IngresarLotePage() {
         setIsOpen={setIsProductFormOpen}
         product={null}
     />
-    <BarcodeScannerDialog 
+    <QrCodeScannerDialog 
         isOpen={isScannerOpen}
         setIsOpen={setIsScannerOpen}
         onScanSuccess={(decodedText) => handleScanSuccess(decodedText)}
