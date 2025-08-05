@@ -26,15 +26,9 @@ export function QrCodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: QrCode
       return;
     }
 
-    // Ensure the container is ready
-    const scannerContainer = document.getElementById(SCANNER_REGION_ID);
-    if (!scannerContainer) {
-      console.error(`Element with id ${SCANNER_REGION_ID} not found.`);
-      return;
-    }
-
     // This check prevents re-initialization if the scanner is already there.
-    if (scannerContainer.children.length > 0) {
+    const scannerContainer = document.getElementById(SCANNER_REGION_ID);
+    if (!scannerContainer || scannerContainer.children.length > 0) {
       return;
     }
 
@@ -67,9 +61,11 @@ export function QrCodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: QrCode
     // Cleanup function when the dialog is closed or component unmounts
     return () => {
       const scanner = document.getElementById(SCANNER_REGION_ID);
-      if (scanner && scanner.innerHTML !== '' && html5QrcodeScanner.getState() === 2) {
+      // Check if scanner is still active before trying to clear
+      if (scanner && scanner.innerHTML !== '' && html5QrcodeScanner.getState() === 2) { 
           html5QrcodeScanner.clear().catch(error => {
-            console.error("Failed to clear html5QrcodeScanner on cleanup.", error);
+            // This error can happen if the component unmounts quickly. It's safe to ignore.
+            // console.error("Failed to clear html5QrcodeScanner on cleanup.", error);
           });
       }
     };
@@ -79,7 +75,7 @@ export function QrCodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: QrCode
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Escanear Código QR</DialogTitle>
+          <DialogTitle>Escanear Código QR de tu Carnet</DialogTitle>
           <DialogDescription>
             Apunta la cámara al código QR que deseas escanear.
           </DialogDescription>
