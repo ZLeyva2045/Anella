@@ -1,7 +1,7 @@
 // src/components/shared/BarcodeScannerDialog.tsx
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Html5QrcodeScanner, type Html5QrcodeResult } from 'html5-qrcode';
 import {
   Dialog,
@@ -20,56 +20,55 @@ interface BarcodeScannerDialogProps {
 const SCANNER_REGION_ID = "barcode-scanner-region";
 
 export function BarcodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: BarcodeScannerDialogProps) {
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => {
-        const scannerElement = document.getElementById(SCANNER_REGION_ID);
-        if (!scannerElement) {
-          console.error(`Element with id ${SCANNER_REGION_ID} not found.`);
-          return;
-        }
-        scannerElement.innerHTML = '';
-
-        const html5QrcodeScanner = new Html5QrcodeScanner(
-          SCANNER_REGION_ID,
-          {
-            qrbox: { width: 250, height: 100 },
-            fps: 10,
-            rememberLastUsedCamera: true,
-          },
-          false // verbose
-        );
-        scannerRef.current = html5QrcodeScanner;
-
-        const handleSuccess = (decodedText: string, decodedResult: Html5QrcodeResult) => {
-          onScanSuccess(decodedText);
-          setIsOpen(false);
-        };
-
-        const handleError = (errorMessage: string) => {
-          // console.warn(errorMessage);
-        };
-
-        html5QrcodeScanner.render(handleSuccess, handleError);
-      }, 100);
-
-      return () => clearTimeout(timer);
+    if (!isOpen) {
+      return;
     }
-  }, [isOpen, onScanSuccess, setIsOpen]);
 
-  useEffect(() => {
-    // Cleanup function for when the component unmounts or dialog is closed
+    // Ensure the container is ready
+    const scannerContainer = document.getElementById(SCANNER_REGION_ID);
+    if (!scannerContainer) {
+      console.error(`Element with id ${SCANNER_REGION_ID} not found.`);
+      return;
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      SCANNER_REGION_ID,
+      {
+        qrbox: { width: 250, height: 100 },
+        fps: 10,
+        rememberLastUsedCamera: true,
+      },
+      false // verbose
+    );
+
+    const handleSuccess = (decodedText: string, decodedResult: Html5QrcodeResult) => {
+      // Stop the scanner immediately on success to prevent multiple calls
+      if (html5QrcodeScanner.getState() === 2) { // 2 is SCANNING state
+          html5QrcodeScanner.clear().catch(error => {
+            console.error("Failed to clear scanner after success", error);
+          });
+      }
+      onScanSuccess(decodedText);
+      setIsOpen(false);
+    };
+
+    const handleError = (errorMessage: string) => {
+      // This can be noisy, so we often leave it empty or log selectively.
+    };
+
+    html5QrcodeScanner.render(handleSuccess, handleError);
+
+    // Cleanup function when the dialog is closed or component unmounts
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(error => {
-          console.error("Failed to clear html5QrcodeScanner.", error);
-        });
-        scannerRef.current = null;
+      if (html5QrcodeScanner && html5QrcodeScanner.getState() === 2) {
+          html5QrcodeScanner.clear().catch(error => {
+            console.error("Failed to clear html5QrcodeScanner on cleanup.", error);
+          });
       }
     };
-  }, []);
+  }, [isOpen, onScanSuccess, setIsOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
