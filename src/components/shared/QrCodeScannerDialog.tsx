@@ -1,4 +1,3 @@
-// src/components/shared/QrCodeScannerDialog.tsx
 'use client';
 
 import React, { useEffect } from 'react';
@@ -22,54 +21,48 @@ const SCANNER_REGION_ID = "qr-code-scanner-region";
 export function QrCodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: QrCodeScannerDialogProps) {
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
-    // This check prevents re-initialization if the scanner is already there.
-    const scannerContainer = document.getElementById(SCANNER_REGION_ID);
-    if (!scannerContainer || scannerContainer.children.length > 0) {
-      return;
-    }
+    let html5QrcodeScanner: Html5QrcodeScanner | null = null;
 
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      SCANNER_REGION_ID,
-      {
-        qrbox: { width: 250, height: 250 },
-        fps: 10,
-        rememberLastUsedCamera: true,
-      },
-      false // verbose
-    );
-
-    const handleSuccess = (decodedText: string, decodedResult: Html5QrcodeResult) => {
-      // Stop the scanner immediately on success to prevent multiple calls
-      if (html5QrcodeScanner.getState() === 2) { // 2 is SCANNING state
-          html5QrcodeScanner.clear().catch(error => {
-            console.error("Failed to clear scanner after success", error);
-          });
+    const initializeScanner = () => {
+      const scannerContainer = document.getElementById(SCANNER_REGION_ID);
+      if (!scannerContainer || scannerContainer.children.length > 0) {
+        return;
       }
-      onScanSuccess(decodedText);
+
+      html5QrcodeScanner = new Html5QrcodeScanner(
+        SCANNER_REGION_ID,
+        {
+          qrbox: { width: 250, height: 250 },
+          fps: 10,
+          rememberLastUsedCamera: true,
+        },
+        false
+      );
+
+      const handleSuccess = (decodedText: string, decodedResult: Html5QrcodeResult) => {
+        html5QrcodeScanner?.clear().catch((err) =>
+          console.error("Error clearing scanner after success", err)
+        );
+        onScanSuccess(decodedText);
+        setIsOpen(false); // opcional: cerrar al escanear
+      };
+
+      html5QrcodeScanner.render(handleSuccess, () => { /* ignore errors */ });
     };
 
-    const handleError = (errorMessage: string) => {
-      // This can be noisy, so we often leave it empty or log selectively.
-    };
+    // Esperamos hasta que el DOM esté listo
+    const timeout = setTimeout(() => {
+      requestAnimationFrame(initializeScanner);
+    }, 100); // delay corto
 
-    html5QrcodeScanner.render(handleSuccess, handleError);
-
-    // Cleanup function when the dialog is closed or component unmounts
+    // Cleanup al desmontar o cerrar
     return () => {
-      const scanner = document.getElementById(SCANNER_REGION_ID);
-      // Check if scanner is still active before trying to clear
-      if (scanner && scanner.innerHTML !== '' && html5QrcodeScanner.getState() === 2) { 
-          html5QrcodeScanner.clear().catch(error => {
-            // This error can happen if the component unmounts quickly. It's safe to ignore.
-            // console.error("Failed to clear html5QrcodeScanner on cleanup.", error);
-          });
-      }
+      clearTimeout(timeout);
+      html5QrcodeScanner?.clear().catch(() => {});
     };
-  }, [isOpen, onScanSuccess]);
+  }, [isOpen, onScanSuccess, setIsOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -80,7 +73,7 @@ export function QrCodeScannerDialog({ isOpen, setIsOpen, onScanSuccess }: QrCode
             Apunta la cámara al código QR que deseas escanear.
           </DialogDescription>
         </DialogHeader>
-        <div id={SCANNER_REGION_ID} className="w-full"></div>
+        <div id={SCANNER_REGION_ID} className="w-full" />
       </DialogContent>
     </Dialog>
   );
