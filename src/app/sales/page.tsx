@@ -17,13 +17,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, Users, CreditCard, Activity, Loader2 } from 'lucide-react';
+import { DollarSign, Users, CreditCard, Activity, Loader2, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, query, where, onSnapshot, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Order } from '@/types/firestore';
 import Link from 'next/link';
+import { BarcodeScannerDialog } from '@/components/shared/BarcodeScannerDialog';
+import { useToast } from '@/hooks/use-toast';
+import { recordAttendance } from '@/services/attendanceService';
 
 const MetricCard = ({ title, value, icon, loading }: { title: string, value: string, icon: React.ElementType, loading?: boolean }) => {
   const Icon = icon;
@@ -123,7 +126,7 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
 }
 
 export default function SalesDashboardPage() {
-    const { user } = useAuth();
+    const { user, firestoreUser } = useAuth();
     const [metrics, setMetrics] = useState({
         monthlyRevenue: 0,
         monthlySalesCount: 0,
@@ -131,6 +134,8 @@ export default function SalesDashboardPage() {
         closeRate: 0,
     });
     const [loading, setLoading] = useState(true);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (!user) return;
@@ -161,18 +166,35 @@ export default function SalesDashboardPage() {
                 monthlySalesCount: salesCount,
             }));
             
-            // Simple timer to avoid flickering
             setTimeout(() => setLoading(false), 500);
         });
 
-        // Note: newCustomers and closeRate are placeholders for now.
-        // A more complex query or logic would be needed.
-        
         return () => unsubscribe();
 
     }, [user]);
 
+    const handleScanSuccess = async (qrContent: string) => {
+      setIsScannerOpen(false);
+      if (!firestoreUser) return;
+  
+      try {
+        await recordAttendance(firestoreUser.id, qrContent);
+        toast({
+          title: 'Asistencia Registrada',
+          description: 'Tu entrada/salida ha sido registrada correctamente.',
+        });
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Error al registrar',
+          description: error.message,
+        });
+      }
+    };
+
+
     return (
+      <>
         <div className="max-w-7xl mx-auto">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900">Dashboard de Ventas</h1>
@@ -187,26 +209,33 @@ export default function SalesDashboardPage() {
                     loading={loading}
                 />
                 <MetricCard
-                    title="Nuevos Clientes (Mes)"
-                    value={`${metrics.newCustomersCount}`}
-                    icon={Users}
-                    loading={true} // Placeholder
-                />
-                <MetricCard
                     title="Mis Ventas (Mes)"
                     value={`${metrics.monthlySalesCount}`}
                     icon={CreditCard}
                     loading={loading}
                 />
+                 <Card className="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center text-center gap-4">
+                  <h3 className="font-semibold text-gray-900">Acceso Rápido</h3>
+                  <Button onClick={() => setIsScannerOpen(true)} className="w-full">
+                    <QrCode className="mr-2 h-4 w-4" />
+                    Registrar Mi Asistencia
+                  </Button>
+                </Card>
                 <MetricCard
                     title="Mi Tasa de Cierre"
                     value={`${metrics.closeRate}%`}
                     icon={Activity}
-                    loading={true} // Placeholder
+                    loading={true}
                 />
             </div>
 
             {user && <RecentOrdersTable sellerId={user.uid} />}
         </div>
+        <BarcodeScannerDialog
+          isOpen={isScannerOpen}
+          setIsOpen={setIsScannerOpen}
+          onScanSuccess={handleScanSuccess}
+        />
+      </>
     );
 }

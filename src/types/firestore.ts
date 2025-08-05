@@ -234,3 +234,15 @@ export interface Expense {
   date: Timestamp;
   createdAt: Timestamp;
 }
+
+
+/**
+ * Represents an attendance record in the 'attendance' collection.
+ */
+export interface Attendance {
+    id: string;
+    employeeId: string; // ID from 'users' collection
+    registrarId: string; // ID of the user who performed the scan
+    timestamp: Timestamp;
+    type: 'check-in' | 'check-out';
+}

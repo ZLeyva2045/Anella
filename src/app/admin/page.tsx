@@ -9,11 +9,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, Users, CreditCard, Loader2 } from 'lucide-react';
+import { DollarSign, Users, CreditCard, Loader2, QrCode } from 'lucide-react';
 import type { Order, User } from '@/types/firestore';
 import { collection, onSnapshot, query, orderBy, limit, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { DashboardAlerts } from '@/components/admin/DashboardAlerts';
+import { Button } from '@/components/ui/button';
+import { BarcodeScannerDialog } from '@/components/shared/BarcodeScannerDialog';
+import { useToast } from '@/hooks/use-toast';
+import { recordAttendance } from '@/services/attendanceService';
+import { useAuth } from '@/hooks/useAuth';
+import { Card } from '@/components/ui/card';
 
 const MetricCard = ({ title, value, icon, loading }: { title: string, value: string, icon: React.ElementType, loading?: boolean }) => {
   const Icon = icon;
@@ -89,6 +95,9 @@ export default function AdminDashboardPage() {
     completedSales: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const { toast } = useToast();
+  const { firestoreUser } = useAuth();
 
   useEffect(() => {
     setLoading(true);
@@ -114,7 +123,6 @@ export default function AdminDashboardPage() {
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
       
-      // Filtramos en el cliente para evitar el error de indice compuesto
       const newCustomersThisMonth = usersData.filter(user => {
         const createdAt = (user.createdAt as Timestamp)?.toDate();
         return createdAt && createdAt >= startOfMonth;
@@ -122,7 +130,6 @@ export default function AdminDashboardPage() {
       setMetrics(prev => ({ ...prev, newCustomers: newCustomersThisMonth.length }));
     });
     
-    // Un simple temporizador para evitar un cambio de estado de carga demasiado rápido
     const timer = setTimeout(() => setLoading(false), 500);
 
     return () => {
@@ -132,38 +139,73 @@ export default function AdminDashboardPage() {
     };
   }, []);
 
+  const handleScanSuccess = async (qrContent: string) => {
+    setIsScannerOpen(false);
+    if (!firestoreUser) return;
+
+    try {
+      await recordAttendance(firestoreUser.id, qrContent);
+      toast({
+        title: 'Asistencia Registrada',
+        description: 'Tu entrada/salida ha sido registrada correctamente.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al registrar',
+        description: error.message,
+      });
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Panel de control</h1>
-            <p className="text-gray-500 mt-1">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
+    <>
+      <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Panel de control</h1>
+              <p className="text-gray-500 mt-1">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard
-            title="Ingresos (Completados)"
-            value={`S/${metrics.totalRevenue.toFixed(2)}`}
-            icon={DollarSign}
-            loading={loading}
-            />
-            <MetricCard
-            title="Pedidos Completados"
-            value={`${metrics.completedSales}`}
-            icon={CreditCard}
-            loading={loading}
-            />
-            <MetricCard
-            title="Nuevos Clientes (Mes)"
-            value={`+${metrics.newCustomers}`}
-            icon={Users}
-            loading={loading}
-            />
-             <div className="lg:col-start-4">
-                 <DashboardAlerts />
-             </div>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <MetricCard
+              title="Ingresos (Completados)"
+              value={`S/${metrics.totalRevenue.toFixed(2)}`}
+              icon={DollarSign}
+              loading={loading}
+              />
+              <MetricCard
+              title="Pedidos Completados"
+              value={`${metrics.completedSales}`}
+              icon={CreditCard}
+              loading={loading}
+              />
+              <MetricCard
+              title="Nuevos Clientes (Mes)"
+              value={`+${metrics.newCustomers}`}
+              icon={Users}
+              loading={loading}
+              />
+               <Card className="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center text-center gap-4">
+                  <h3 className="font-semibold text-gray-900">Acceso Rápido</h3>
+                  <Button onClick={() => setIsScannerOpen(true)} className="w-full">
+                    <QrCode className="mr-2 h-4 w-4" />
+                    Registrar Mi Asistencia
+                  </Button>
+              </Card>
+          </div>
+          
+          <div className="mt-6">
+            <DashboardAlerts />
+          </div>
 
-        <RecentActivityTable />
-    </div>
+          <RecentActivityTable />
+      </div>
+
+      <BarcodeScannerDialog
+        isOpen={isScannerOpen}
+        setIsOpen={setIsScannerOpen}
+        onScanSuccess={handleScanSuccess}
+      />
+    </>
   );
 }
