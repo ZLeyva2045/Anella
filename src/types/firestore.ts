@@ -274,3 +274,34 @@ export interface Feedback {
   period: string;
   createdAt: Timestamp;
 }
+
+/**
+ * Represents the attendance status for a single day.
+ */
+export interface DailyAttendance {
+  date: Date;
+  status: 'present' | 'absent' | 'incomplete';
+  checkIn?: Timestamp;
+  checkOut?: Timestamp;
+}
+
+/**
+ * Represents the attendance summary for a month.
+ */
+export interface MonthlyAttendance {
+  [day: number]: DailyAttendance;
+}
+
+/**
+ * Consolidates all data needed for a monthly employee report.
+ */
+export interface ReportData {
+    employee: User;
+    period: string; // "Agosto 2024"
+    evaluation: Evaluation | null;
+    feedback: {
+        recognitions: Feedback[];
+        improvements: Feedback[];
+    };
+    attendance: MonthlyAttendance;
+}

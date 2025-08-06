@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AttendanceTracker } from '@/components/admin/payroll/AttendanceTracker';
 import { PerformanceReview } from '@/components/admin/payroll/PerformanceReview';
 import { FeedbackManager } from '@/components/admin/payroll/FeedbackManager';
+import { ReportGenerator } from '@/components/admin/payroll/reports/ReportGenerator';
 
 
 export default function PayrollPage() {
@@ -72,19 +73,7 @@ export default function PayrollPage() {
         </TabsContent>
 
         <TabsContent value="reportes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Generación de Reportes</CardTitle>
-              <CardDescription>
-                Autogenera reportes de desempeño individuales.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">
-                Generador de Reportes en desarrollo.
-              </p>
-            </CardContent>
-          </Card>
+          <ReportGenerator employees={employees} />
         </TabsContent>
       </Tabs>
     </div>
