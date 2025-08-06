@@ -34,6 +34,7 @@ export async function createEmployee(data: Omit<EmployeeData, 'password'> & { pa
     name: data.name,
     email: data.email,
     role: data.role || 'sales',
+    schedule: data.schedule || 'full-day',
     photoURL: data.photoURL || '',
     createdAt: serverTimestamp() as Timestamp,
     // Initialize other fields as needed

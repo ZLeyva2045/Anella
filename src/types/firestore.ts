@@ -107,6 +107,8 @@ export const employeeRoles = ['manager', 'sales', 'designer', 'manufacturing', '
 export type EmployeeRole = (typeof employeeRoles)[number];
 export type UserRole = 'customer' | EmployeeRole;
 
+export const employeeSchedules = ['morning', 'afternoon', 'full-day'] as const;
+export type EmployeeSchedule = (typeof employeeSchedules)[number];
 
 /**
  * Representa el detalle de un pago realizado para un pedido.
@@ -187,6 +189,7 @@ export interface User {
   birthDate?: Date | Timestamp; // Fecha de nacimiento
   orders: string[]; // Array de IDs de los pedidos del usuario
   role?: UserRole; // Rol del usuario
+  schedule?: EmployeeSchedule; // Turno del empleado
   photoURL?: string; // foto del usuario
   loyaltyPoints?: number; // Puntos de fidelidad
   createdAt: Date | Timestamp;
@@ -245,6 +248,7 @@ export interface Attendance {
     registrarId: string; // ID of the user who performed the scan
     timestamp: Timestamp;
     type: 'check-in' | 'check-out';
+    shift: 'morning' | 'afternoon'; // Turno al que corresponde el registro
 }
 
 /**
@@ -280,9 +284,9 @@ export interface Feedback {
  */
 export interface DailyAttendance {
   date: Date;
-  status: 'present' | 'absent' | 'incomplete';
-  checkIn?: Timestamp;
-  checkOut?: Timestamp;
+  status: 'present' | 'absent' | 'incomplete' | 'present_morning' | 'present_afternoon';
+  morning?: { checkIn?: Timestamp; checkOut?: Timestamp; };
+  afternoon?: { checkIn?: Timestamp; checkOut?: Timestamp; };
 }
 
 /**

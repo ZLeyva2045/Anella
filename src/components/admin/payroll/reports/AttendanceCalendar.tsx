@@ -3,13 +3,38 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { MonthlyAttendance } from '@/types/firestore';
+import type { MonthlyAttendance, DailyAttendance } from '@/types/firestore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface AttendanceCalendarProps {
   attendanceData: MonthlyAttendance;
   month: Date;
+}
+
+function getDayTooltipText(dayData: DailyAttendance | undefined): string {
+    if (!dayData) return "Sin datos";
+    if (dayData.status === 'absent') return "Ausente";
+
+    let morningText = "Mañana: No registrada";
+    if(dayData.morning?.checkIn && dayData.morning?.checkOut) {
+        morningText = `Mañana: ${format(dayData.morning.checkIn.toDate(), 'p', { locale: es })} - ${format(dayData.morning.checkOut.toDate(), 'p', { locale: es })}`;
+    } else if (dayData.morning?.checkIn) {
+        morningText = `Mañana (Incompleto): Entrada ${format(dayData.morning.checkIn.toDate(), 'p', { locale: es })}`;
+    }
+
+    let afternoonText = "Tarde: No registrada";
+     if(dayData.afternoon?.checkIn && dayData.afternoon?.checkOut) {
+        afternoonText = `Tarde: ${format(dayData.afternoon.checkIn.toDate(), 'p', { locale: es })} - ${format(dayData.afternoon.checkOut.toDate(), 'p', { locale: es })}`;
+    } else if (dayData.afternoon?.checkIn) {
+        afternoonText = `Tarde (Incompleto): Entrada ${format(dayData.afternoon.checkIn.toDate(), 'p', { locale: es })}`;
+    }
+
+    if(dayData.status === 'present_morning') return morningText;
+    if(dayData.status === 'present_afternoon') return afternoonText;
+    if(dayData.status === 'present') return `${morningText} | ${afternoonText}`;
+
+    return `Incompleto: ${morningText} | ${afternoonText}`;
 }
 
 export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendarProps) {
@@ -26,7 +51,7 @@ export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendar
             modifiers={{
                 present: (date) => {
                     const day = date.getDate();
-                    return !!attendanceData[day] && attendanceData[day].status === 'present';
+                    return !!attendanceData[day] && (attendanceData[day].status === 'present' || attendanceData[day].status === 'present_morning' || attendanceData[day].status === 'present_afternoon');
                 },
                 incomplete: (date) => {
                     const day = date.getDate();
@@ -35,8 +60,7 @@ export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendar
                 absent: (date) => {
                     const day = date.getDate();
                     const dayOfWeek = date.getDay();
-                    // Consider absent if there's no record and it's not Sunday
-                    return (!attendanceData[day] || attendanceData[day].status === 'absent') && dayOfWeek !== 0;
+                    return dayOfWeek !== 0 && (!attendanceData[day] || attendanceData[day].status === 'absent');
                 }
             }}
             modifiersClassNames={{
@@ -48,31 +72,14 @@ export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendar
                 DayContent: (props) => {
                     const day = props.date.getDate();
                     const attendance = attendanceData[day];
+                    const tooltipText = getDayTooltipText(attendance);
                     
-                    let tooltipText = "Ausente";
-                    if (attendance) {
-                      const checkInTime = attendance.checkIn ? format(attendance.checkIn.toDate(), 'p', { locale: es }) : null;
-                      const checkOutTime = attendance.checkOut ? format(attendance.checkOut.toDate(), 'p', { locale: es }) : null;
-
-                      if (attendance.status === 'present' && checkInTime && checkOutTime) {
-                          tooltipText = `Entrada: ${checkInTime} - Salida: ${checkOutTime}`;
-                      } else if (attendance.status === 'incomplete') {
-                          if (checkInTime) {
-                            tooltipText = `Incompleto - Solo Entrada: ${checkInTime}`;
-                          } else if (checkOutTime) {
-                            tooltipText = `Incompleto - Solo Salida: ${checkOutTime}`;
-                          } else {
-                            tooltipText = `Incompleto - Sin registros de hora`;
-                          }
-                      }
-                    }
-
                     return (
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <span>{props.date.getDate()}</span>
                             </TooltipTrigger>
-                            <TooltipContent>
+                             <TooltipContent>
                                 <p>{tooltipText}</p>
                             </TooltipContent>
                         </Tooltip>

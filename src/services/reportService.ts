@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { User, Evaluation, Feedback, Attendance, MonthlyAttendance, ReportData, DailyAttendance } from '@/types/firestore';
-import { getMonth, getYear, getDaysInMonth, startOfMonth, endOfMonth } from 'date-fns';
+import { getMonth, getYear, getDaysInMonth, startOfMonth, endOfMonth, getDay } from 'date-fns';
 
 /**
  * Generates a comprehensive report for a given employee and month.
@@ -66,20 +66,48 @@ export async function generateEmployeeReportData(employeeId: string, date: Date)
 
   for (let i = 1; i <= daysInMonth; i++) {
     const dayDate = new Date(getYear(date), getMonth(date), i);
+    const dayOfWeek = getDay(dayDate); // Sunday = 0, Saturday = 6
+
     const recordsForDay = attendanceRecords.filter(r => r.timestamp.toDate().getDate() === i);
     
-    const checkIn = recordsForDay.find(r => r.type === 'check-in');
-    const checkOut = recordsForDay.find(r => r.type === 'check-out');
+    const morningCheckIn = recordsForDay.find(r => r.shift === 'morning' && r.type === 'check-in');
+    const morningCheckOut = recordsForDay.find(r => r.shift === 'morning' && r.type === 'check-out');
+    const afternoonCheckIn = recordsForDay.find(r => r.shift === 'afternoon' && r.type === 'check-in');
+    const afternoonCheckOut = recordsForDay.find(r => r.shift === 'afternoon' && r.type === 'check-out');
 
-    let status: DailyAttendance['status'] = 'absent';
-    if(checkIn && checkOut) status = 'present';
-    else if (checkIn || checkOut) status = 'incomplete';
+    const isWorkDay = dayOfWeek >= 1 && dayOfWeek <= 5; // Monday to Friday
     
+    let status: DailyAttendance['status'] = 'absent';
+    if (!isWorkDay) {
+        status = 'absent'; // Mark weekends as absent for simplicity, could be another status like 'off-day'
+    } else {
+        const morningPresent = morningCheckIn && morningCheckOut;
+        const afternoonPresent = afternoonCheckIn && afternoonCheckOut;
+        
+        if (employee.schedule === 'full-day') {
+            if (morningPresent && afternoonPresent) status = 'present';
+            else if (morningPresent || afternoonPresent) status = 'incomplete';
+        } else if (employee.schedule === 'morning') {
+            if (morningPresent) status = 'present_morning';
+            else if (morningCheckIn || morningCheckOut) status = 'incomplete';
+        } else if (employee.schedule === 'afternoon') {
+            if (afternoonPresent) status = 'present_afternoon';
+            else if (afternoonCheckIn || afternoonCheckOut) status = 'incomplete';
+        }
+    }
+
+
     monthlyAttendance[i] = {
         date: dayDate,
-        status,
-        checkIn: checkIn?.timestamp,
-        checkOut: checkOut?.timestamp,
+        status: isWorkDay ? status : 'absent',
+        morning: {
+            checkIn: morningCheckIn?.timestamp,
+            checkOut: morningCheckOut?.timestamp,
+        },
+        afternoon: {
+            checkIn: afternoonCheckIn?.timestamp,
+            checkOut: afternoonCheckOut?.timestamp,
+        }
     };
   }
 

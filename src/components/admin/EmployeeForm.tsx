@@ -25,8 +25,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import type { User, EmployeeRole } from '@/types/firestore';
-import { employeeRoles } from '@/types/firestore';
+import type { User, EmployeeRole, EmployeeSchedule } from '@/types/firestore';
+import { employeeRoles, employeeSchedules } from '@/types/firestore';
 import { createEmployee, updateEmployee } from '@/services/employeeService';
 import { Loader2, UserPlus } from 'lucide-react';
 import { uploadImage } from '@/services/productService';
@@ -37,6 +37,9 @@ const employeeSchema = z.object({
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.').optional(),
   role: z.custom<EmployeeRole>((val) => employeeRoles.includes(val as EmployeeRole), {
     message: 'Debe seleccionar un rol válido.',
+  }),
+  schedule: z.custom<EmployeeSchedule>((val) => employeeSchedules.includes(val as EmployeeSchedule), {
+    message: 'Debe seleccionar un horario válido.',
   }),
   photoURL: z.string().optional(),
 });
@@ -64,6 +67,7 @@ export function EmployeeForm({ isOpen, setIsOpen, employee }: EmployeeFormProps)
       email: '',
       password: '',
       role: 'sales',
+      schedule: 'full-day',
       photoURL: '',
     },
   });
@@ -76,6 +80,7 @@ export function EmployeeForm({ isOpen, setIsOpen, employee }: EmployeeFormProps)
           email: employee.email || '',
           password: '', // No precargar contraseña por seguridad
           role: employee.role as EmployeeRole || 'sales',
+          schedule: employee.schedule || 'full-day',
           photoURL: employee.photoURL || '',
         });
       } else {
@@ -84,6 +89,7 @@ export function EmployeeForm({ isOpen, setIsOpen, employee }: EmployeeFormProps)
           email: '',
           password: '',
           role: 'sales',
+          schedule: 'full-day',
           photoURL: '',
         });
       }
@@ -105,7 +111,7 @@ export function EmployeeForm({ isOpen, setIsOpen, employee }: EmployeeFormProps)
 
       if (employee) {
         // Actualizar empleado existente
-        await updateEmployee(employee.id, { name: data.name, role: data.role, photoURL: photoUrl });
+        await updateEmployee(employee.id, { name: data.name, role: data.role, schedule: data.schedule, photoURL: photoUrl });
         toast({ title: 'Empleado actualizado', description: 'Los datos del empleado se han guardado correctamente.' });
       } else {
         // Crear nuevo empleado
@@ -153,11 +159,20 @@ export function EmployeeForm({ isOpen, setIsOpen, employee }: EmployeeFormProps)
                 <FormItem><FormLabel>Contraseña</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
             )}
-            <FormField name="role" control={form.control} render={({ field }) => (
-              <FormItem><FormLabel>Rol</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{employeeRoles.map(role => (
-                <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>
-              ))}</SelectContent></Select><FormMessage /></FormItem>
-            )} />
+            <div className="grid grid-cols-2 gap-4">
+                <FormField name="role" control={form.control} render={({ field }) => (
+                <FormItem><FormLabel>Rol</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{employeeRoles.map(role => (
+                    <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>
+                ))}</SelectContent></Select><FormMessage /></FormItem>
+                )} />
+                 <FormField name="schedule" control={form.control} render={({ field }) => (
+                <FormItem><FormLabel>Horario</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>
+                    <SelectItem value="morning">Mañana (8am-1pm)</SelectItem>
+                    <SelectItem value="afternoon">Tarde (3pm-8pm)</SelectItem>
+                    <SelectItem value="full-day">Día Completo</SelectItem>
+                </SelectContent></Select><FormMessage /></FormItem>
+                )} />
+            </div>
             <FormItem>
               <FormLabel>Foto del Empleado</FormLabel>
               <FormControl>
