@@ -240,7 +240,7 @@ export interface Expense {
 
 
 /**
- * Represents an attendance record in the 'attendance' collection.
+ * Representa un registro de asistencia en la colección 'attendance'.
  */
 export interface Attendance {
     id: string;
@@ -249,6 +249,7 @@ export interface Attendance {
     timestamp: Timestamp;
     type: 'check-in' | 'check-out';
     shift: 'morning' | 'afternoon'; // Turno al que corresponde el registro
+    status?: 'on-time' | 'late'; // Estado de la puntualidad (solo para check-in)
 }
 
 /**
@@ -284,9 +285,9 @@ export interface Feedback {
  */
 export interface DailyAttendance {
   date: Date;
-  status: 'present' | 'absent' | 'incomplete' | 'present_morning' | 'present_afternoon';
-  morning?: { checkIn?: Timestamp; checkOut?: Timestamp; };
-  afternoon?: { checkIn?: Timestamp; checkOut?: Timestamp; };
+  status: 'present' | 'absent' | 'incomplete' | 'present_morning' | 'present_afternoon' | 'late';
+  morning?: { checkIn?: Timestamp; checkOut?: Timestamp; late?: boolean };
+  afternoon?: { checkIn?: Timestamp; checkOut?: Timestamp; late?: boolean };
 }
 
 /**
@@ -308,4 +309,6 @@ export interface ReportData {
         improvements: Feedback[];
     };
     attendance: MonthlyAttendance;
+    tardinessCount: number;
+    tardinessPenalty: number;
 }

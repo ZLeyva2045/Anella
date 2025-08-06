@@ -50,23 +50,14 @@ export async function recordAttendance(registrarId: string, employeeIdFromQR: st
   const currentHour = now.getHours();
   const currentMinutes = now.getMinutes();
   let currentShift: 'morning' | 'afternoon' | null = null;
-  let isCheckInAttempt = false;
   
   // Morning shift window
   if (currentHour >= 7 && (currentHour < 14)) {
       currentShift = 'morning';
-      // Check-in window with tolerance (e.g., 8:00 to 8:05)
-      if (currentHour < 8 || (currentHour === 8 && currentMinutes <= 5)) {
-          isCheckInAttempt = true;
-      }
   }
   // Afternoon shift window
   else if (currentHour >= 14 && (currentHour < 22)) {
       currentShift = 'afternoon';
-      // Check-in window with tolerance (e.g., 15:00 to 15:05)
-      if (currentHour < 15 || (currentHour === 15 && currentMinutes <= 5)) {
-          isCheckInAttempt = true;
-      }
   }
   
   if (!currentShift) {
@@ -93,17 +84,21 @@ export async function recordAttendance(registrarId: string, employeeIdFromQR: st
   const querySnapshot = await getDocs(q);
   
   let recordType: 'check-in' | 'check-out';
+  let attendanceStatus: 'on-time' | 'late' | undefined = undefined;
   
   // If there are no records for today in this shift, it must be a check-in.
   if (querySnapshot.empty) {
       recordType = 'check-in';
-      // Validate tardiness
-      if (currentShift === 'morning' && (currentHour > 8 || (currentHour === 8 && currentMinutes > 5))) {
-          throw new Error('Registro de entrada tardío. La tolerancia es hasta las 8:05 AM.');
+      // Determine if the check-in is late
+      const isMorningLate = currentShift === 'morning' && (currentHour > 8 || (currentHour === 8 && currentMinutes > 5));
+      const isAfternoonLate = currentShift === 'afternoon' && (currentHour > 15 || (currentHour === 15 && currentMinutes > 5));
+      
+      if (isMorningLate || isAfternoonLate) {
+          attendanceStatus = 'late';
+      } else {
+          attendanceStatus = 'on-time';
       }
-      if (currentShift === 'afternoon' && (currentHour > 15 || (currentHour === 15 && currentMinutes > 5))) {
-          throw new Error('Registro de entrada tardío. La tolerancia es hasta las 3:05 PM.');
-      }
+
   } else {
     // If there are records, determine the next action
     const lastRecord = querySnapshot.docs[0].data();
@@ -117,13 +112,17 @@ export async function recordAttendance(registrarId: string, employeeIdFromQR: st
 
 
   // Create the new attendance record
-  const newRecord = {
+  const newRecord: Omit<Attendance, 'id'> = {
     employeeId: employeeIdFromQR,
     registrarId,
     timestamp: Timestamp.now(),
     type: recordType,
     shift: currentShift,
   };
+  
+  if (attendanceStatus) {
+    newRecord.status = attendanceStatus;
+  }
   
   const newDocRef = await addDoc(attendanceRef, newRecord);
 

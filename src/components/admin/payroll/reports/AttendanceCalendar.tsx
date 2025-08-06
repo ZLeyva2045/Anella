@@ -16,23 +16,26 @@ function getDayTooltipText(dayData: DailyAttendance | undefined): string {
     if (!dayData) return "Sin datos";
     if (dayData.status === 'absent') return "Ausente";
 
+    const morningStatus = dayData.morning?.late ? '(Tardanza)' : '';
+    const afternoonStatus = dayData.afternoon?.late ? '(Tardanza)' : '';
+    
     let morningText = "Mañana: No registrada";
     if(dayData.morning?.checkIn && dayData.morning?.checkOut) {
-        morningText = `Mañana: ${format(dayData.morning.checkIn.toDate(), 'p', { locale: es })} - ${format(dayData.morning.checkOut.toDate(), 'p', { locale: es })}`;
+        morningText = `Mañana: ${format(dayData.morning.checkIn.toDate(), 'p', { locale: es })} - ${format(dayData.morning.checkOut.toDate(), 'p', { locale: es })} ${morningStatus}`;
     } else if (dayData.morning?.checkIn) {
-        morningText = `Mañana (Incompleto): Entrada ${format(dayData.morning.checkIn.toDate(), 'p', { locale: es })}`;
+        morningText = `Mañana (Incompleto): Entrada ${format(dayData.morning.checkIn.toDate(), 'p', { locale: es })} ${morningStatus}`;
     }
 
     let afternoonText = "Tarde: No registrada";
      if(dayData.afternoon?.checkIn && dayData.afternoon?.checkOut) {
-        afternoonText = `Tarde: ${format(dayData.afternoon.checkIn.toDate(), 'p', { locale: es })} - ${format(dayData.afternoon.checkOut.toDate(), 'p', { locale: es })}`;
+        afternoonText = `Tarde: ${format(dayData.afternoon.checkIn.toDate(), 'p', { locale: es })} - ${format(dayData.afternoon.checkOut.toDate(), 'p', { locale: es })} ${afternoonStatus}`;
     } else if (dayData.afternoon?.checkIn) {
-        afternoonText = `Tarde (Incompleto): Entrada ${format(dayData.afternoon.checkIn.toDate(), 'p', { locale: es })}`;
+        afternoonText = `Tarde (Incompleto): Entrada ${format(dayData.afternoon.checkIn.toDate(), 'p', { locale: es })} ${afternoonStatus}`;
     }
 
     if(dayData.status === 'present_morning') return morningText;
     if(dayData.status === 'present_afternoon') return afternoonText;
-    if(dayData.status === 'present') return `${morningText} | ${afternoonText}`;
+    if(dayData.status === 'present' || dayData.status === 'late') return `${morningText} | ${afternoonText}`;
 
     return `Incompleto: ${morningText} | ${afternoonText}`;
 }
@@ -53,6 +56,10 @@ export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendar
                     const day = date.getDate();
                     return !!attendanceData[day] && (attendanceData[day].status === 'present' || attendanceData[day].status === 'present_morning' || attendanceData[day].status === 'present_afternoon');
                 },
+                late: (date) => {
+                     const day = date.getDate();
+                     return !!attendanceData[day] && attendanceData[day].status === 'late';
+                },
                 incomplete: (date) => {
                     const day = date.getDate();
                     return !!attendanceData[day] && attendanceData[day].status === 'incomplete';
@@ -65,6 +72,7 @@ export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendar
             }}
             modifiersClassNames={{
                 present: 'bg-green-100 text-green-800 rounded-md',
+                late: 'bg-orange-100 text-orange-800 rounded-md',
                 incomplete: 'bg-yellow-100 text-yellow-800 rounded-md',
                 absent: 'bg-red-100 text-red-800 rounded-md',
             }}

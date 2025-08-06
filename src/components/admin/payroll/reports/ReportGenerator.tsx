@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { User, ReportData } from '@/types/firestore';
 import { generateEmployeeReportData } from '@/services/reportService';
-import { Loader2, FileText, Printer, ThumbsUp, Goal, MessageSquare } from 'lucide-react';
+import { Loader2, FileText, Printer, ThumbsUp, Goal, MessageSquare, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { PerformanceSummary } from './PerformanceSummary';
 import { AttendanceCalendar } from './AttendanceCalendar';
 import { Separator } from '@/components/ui/separator';
@@ -39,8 +39,7 @@ export function ReportGenerator({ employees }: ReportGeneratorProps) {
     const date = new Date();
     for (let i = 0; i < 12; i++) {
         const monthStr = format(date, 'MMMM yyyy', { locale: es });
-        const valueStr = format(date, 'yyyy-MM');
-        options.push({ label: monthStr.charAt(0).toUpperCase() + monthStr.slice(1), value: valueStr });
+        options.push({ label: monthStr.charAt(0).toUpperCase() + monthStr.slice(1), value: format(date, 'yyyy-MM') });
         date.setMonth(date.getMonth() - 1);
     }
     return options;
@@ -103,14 +102,24 @@ export function ReportGenerator({ employees }: ReportGeneratorProps) {
                     
                     {reportData.evaluation ? <PerformanceSummary evaluation={reportData.evaluation} /> : <p className="text-center text-muted-foreground">No se encontró evaluación para este período.</p>}
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <Card>
-                           <CardHeader><CardTitle className="flex items-center gap-2"><ThumbsUp className="text-green-500"/>Reconocimientos</CardTitle></CardHeader>
-                           <CardContent className="space-y-2">{reportData.feedback.recognitions.length > 0 ? reportData.feedback.recognitions.map(fb => <p key={fb.id} className="text-sm p-2 border-l-4 border-green-500 bg-green-50">{fb.comment}</p>) : <p className="text-sm text-muted-foreground">Sin reconocimientos este mes.</p>}</CardContent>
+                           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><ThumbsUp className="text-green-500"/>Reconocimientos</CardTitle></CardHeader>
+                           <CardContent className="space-y-2 max-h-40 overflow-y-auto">{reportData.feedback.recognitions.length > 0 ? reportData.feedback.recognitions.map(fb => <p key={fb.id} className="text-sm p-2 border-l-4 border-green-500 bg-green-50">{fb.comment}</p>) : <p className="text-sm text-muted-foreground">Sin reconocimientos este mes.</p>}</CardContent>
                         </Card>
                         <Card>
-                           <CardHeader><CardTitle className="flex items-center gap-2"><Goal className="text-yellow-500"/>Áreas de Mejora</CardTitle></CardHeader>
-                           <CardContent className="space-y-2">{reportData.feedback.improvements.length > 0 ? reportData.feedback.improvements.map(fb => <p key={fb.id} className="text-sm p-2 border-l-4 border-yellow-500 bg-yellow-50">{fb.comment}</p>) : <p className="text-sm text-muted-foreground">Sin áreas de mejora este mes.</p>}</CardContent>
+                           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Goal className="text-yellow-500"/>Áreas de Mejora</CardTitle></CardHeader>
+                           <CardContent className="space-y-2 max-h-40 overflow-y-auto">{reportData.feedback.improvements.length > 0 ? reportData.feedback.improvements.map(fb => <p key={fb.id} className="text-sm p-2 border-l-4 border-yellow-500 bg-yellow-50">{fb.comment}</p>) : <p className="text-sm text-muted-foreground">Sin áreas de mejora este mes.</p>}</CardContent>
+                        </Card>
+                         <Card>
+                            <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><AlertTriangle className="text-red-500"/>Tardanzas y Penalidad</CardTitle></CardHeader>
+                            <CardContent className="text-center pt-4">
+                                <p className="text-4xl font-bold">{reportData.tardinessCount}</p>
+                                <p className="text-sm text-muted-foreground">Tardanzas registradas</p>
+                                <Separator className="my-2" />
+                                <p className="text-2xl font-bold text-destructive">- S/ {reportData.tardinessPenalty.toFixed(2)}</p>
+                                <p className="text-xs text-muted-foreground">Penalidad total</p>
+                            </CardContent>
                         </Card>
                     </div>
 

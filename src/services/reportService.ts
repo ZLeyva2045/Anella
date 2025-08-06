@@ -46,7 +46,7 @@ export async function generateEmployeeReportData(employeeId: string, date: Date)
   const recognitions = allFeedback.filter(f => f.type === 'recognition');
   const improvements = allFeedback.filter(f => f.type === 'improvement');
 
-  // 4. Fetch Attendance
+  // 4. Fetch Attendance and count tardiness
   const monthStart = startOfMonth(date);
   const monthEnd = endOfMonth(date);
 
@@ -60,6 +60,9 @@ export async function generateEmployeeReportData(employeeId: string, date: Date)
   );
   const attendanceSnap = await getDocs(attendanceQuery);
   const attendanceRecords = attendanceSnap.docs.map(d => d.data() as Attendance);
+
+  const tardinessCount = attendanceRecords.filter(r => r.type === 'check-in' && r.status === 'late').length;
+  const tardinessPenalty = tardinessCount * 10; // S/ 10 penalty per late arrival
 
   const monthlyAttendance: MonthlyAttendance = {};
   const daysInMonth = getDaysInMonth(date);
@@ -79,12 +82,14 @@ export async function generateEmployeeReportData(employeeId: string, date: Date)
     
     let status: DailyAttendance['status'] = 'absent';
     if (!isWorkDay) {
-        status = 'absent'; // Mark weekends as absent for simplicity, could be another status like 'off-day'
+        status = 'absent';
     } else {
         const morningPresent = morningCheckIn && morningCheckOut;
         const afternoonPresent = afternoonCheckIn && afternoonCheckOut;
-        
-        if (employee.schedule === 'full-day') {
+        const isLate = morningCheckIn?.status === 'late' || afternoonCheckIn?.status === 'late';
+
+        if(isLate) status = 'late';
+        else if (employee.schedule === 'full-day') {
             if (morningPresent && afternoonPresent) status = 'present';
             else if (morningPresent || afternoonPresent) status = 'incomplete';
         } else if (employee.schedule === 'morning') {
@@ -103,10 +108,12 @@ export async function generateEmployeeReportData(employeeId: string, date: Date)
         morning: {
             checkIn: morningCheckIn?.timestamp,
             checkOut: morningCheckOut?.timestamp,
+            late: morningCheckIn?.status === 'late'
         },
         afternoon: {
             checkIn: afternoonCheckIn?.timestamp,
             checkOut: afternoonCheckOut?.timestamp,
+            late: afternoonCheckIn?.status === 'late'
         }
     };
   }
@@ -117,5 +124,7 @@ export async function generateEmployeeReportData(employeeId: string, date: Date)
     evaluation,
     feedback: { recognitions, improvements },
     attendance: monthlyAttendance,
+    tardinessCount,
+    tardinessPenalty,
   };
 }
