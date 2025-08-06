@@ -17,7 +17,7 @@ export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendar
     <Card>
       <CardHeader>
         <CardTitle>Calendario de Asistencias</CardTitle>
-        <CardDescription>Resumen visual de la asistencia durante el mes.</CardDescription>
+        <CardDescription>Pasa el cursor sobre un día para ver los detalles de entrada y salida.</CardDescription>
       </CardHeader>
       <CardContent className="flex justify-center">
         <TooltipProvider>
@@ -26,16 +26,17 @@ export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendar
             modifiers={{
                 present: (date) => {
                     const day = date.getDate();
-                    return attendanceData[day]?.status === 'present';
+                    return !!attendanceData[day] && attendanceData[day].status === 'present';
                 },
                 incomplete: (date) => {
                     const day = date.getDate();
-                    return attendanceData[day]?.status === 'incomplete';
+                    return !!attendanceData[day] && attendanceData[day].status === 'incomplete';
                 },
                 absent: (date) => {
                     const day = date.getDate();
                     const dayOfWeek = date.getDay();
-                    return attendanceData[day]?.status === 'absent' && dayOfWeek !== 0; // Exclude Sundays
+                    // Consider absent if there's no record and it's not Sunday
+                    return (!attendanceData[day] || attendanceData[day].status === 'absent') && dayOfWeek !== 0;
                 }
             }}
             modifiersClassNames={{
@@ -47,13 +48,23 @@ export function AttendanceCalendar({ attendanceData, month }: AttendanceCalendar
                 DayContent: (props) => {
                     const day = props.date.getDate();
                     const attendance = attendanceData[day];
-                    if (!attendance) return <div {...props}>{props.date.getDate()}</div>;
                     
                     let tooltipText = "Ausente";
-                    if (attendance.status === 'present' && attendance.checkIn && attendance.checkOut) {
-                        tooltipText = `Entrada: ${format(attendance.checkIn.toDate(), 'p', {locale: es})} - Salida: ${format(attendance.checkOut.toDate(), 'p', {locale: es})}`;
-                    } else if (attendance.status === 'incomplete') {
-                        tooltipText = `Incompleto - ${attendance.checkIn ? `Solo Entrada: ${format(attendance.checkIn.toDate(), 'p', {locale: es})}` : `Solo Salida: ${format(attendance.checkOut?.toDate(), 'p', {locale: es})}`}`;
+                    if (attendance) {
+                      const checkInTime = attendance.checkIn ? format(attendance.checkIn.toDate(), 'p', { locale: es }) : null;
+                      const checkOutTime = attendance.checkOut ? format(attendance.checkOut.toDate(), 'p', { locale: es }) : null;
+
+                      if (attendance.status === 'present' && checkInTime && checkOutTime) {
+                          tooltipText = `Entrada: ${checkInTime} - Salida: ${checkOutTime}`;
+                      } else if (attendance.status === 'incomplete') {
+                          if (checkInTime) {
+                            tooltipText = `Incompleto - Solo Entrada: ${checkInTime}`;
+                          } else if (checkOutTime) {
+                            tooltipText = `Incompleto - Solo Salida: ${checkOutTime}`;
+                          } else {
+                            tooltipText = `Incompleto - Sin registros de hora`;
+                          }
+                      }
                     }
 
                     return (
