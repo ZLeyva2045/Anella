@@ -246,3 +246,18 @@ export interface Attendance {
     timestamp: Timestamp;
     type: 'check-in' | 'check-out';
 }
+
+/**
+ * Represents a performance evaluation for an employee.
+ */
+export interface Evaluation {
+  id?: string;
+  employeeId: string;
+  evaluatorId: string;
+  period: string; // e.g., "Agosto 2024"
+  scores: { [criterionId: string]: number };
+  totalScore: number;
+  bonus: number;
+  comments?: string;
+  createdAt: Timestamp;
+}
