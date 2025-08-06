@@ -6,9 +6,10 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { Evaluation } from '@/types/firestore';
+import type { Evaluation, Feedback } from '@/types/firestore';
 
 type EvaluationData = Omit<Evaluation, 'id' | 'createdAt'> & { createdAt: Date };
+type FeedbackData = Omit<Feedback, 'id' | 'createdAt'> & { createdAt: Date };
 
 /**
  * Saves a performance evaluation to the 'evaluations' collection.
@@ -22,4 +23,19 @@ export async function saveEvaluation(data: EvaluationData): Promise<string> {
 
   const newDocRef = await addDoc(collection(db, 'evaluations'), evaluationWithTimestamp);
   return newDocRef.id;
+}
+
+
+/**
+ * Saves a feedback entry to the 'feedback' collection.
+ * @param data - The feedback data to be saved.
+ */
+export async function saveFeedback(data: FeedbackData): Promise<string> {
+    const feedbackWithTimestamp = {
+        ...data,
+        createdAt: Timestamp.fromDate(data.createdAt),
+    };
+    
+    const newDocRef = await addDoc(collection(db, 'feedback'), feedbackWithTimestamp);
+    return newDocRef.id;
 }

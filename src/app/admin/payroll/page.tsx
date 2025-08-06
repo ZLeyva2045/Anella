@@ -23,6 +23,7 @@ import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceTracker } from '@/components/admin/payroll/AttendanceTracker';
 import { PerformanceReview } from '@/components/admin/payroll/PerformanceReview';
+import { FeedbackManager } from '@/components/admin/payroll/FeedbackManager';
 
 
 export default function PayrollPage() {
@@ -67,19 +68,7 @@ export default function PayrollPage() {
         </TabsContent>
 
         <TabsContent value="retroalimentacion">
-          <Card>
-            <CardHeader>
-              <CardTitle>Retroalimentación y Críticas Constructivas</CardTitle>
-              <CardDescription>
-                Proporciona feedback detallado para el crecimiento profesional.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">
-                Módulo de Retroalimentación en desarrollo.
-              </p>
-            </CardContent>
-          </Card>
+          <FeedbackManager employees={employees} />
         </TabsContent>
 
         <TabsContent value="reportes">

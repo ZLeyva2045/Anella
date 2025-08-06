@@ -261,3 +261,16 @@ export interface Evaluation {
   comments?: string;
   createdAt: Timestamp;
 }
+
+/**
+ * Represents a feedback entry for an employee.
+ */
+export interface Feedback {
+  id?: string;
+  employeeId: string;
+  evaluatorId: string;
+  type: 'recognition' | 'improvement';
+  comment: string;
+  period: string;
+  createdAt: Timestamp;
+}
