@@ -27,6 +27,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { AttendanceTracker } from '@/components/admin/payroll/AttendanceTracker';
 
 const evaluationCriteria = [
   { id: 'quality', label: 'Calidad del Trabajo' },
@@ -70,7 +71,7 @@ export default function PayrollPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="evaluaciones" className="w-full">
+      <Tabs defaultValue="asistencias" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="asistencias">Asistencias</TabsTrigger>
           <TabsTrigger value="evaluaciones">Evaluaciones</TabsTrigger>
@@ -79,19 +80,7 @@ export default function PayrollPage() {
         </TabsList>
 
         <TabsContent value="asistencias">
-          <Card>
-            <CardHeader>
-              <CardTitle>Control de Asistencias</CardTitle>
-              <CardDescription>
-                Registra y visualiza la asistencia de los empleados.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">
-                Funcionalidad de Asistencias en desarrollo.
-              </p>
-            </CardContent>
-          </Card>
+          <AttendanceTracker />
         </TabsContent>
 
         <TabsContent value="evaluaciones">
