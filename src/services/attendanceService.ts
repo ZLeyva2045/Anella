@@ -48,16 +48,29 @@ export async function recordAttendance(registrarId: string, employeeIdFromQR: st
 
   // Determine current shift based on time
   const currentHour = now.getHours();
-  let currentShift: 'morning' | 'afternoon';
-  // Morning shift check-in/out window (e.g., 7am-2pm)
-  if (currentHour >= 7 && currentHour < 14) {
-    currentShift = 'morning';
-  } 
-  // Afternoon shift check-in/out window (e.g., 2pm-9pm)
-  else if (currentHour >= 14 && currentHour < 22) {
-    currentShift = 'afternoon';
-  } else {
-    throw new Error('Fuera del horario de registro. El registro es de 7am a 10pm.');
+  const currentMinutes = now.getMinutes();
+  let currentShift: 'morning' | 'afternoon' | null = null;
+  let isCheckInAttempt = false;
+  
+  // Morning shift window
+  if (currentHour >= 7 && (currentHour < 14)) {
+      currentShift = 'morning';
+      // Check-in window with tolerance (e.g., 8:00 to 8:05)
+      if (currentHour < 8 || (currentHour === 8 && currentMinutes <= 5)) {
+          isCheckInAttempt = true;
+      }
+  }
+  // Afternoon shift window
+  else if (currentHour >= 14 && (currentHour < 22)) {
+      currentShift = 'afternoon';
+      // Check-in window with tolerance (e.g., 15:00 to 15:05)
+      if (currentHour < 15 || (currentHour === 15 && currentMinutes <= 5)) {
+          isCheckInAttempt = true;
+      }
+  }
+  
+  if (!currentShift) {
+       throw new Error('Fuera del horario de registro. El registro es de 7am a 10pm.');
   }
   
   // Check if employee schedule allows for this shift
@@ -79,10 +92,20 @@ export async function recordAttendance(registrarId: string, employeeIdFromQR: st
   
   const querySnapshot = await getDocs(q);
   
-  let recordType: 'check-in' | 'check-out' = 'check-in';
+  let recordType: 'check-in' | 'check-out';
   
-  // If there are records for today in this shift, determine the next record type
-  if (!querySnapshot.empty) {
+  // If there are no records for today in this shift, it must be a check-in.
+  if (querySnapshot.empty) {
+      recordType = 'check-in';
+      // Validate tardiness
+      if (currentShift === 'morning' && (currentHour > 8 || (currentHour === 8 && currentMinutes > 5))) {
+          throw new Error('Registro de entrada tardío. La tolerancia es hasta las 8:05 AM.');
+      }
+      if (currentShift === 'afternoon' && (currentHour > 15 || (currentHour === 15 && currentMinutes > 5))) {
+          throw new Error('Registro de entrada tardío. La tolerancia es hasta las 3:05 PM.');
+      }
+  } else {
+    // If there are records, determine the next action
     const lastRecord = querySnapshot.docs[0].data();
     if (lastRecord.type === 'check-in') {
       recordType = 'check-out';
@@ -91,6 +114,7 @@ export async function recordAttendance(registrarId: string, employeeIdFromQR: st
       throw new Error(`Ya has registrado tu salida para el turno de la ${currentShift === 'morning' ? 'mañana' : 'tarde'}.`);
     }
   }
+
 
   // Create the new attendance record
   const newRecord = {
