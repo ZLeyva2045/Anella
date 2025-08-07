@@ -8,7 +8,7 @@ import { AuthProvider } from '@/hooks/useAuth';
 import { CartProvider } from '@/hooks/useCart';
 import { WhatsAppButton } from '@/components/anella/WhatsAppButton';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 const metadata: Metadata = {
   title: 'Anella Boutique',
@@ -24,6 +24,36 @@ export default function RootLayout({
   const isAdminOrSalesPath = pathname.startsWith('/admin') || pathname.startsWith('/sales');
   const showWhatsAppButton = !isAdminOrSalesPath;
   
+   useEffect(() => {
+    if (isAdminOrSalesPath) {
+      const theme = localStorage.getItem('anella-theme') || 'light';
+      document.documentElement.classList.add(theme);
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    const handleThemeChange = () => {
+      if (isAdminOrSalesPath) {
+        const theme = localStorage.getItem('anella-theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    };
+
+    window.addEventListener('themeChange', handleThemeChange);
+    window.addEventListener('storage', handleThemeChange);
+    
+    handleThemeChange(); // Initial check
+
+    return () => {
+      window.removeEventListener('themeChange', handleThemeChange);
+      window.removeEventListener('storage', handleThemeChange);
+    };
+  }, [isAdminOrSalesPath]);
+
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
@@ -33,7 +63,7 @@ export default function RootLayout({
         <title>{String(metadata.title)}</title>
         <meta name="description" content={String(metadata.description)} />
       </head>
-      <body className="antialiased">
+      <body>
             <AuthProvider>
             <CartProvider>
                 {children}
