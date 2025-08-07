@@ -19,24 +19,24 @@ import { QrCodeScannerDialog } from '@/components/shared/QrCodeScannerDialog';
 import { useToast } from '@/hooks/use-toast';
 import { recordAttendance } from '@/services/attendanceService';
 import { useAuth } from '@/hooks/useAuth';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const MetricCard = ({ title, value, icon, loading }: { title: string, value: string, icon: React.ElementType, loading?: boolean }) => {
   const Icon = icon;
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm flex items-center gap-6">
-       <div className="p-3 rounded-full bg-secondary text-primary">
-            <Icon className="h-7 w-7" />
-       </div>
-       <div>
-            <p className="text-sm font-medium text-gray-500">{title}</p>
+    <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            <Icon className="h-6 w-6 text-muted-foreground" />
+       </CardHeader>
+       <CardContent>
             {loading ? (
                 <Loader2 className="h-8 w-8 animate-spin mt-1" />
             ) : (
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <div className="text-2xl font-bold">{value}</div>
             )}
-       </div>
-    </div>
+       </CardContent>
+    </Card>
   );
 };
 
@@ -60,11 +60,13 @@ const RecentActivityTable = () => {
     }
     
     return (
-        <div className="mt-10 bg-white rounded-lg shadow-sm overflow-hidden">
-            <h2 className="text-lg font-semibold text-gray-900 p-6">Actividad reciente</h2>
-            <div className="overflow-x-auto">
-                <Table>
-                    <TableHeader className="text-xs text-gray-700 uppercase bg-pink-50">
+        <Card className="mt-10 overflow-hidden">
+            <CardHeader>
+                <CardTitle>Actividad reciente</CardTitle>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
                         <TableRow>
                             <TableHead>Fecha</TableHead>
                             <TableHead>Actividad</TableHead>
@@ -74,17 +76,17 @@ const RecentActivityTable = () => {
                     </TableHeader>
                     <TableBody>
                         {orders.map((order) => (
-                        <TableRow key={order.id} className="bg-white border-b border-pink-100">
+                        <TableRow key={order.id}>
                             <TableCell>{new Date((order.createdAt as any).seconds * 1000).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</TableCell>
-                            <TableCell className="font-medium text-gray-900">Nuevo pedido #{order.id.substring(0,7)}</TableCell>
+                            <TableCell className="font-medium">Nuevo pedido #{order.id.substring(0,7)}</TableCell>
                             <TableCell>{order.customerInfo.name}</TableCell>
                             <TableCell>S/{order.totalAmount.toFixed(2)}</TableCell>
                         </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     )
 }
 
@@ -162,8 +164,8 @@ export default function AdminDashboardPage() {
     <>
       <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Panel de control</h1>
-              <p className="text-gray-500 mt-1">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <h1 className="text-3xl font-bold">Panel de control</h1>
+              <p className="text-muted-foreground">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -185,12 +187,16 @@ export default function AdminDashboardPage() {
               icon={Users}
               loading={loading}
               />
-               <Card className="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center text-center gap-4">
-                  <h3 className="font-semibold text-gray-900">Acceso Rápido</h3>
-                  <Button onClick={() => setIsScannerOpen(true)} className="w-full">
-                    <QrCode className="mr-2 h-4 w-4" />
-                    Registrar Mi Asistencia
-                  </Button>
+               <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Acceso Rápido</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Button onClick={() => setIsScannerOpen(true)} className="w-full">
+                        <QrCode className="mr-2 h-4 w-4" />
+                        Registrar Mi Asistencia
+                    </Button>
+                  </CardContent>
               </Card>
           </div>
           

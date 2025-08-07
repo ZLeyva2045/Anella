@@ -28,7 +28,7 @@ const AlertItem = ({ icon: Icon, title, count, linkHref, linkText, colorClass }:
   return (
     <div className={`flex items-center gap-4`}>
       <div className={`p-2 rounded-full ${colorClass}`}>
-         <Icon className="h-5 w-5" />
+         <Icon className="h-5 w-5 text-current" />
       </div>
       <div className="flex-1">
         <p className="font-semibold text-sm">{count} {title}</p>
@@ -109,31 +109,33 @@ export function DashboardAlerts() {
 
   if (loading) {
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+        <Card className="flex items-center justify-center h-full">
+            <CardContent>
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </CardContent>
+        </Card>
     )
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center h-full">
-        <div className="flex items-center gap-3 mb-4">
-             <div className="p-3 rounded-full bg-amber-100 text-amber-500">
-                <AlertTriangle className="h-7 w-7" />
+    <Card className="flex flex-col justify-center h-full">
+        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+             <div className="p-3 rounded-full bg-amber-100 text-amber-500 dark:bg-amber-900/50 dark:text-amber-400">
+                <AlertTriangle className="h-7 w-7 text-current" />
              </div>
              <div>
-                <p className="text-sm font-medium text-gray-500">Alertas Activas</p>
-                <p className="text-2xl font-bold text-gray-900">{totalAlerts}</p>
+                <CardTitle>Alertas Activas</CardTitle>
+                <CardDescription className="text-2xl font-bold">{totalAlerts}</CardDescription>
              </div>
-        </div>
-        <div className="space-y-3">
+        </CardHeader>
+        <CardContent className="space-y-3">
              <AlertItem
               icon={ShoppingCart}
               title="Pedidos Pendientes"
               count={pendingOrders.length}
               linkHref="/admin/orders"
               linkText="Procesar"
-              colorClass="bg-blue-100 text-blue-600"
+              colorClass="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
             />
              <AlertItem
               icon={Sparkles}
@@ -141,7 +143,7 @@ export function DashboardAlerts() {
               count={inProgressOrders.length}
               linkHref="/admin/orders"
               linkText="Ver en curso"
-              colorClass="bg-purple-100 text-purple-600"
+              colorClass="bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400"
             />
             <AlertItem
               icon={Package}
@@ -149,7 +151,7 @@ export function DashboardAlerts() {
               count={lowStockProducts.length}
               linkHref="/admin/products"
               linkText="Revisar"
-              colorClass="bg-amber-100 text-amber-600"
+              colorClass="bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400"
             />
             <AlertItem
               icon={CalendarClock}
@@ -157,12 +159,12 @@ export function DashboardAlerts() {
               count={expiringProducts.length}
               linkHref="/admin/compras"
               linkText="Ver lotes"
-              colorClass="bg-red-100 text-red-600"
+              colorClass="bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400"
             />
-        </div>
-        {totalAlerts === 0 && (
-             <p className="text-center text-sm text-muted-foreground pt-4">¡Todo en orden!</p>
-        )}
+             {totalAlerts === 0 && (
+                <p className="text-center text-sm text-muted-foreground pt-4">¡Todo en orden!</p>
+            )}
+        </CardContent>
     </div>
   );
 }

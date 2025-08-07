@@ -31,19 +31,19 @@ import { recordAttendance } from '@/services/attendanceService';
 const MetricCard = ({ title, value, icon, loading }: { title: string, value: string, icon: React.ElementType, loading?: boolean }) => {
   const Icon = icon;
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm flex items-center gap-6">
-       <div className="p-3 rounded-full bg-secondary text-primary">
-            <Icon className="h-7 w-7" />
-       </div>
-       <div>
-            <p className="text-sm font-medium text-gray-500">{title}</p>
+    <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            <Icon className="h-6 w-6 text-muted-foreground" />
+       </CardHeader>
+       <CardContent>
             {loading ? (
                 <Loader2 className="h-8 w-8 animate-spin mt-1" />
             ) : (
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <div className="text-2xl font-bold">{value}</div>
             )}
-       </div>
-    </div>
+       </CardContent>
+    </Card>
   );
 };
 
@@ -89,11 +89,13 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
     }
 
     return (
-        <div className="mt-10 bg-white rounded-lg shadow-sm overflow-hidden">
-            <h2 className="text-lg font-semibold text-gray-900 p-6">Mis Pedidos Recientes</h2>
-             <div className="overflow-x-auto">
+        <Card className="mt-10 overflow-hidden">
+            <CardHeader>
+                <CardTitle>Mis Pedidos Recientes</CardTitle>
+            </CardHeader>
+             <CardContent>
                 <Table>
-                    <TableHeader className="text-xs text-gray-700 uppercase bg-pink-50">
+                    <TableHeader>
                         <TableRow>
                             <TableHead>Pedido</TableHead>
                             <TableHead>Cliente</TableHead>
@@ -120,8 +122,8 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
                         ))}
                     </TableBody>
                 </Table>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     )
 }
 
@@ -197,8 +199,8 @@ export default function SalesDashboardPage() {
       <>
         <div className="max-w-7xl mx-auto">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Dashboard de Ventas</h1>
-                <p className="text-gray-500 mt-1">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <h1 className="text-3xl font-bold">Dashboard de Ventas</h1>
+                <p className="text-muted-foreground">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -214,12 +216,16 @@ export default function SalesDashboardPage() {
                     icon={CreditCard}
                     loading={loading}
                 />
-                 <Card className="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center text-center gap-4">
-                  <h3 className="font-semibold text-gray-900">Acceso Rápido</h3>
-                  <Button onClick={() => setIsScannerOpen(true)} className="w-full">
-                    <QrCode className="mr-2 h-4 w-4" />
-                    Registrar Mi Asistencia
-                  </Button>
+                 <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Acceso Rápido</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Button onClick={() => setIsScannerOpen(true)} className="w-full">
+                        <QrCode className="mr-2 h-4 w-4" />
+                        Registrar Mi Asistencia
+                    </Button>
+                  </CardContent>
                 </Card>
                 <MetricCard
                     title="Mi Tasa de Cierre"

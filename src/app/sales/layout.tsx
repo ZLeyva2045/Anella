@@ -46,7 +46,7 @@ const SalesNav = () => {
     
     return (
         <Sidebar>
-            <SidebarHeader className="h-20 justify-center border-b border-gray-200">
+            <SidebarHeader className="h-20 justify-center">
                  <Link href="/sales">
                     <Image
                     src="https://i.ibb.co/MyXzBh0r/Anella.png"
@@ -64,7 +64,7 @@ const SalesNav = () => {
                             asChild
                             isActive={pathname === '/sales'}
                             tooltip={{ children: "Dashboard" }}
-                            className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
+                            className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
                          >
                             <Link href="/sales"><Home /><span>Dashboard</span></Link>
                         </SidebarMenuButton>
@@ -74,7 +74,7 @@ const SalesNav = () => {
                             asChild
                             isActive={isActive('/sales/pos')}
                             tooltip={{ children: "Punto de Venta" }}
-                            className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
+                            className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
                         >
                              <Link href="/sales/pos"><Store /><span>Punto de Venta</span></Link>
                         </SidebarMenuButton>
@@ -84,7 +84,7 @@ const SalesNav = () => {
                             asChild
                             isActive={isActive('/sales/calculator')}
                             tooltip={{ children: "Calculadora" }}
-                            className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
+                            className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
                         >
                              <Link href="/sales/calculator"><Calculator /><span>Calculadora</span></Link>
                         </SidebarMenuButton>
@@ -94,7 +94,7 @@ const SalesNav = () => {
                             asChild
                             isActive={isActive('/sales/orders')}
                             tooltip={{ children: "Pedidos" }}
-                            className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
+                            className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
                         >
                              <Link href="/sales/orders"><ShoppingCart /><span>Pedidos</span></Link>
                         </SidebarMenuButton>
@@ -104,7 +104,7 @@ const SalesNav = () => {
                             asChild
                             isActive={isActive('/sales/customers')}
                             tooltip={{ children: "Clientes" }}
-                            className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
+                            className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
                         >
                              <Link href="/sales/customers"><Users /><span>Clientes</span></Link>
                         </SidebarMenuButton>
@@ -114,7 +114,7 @@ const SalesNav = () => {
                             asChild
                             isActive={isActive('/products')}
                             tooltip={{ children: "Catálogo" }}
-                            className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
+                            className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
                         >
                              <Link href="/products"><Package /><span>Catálogo</span></Link>
                         </SidebarMenuButton>
@@ -124,7 +124,7 @@ const SalesNav = () => {
             <SidebarFooter>
                  <SidebarMenu className="px-4">
                     <SidebarMenuItem>
-                         <SidebarMenuButton asChild isActive={isActive('/admin/settings')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{ children: "Configuración" }}>
+                         <SidebarMenuButton asChild isActive={isActive('/admin/settings')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{ children: "Configuración" }}>
                              <Link href="/admin/settings"><Settings /><span>Configuración</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -166,7 +166,7 @@ export default function SalesLayout({
                 <div className="flex min-h-screen">
                      <SalesNav />
                     <div className="flex-1 flex flex-col">
-                         <header className="flex h-20 items-center justify-end whitespace-nowrap border-b border-solid border-pink-100 bg-card px-8">
+                         <header className="flex h-20 items-center justify-end whitespace-nowrap border-b bg-card px-8">
                             <div className="flex items-center gap-4">
                                 <Button variant="ghost" size="icon" className="relative rounded-full p-2 text-muted-foreground hover:bg-secondary hover:text-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                                     <span className="sr-only">Ver notificaciones</span>

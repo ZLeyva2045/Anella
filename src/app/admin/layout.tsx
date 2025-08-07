@@ -65,7 +65,7 @@ const AdminNav = () => {
     
     return (
       <Sidebar>
-        <SidebarHeader className="h-20 justify-center border-b border-gray-200">
+        <SidebarHeader className="h-20 justify-center">
           <Link href="/admin">
             <Image
               src="https://i.ibb.co/MyXzBh0r/Anella.png"
@@ -79,50 +79,50 @@ const AdminNav = () => {
         <SidebarContent>
              <SidebarMenu className="px-4">
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === '/admin'} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Inicio"}}><Link href="/admin"><Home /><span>Inicio</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={pathname === '/admin'} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Inicio"}}><Link href="/admin"><Home /><span>Inicio</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/customers')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Clientes"}}><Link href="/admin/customers"><Users /><span>Clientes</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/customers')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Clientes"}}><Link href="/admin/customers"><Users /><span>Clientes</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/employees')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Empleados"}}><Link href="/admin/employees"><UserCog /><span>Empleados</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/employees')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Empleados"}}><Link href="/admin/employees"><UserCog /><span>Empleados</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/products')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Productos"}}><Link href="/admin/products"><Package /><span>Productos</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/products')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Productos"}}><Link href="/admin/products"><Package /><span>Productos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/gifts')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Regalos"}}><Link href="/admin/gifts"><Gift /><span>Regalos</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/gifts')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Regalos"}}><Link href="/admin/gifts"><Gift /><span>Regalos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/orders')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Pedidos"}}><Link href="/admin/orders"><ShoppingCart /><span>Pedidos</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/orders')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Pedidos"}}><Link href="/admin/orders"><ShoppingCart /><span>Pedidos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/compras')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Compras"}}><Link href="/admin/compras"><ShoppingBasket /><span>Compras</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/compras')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Compras"}}><Link href="/admin/compras"><ShoppingBasket /><span>Compras</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/expenses')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Gastos"}}><Link href="/admin/expenses"><Receipt /><span>Gastos</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/expenses')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Gastos"}}><Link href="/admin/expenses"><Receipt /><span>Gastos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/payroll')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Nómina"}}><Link href="/admin/payroll"><ClipboardList /><span>RR.HH. / Nómina</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/payroll')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Nómina"}}><Link href="/admin/payroll"><ClipboardList /><span>RR.HH. / Nómina</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/analytics')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Análisis"}}><Link href="/admin/analytics"><BarChart2 /><span>Análisis</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/analytics')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Análisis"}}><Link href="/admin/analytics"><BarChart2 /><span>Análisis</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/statistics')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Estadísticas"}}><Link href="/admin/statistics"><LineChart /><span>Estadísticas</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/statistics')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Estadísticas"}}><Link href="/admin/statistics"><LineChart /><span>Estadísticas</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/reports')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Reportes"}}><Link href="/admin/reports"><FileText /><span>Reportes</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/reports')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Reportes"}}><Link href="/admin/reports"><FileText /><span>Reportes</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/pos')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Punto de Venta"}}><Link href="/admin/pos"><Store /><span>Punto de Venta</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/pos')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Punto de Venta"}}><Link href="/admin/pos"><Store /><span>Punto de Venta</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
              <SidebarMenu className="px-4">
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/settings')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{ children: "Configuración" }}>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/settings')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{ children: "Configuración" }}>
                          <Link href="/admin/settings"><Settings /><span>Configuración</span></Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -160,7 +160,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="flex min-h-screen">
                     <AdminNav />
                     <div className="flex-1 flex flex-col">
-                        <header className="flex h-20 items-center justify-end whitespace-nowrap border-b border-solid border-pink-100 bg-card px-8">
+                        <header className="flex h-20 items-center justify-end whitespace-nowrap border-b bg-card px-8">
                             <div className="flex items-center gap-4">
                                 <Button variant="ghost" size="icon" className="relative rounded-full p-2 text-muted-foreground hover:bg-secondary hover:text-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                                     <span className="sr-only">Ver notificaciones</span>
