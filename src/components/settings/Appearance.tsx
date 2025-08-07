@@ -17,7 +17,7 @@ const accentColors = [
     { name: 'green', label: 'Verde', color: 'hsl(142.1 76.2% 36.3%)' },
     { name: 'orange', label: 'Naranja', color: 'hsl(24.6 95% 53.1%)' },
     { name: 'wine', label: 'Vino', color: 'hsl(347 77% 40%)' },
-    { name: 'military', label: 'Verde Militar', color: 'hsl(84 20% 30%)' },
+    { name: 'military-green', label: 'Verde Militar', color: 'hsl(84 20% 30%)' },
     { name: 'gold', label: 'Dorado', color: 'hsl(45 74% 47%)' },
 ] as const;
 
@@ -28,23 +28,28 @@ export function Appearance() {
     const [theme, setTheme] = useState<Theme>('light');
     const [accentColor, setAccentColor] = useState<AccentColor>('default');
     
-    // This effect ensures we only run on the client, avoiding hydration mismatches.
     useEffect(() => {
         const savedTheme = localStorage.getItem('anella-theme') as Theme | null;
         const savedAccent = localStorage.getItem('anella-accent-color') as AccentColor | null;
         if (savedTheme) setTheme(savedTheme);
         if (savedAccent) setAccentColor(savedAccent);
     }, []);
+    
+    const triggerThemeChange = () => {
+        window.dispatchEvent(new Event('themeChange'));
+    };
 
     const handleThemeChange = (checked: boolean) => {
         const newTheme = checked ? 'dark' : 'light';
         setTheme(newTheme);
         localStorage.setItem('anella-theme', newTheme);
+        triggerThemeChange();
     };
     
     const handleAccentChange = (colorName: AccentColor) => {
         setAccentColor(colorName);
         localStorage.setItem('anella-accent-color', colorName);
+        triggerThemeChange();
     };
 
     return (

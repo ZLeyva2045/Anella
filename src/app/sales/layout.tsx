@@ -148,6 +148,21 @@ export default function SalesLayout({
         const savedAccent = localStorage.getItem('anella-accent-color') || 'default';
         setTheme(savedTheme);
         setAccentColor(savedAccent);
+        
+        const handleStorageChange = () => {
+            const updatedTheme = localStorage.getItem('anella-theme') || 'light';
+            const updatedAccent = localStorage.getItem('anella-accent-color') || 'default';
+            setTheme(updatedTheme);
+            setAccentColor(updatedAccent);
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('themeChange', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('themeChange', handleStorageChange);
+        };
     }, []);
 
     const themeClasses = cn(
