@@ -1,3 +1,4 @@
+
 // src/components/settings/Appearance.tsx
 'use client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -5,19 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Moon, Sun, Palette } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Moon, Sun, Palette, Check } from 'lucide-react';
+import { Separator } from '../ui/separator';
+import { useTheme } from '@/hooks/useTheme';
+import { cn } from '@/lib/utils';
+
 
 const accentColors = [
-    { name: 'Predeterminado', color: 'hsl(336 84% 60%)' },
-    { name: 'Azul', color: '#3b82f6' },
-    { name: 'Verde', color: '#22c55e' },
-    { name: 'Naranja', color: '#f97316' },
+    { name: 'default', label: 'Predeterminado', color: 'hsl(330 84% 70%)' },
+    { name: 'blue', label: 'Azul', color: 'hsl(221.2 83.2% 53.3%)' },
+    { name: 'green', label: 'Verde', color: 'hsl(142.1 76.2% 36.3%)' },
+    { name: 'orange', label: 'Naranja', color: 'hsl(24.6 95% 53.1%)' },
 ];
 
 export function Appearance() {
-    // Lógica para modo oscuro y color de acento iría aquí
-    // Por ahora, es solo UI
+    const { theme, setTheme, accentColor, setAccentColor } = useTheme();
 
     return (
         <Card>
@@ -33,7 +36,11 @@ export function Appearance() {
                         <Sun className="h-5 w-5" /> / <Moon className="h-5 w-5" />
                         Modo Oscuro
                     </Label>
-                    <Switch id="dark-mode" />
+                    <Switch 
+                        id="dark-mode"
+                        checked={theme === 'dark'}
+                        onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                    />
                 </div>
                 <Separator />
                 <div className="space-y-2">
@@ -42,14 +49,20 @@ export function Appearance() {
                     </Label>
                      <div className="flex flex-wrap gap-2 pt-2">
                         {accentColors.map(ac => (
-                             <Button key={ac.name} variant="outline" className="flex items-center gap-2">
+                             <Button 
+                                key={ac.name} 
+                                variant="outline" 
+                                className={cn("flex items-center gap-2", accentColor === ac.name && "border-2 border-primary")}
+                                onClick={() => setAccentColor(ac.name)}
+                            >
                                 <span className="h-4 w-4 rounded-full" style={{ backgroundColor: ac.color }} />
-                                {ac.name}
+                                {ac.label}
+                                {accentColor === ac.name && <Check className="h-4 w-4" />}
                             </Button>
                         ))}
                     </div>
                 </div>
-                <Separator />
+                 <Separator />
                  <div className="space-y-2">
                     <Label>Densidad de la Interfaz</Label>
                     <RadioGroup defaultValue="normal" className="flex gap-4 pt-2">
@@ -65,7 +78,7 @@ export function Appearance() {
                 </div>
             </CardContent>
             <CardFooter>
-                 <Button disabled>Guardar Apariencia</Button>
+                 <Button>Guardar Apariencia</Button>
             </CardFooter>
         </Card>
     );

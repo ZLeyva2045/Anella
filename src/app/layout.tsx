@@ -8,6 +8,7 @@ import { AuthProvider } from '@/hooks/useAuth';
 import { CartProvider } from '@/hooks/useCart';
 import { WhatsAppButton } from '@/components/anella/WhatsAppButton';
 import { cn } from '@/lib/utils';
+import { ThemeProvider } from '@/hooks/useTheme';
 
 const metadata: Metadata = {
   title: 'Anella Boutique',
@@ -24,7 +25,7 @@ export default function RootLayout({
   const showWhatsAppButton = !isAdminOrSalesPath;
   
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -33,13 +34,15 @@ export default function RootLayout({
         <meta name="description" content={String(metadata.description)} />
       </head>
       <body className={cn(isAdminOrSalesPath ? 'sales-dashboard' : '', "antialiased")}>
-        <AuthProvider>
-          <CartProvider>
-            {children}
-            {showWhatsAppButton && <WhatsAppButton />}
-          </CartProvider>
-        </AuthProvider>
-        <Toaster />
+        <ThemeProvider>
+            <AuthProvider>
+            <CartProvider>
+                {children}
+                {showWhatsAppButton && <WhatsAppButton />}
+            </CartProvider>
+            </AuthProvider>
+            <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

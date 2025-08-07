@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -60,7 +61,7 @@
   }
 
   /* Estilos específicos para los dashboards de admin/sales */
-  .admin-dashboard, .sales-dashboard {
+  .sales-dashboard {
       --background: 0 0% 98%;
       --foreground: 222.2 47.4% 11.2%;
       --card: 0 0% 100%;
@@ -79,6 +80,31 @@
       --input: 214.3 31.8% 91.4%;
       --ring: 330 84% 70%;
   }
+
+  .sales-dashboard.theme-blue {
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222.2 47.4% 95.2%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --ring: 221.2 83.2% 53.3%;
+  }
+
+  .sales-dashboard.theme-green {
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 144.9 80.4% 97.3%;
+    --secondary: 142.1 70.6% 95.1%;
+    --secondary-foreground: 142.1 76.2% 36.3%;
+    --ring: 142.1 76.2% 36.3%;
+  }
+  
+  .sales-dashboard.theme-orange {
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 20 14.3% 97.3%;
+    --secondary: 24.6 95% 95.1%;
+    --secondary-foreground: 24.6 95% 53.1%;
+    --ring: 24.6 95% 53.1%;
+  }
+
 }
 
 @layer base {
