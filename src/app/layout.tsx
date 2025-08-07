@@ -1,4 +1,4 @@
-
+// src/app/layout.tsx
 'use client';
 import { usePathname } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -15,9 +15,6 @@ const metadata: Metadata = {
   description: 'Regalos personalizados desde Cajamarca, Perú.',
 };
 
-type Theme = 'dark' | 'light';
-type AccentColor = 'default' | 'green' | 'blue' | 'orange';
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,23 +23,6 @@ export default function RootLayout({
   const pathname = usePathname();
   const isAdminOrSalesPath = pathname.startsWith('/admin') || pathname.startsWith('/sales');
   const showWhatsAppButton = !isAdminOrSalesPath;
-  
-  const [theme, setTheme] = useState<Theme>('light');
-  const [accentColor, setAccentColor] = useState<AccentColor>('default');
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('anella-theme') as Theme | null;
-    const savedAccent = localStorage.getItem('anella-accent-color') as AccentColor | null;
-    if (savedTheme) setTheme(savedTheme);
-    if (savedAccent) setAccentColor(savedAccent);
-  }, []);
-  
-  const bodyClasses = cn(
-    'antialiased',
-    isAdminOrSalesPath ? 'sales-dashboard' : '',
-    theme,
-    accentColor !== 'default' ? `theme-${accentColor}` : ''
-  );
   
   return (
     <html lang="es" suppressHydrationWarning>
@@ -53,7 +33,7 @@ export default function RootLayout({
         <title>{String(metadata.title)}</title>
         <meta name="description" content={String(metadata.description)} />
       </head>
-      <body className={bodyClasses}>
+      <body className="antialiased">
             <AuthProvider>
             <CartProvider>
                 {children}

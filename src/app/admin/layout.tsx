@@ -1,6 +1,6 @@
 // src/app/admin/layout.tsx
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   Home,
@@ -37,6 +37,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BottomNavBar, type NavItem } from '@/components/shared/BottomNavBar';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
 
 const adminNavItems: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: Home },
@@ -132,36 +134,54 @@ const AdminNav = () => {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { firestoreUser } = useAuth();
+    const [theme, setTheme] = useState('light');
+    const [accentColor, setAccentColor] = useState('default');
+    
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('anella-theme') || 'light';
+        const savedAccent = localStorage.getItem('anella-accent-color') || 'default';
+        setTheme(savedTheme);
+        setAccentColor(savedAccent);
+    }, []);
+
+    const themeClasses = cn(
+        'sales-dashboard',
+        theme,
+        accentColor !== 'default' ? `theme-${accentColor}` : ''
+    );
+    
     return (
-        <SidebarProvider>
-            <div className="flex min-h-screen">
-                <AdminNav />
-                <div className="flex-1 flex flex-col">
-                    <header className="flex h-20 items-center justify-end whitespace-nowrap border-b border-solid border-pink-100 bg-white px-8">
-                        <div className="flex items-center gap-4">
-                            <Button variant="ghost" size="icon" className="relative rounded-full p-2 text-gray-500 hover:bg-secondary hover:text-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                                <span className="sr-only">Ver notificaciones</span>
-                                <Bell />
-                            </Button>
-                            <div className="relative">
-                                <button className="flex items-center gap-2">
-                                    <Avatar className="size-10">
-                                        <AvatarImage src={firestoreUser?.photoURL ?? ''} alt={firestoreUser?.name ?? 'Admin'} />
-                                        <AvatarFallback>{firestoreUser?.name?.charAt(0) ?? 'A'}</AvatarFallback>
-                                    </Avatar>
-                                    <span className="text-sm font-medium text-gray-700 hidden sm:inline">{firestoreUser?.name}</span>
-                                </button>
+        <div className={themeClasses}>
+            <SidebarProvider>
+                <div className="flex min-h-screen">
+                    <AdminNav />
+                    <div className="flex-1 flex flex-col">
+                        <header className="flex h-20 items-center justify-end whitespace-nowrap border-b border-solid border-pink-100 bg-white px-8">
+                            <div className="flex items-center gap-4">
+                                <Button variant="ghost" size="icon" className="relative rounded-full p-2 text-gray-500 hover:bg-secondary hover:text-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    <span className="sr-only">Ver notificaciones</span>
+                                    <Bell />
+                                </Button>
+                                <div className="relative">
+                                    <button className="flex items-center gap-2">
+                                        <Avatar className="size-10">
+                                            <AvatarImage src={firestoreUser?.photoURL ?? ''} alt={firestoreUser?.name ?? 'Admin'} />
+                                            <AvatarFallback>{firestoreUser?.name?.charAt(0) ?? 'A'}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-sm font-medium text-gray-700 hidden sm:inline">{firestoreUser?.name}</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </header>
-                    <SidebarInset className="flex-1 bg-soft-pink">
-                        <main className="p-4 sm:p-6 lg:p-8">
-                            {children}
-                        </main>
-                        <BottomNavBar navItems={adminNavItems} />
-                    </SidebarInset>
+                        </header>
+                        <SidebarInset className="flex-1 bg-soft-pink">
+                            <main className="p-4 sm:p-6 lg:p-8">
+                                {children}
+                            </main>
+                            <BottomNavBar navItems={adminNavItems} />
+                        </SidebarInset>
+                    </div>
                 </div>
-            </div>
-        </SidebarProvider>
+            </SidebarProvider>
+        </div>
     );
 }

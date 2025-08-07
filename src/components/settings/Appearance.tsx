@@ -1,4 +1,3 @@
-
 // src/components/settings/Appearance.tsx
 'use client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -25,24 +24,27 @@ type AccentColor = (typeof accentColors)[number]['name'];
 export function Appearance() {
     const [theme, setTheme] = useState<Theme>('light');
     const [accentColor, setAccentColor] = useState<AccentColor>('default');
-
+    
+    // This effect ensures we only run on the client, avoiding hydration mismatches.
     useEffect(() => {
-        setTheme((localStorage.getItem('anella-theme') as Theme) || 'light');
-        setAccentColor((localStorage.getItem('anella-accent-color') as AccentColor) || 'default');
+        const savedTheme = localStorage.getItem('anella-theme') as Theme | null;
+        const savedAccent = localStorage.getItem('anella-accent-color') as AccentColor | null;
+        if (savedTheme) setTheme(savedTheme);
+        if (savedAccent) setAccentColor(savedAccent);
     }, []);
 
     const handleThemeChange = (checked: boolean) => {
         const newTheme = checked ? 'dark' : 'light';
         setTheme(newTheme);
         localStorage.setItem('anella-theme', newTheme);
-        document.documentElement.classList.toggle('dark', checked);
-        document.documentElement.classList.toggle('light', !checked);
+        // We will reload to apply the theme classes correctly at the layout level
         window.location.reload();
     };
     
     const handleAccentChange = (colorName: AccentColor) => {
         setAccentColor(colorName);
         localStorage.setItem('anella-accent-color', colorName);
+        // We will reload to apply the theme classes correctly at the layout level
         window.location.reload();
     };
 
