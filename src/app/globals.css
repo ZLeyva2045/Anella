@@ -105,6 +105,30 @@
     --ring: 24.6 95% 53.1%;
   }
 
+  .sales-dashboard.theme-wine {
+    --primary: 347 77% 40%;
+    --primary-foreground: 347 77% 95%;
+    --secondary: 347 77% 97%;
+    --secondary-foreground: 347 77% 40%;
+    --ring: 347 77% 40%;
+  }
+
+  .sales-dashboard.theme-military {
+    --primary: 84 20% 30%;
+    --primary-foreground: 84 20% 95%;
+    --secondary: 84 20% 97%;
+    --secondary-foreground: 84 20% 30%;
+    --ring: 84 20% 30%;
+  }
+
+  .sales-dashboard.theme-gold {
+    --primary: 45 74% 47%;
+    --primary-foreground: 45 74% 95%;
+    --secondary: 45 74% 97%;
+    --secondary-foreground: 45 74% 47%;
+    --ring: 45 74% 47%;
+  }
+
 }
 
 @layer base {

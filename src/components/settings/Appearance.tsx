@@ -16,6 +16,9 @@ const accentColors = [
     { name: 'blue', label: 'Azul', color: 'hsl(221.2 83.2% 53.3%)' },
     { name: 'green', label: 'Verde', color: 'hsl(142.1 76.2% 36.3%)' },
     { name: 'orange', label: 'Naranja', color: 'hsl(24.6 95% 53.1%)' },
+    { name: 'wine', label: 'Vino', color: 'hsl(347 77% 40%)' },
+    { name: 'military', label: 'Verde Militar', color: 'hsl(84 20% 30%)' },
+    { name: 'gold', label: 'Dorado', color: 'hsl(45 74% 47%)' },
 ] as const;
 
 type Theme = 'dark' | 'light';
@@ -37,15 +40,11 @@ export function Appearance() {
         const newTheme = checked ? 'dark' : 'light';
         setTheme(newTheme);
         localStorage.setItem('anella-theme', newTheme);
-        // We will reload to apply the theme classes correctly at the layout level
-        window.location.reload();
     };
     
     const handleAccentChange = (colorName: AccentColor) => {
         setAccentColor(colorName);
         localStorage.setItem('anella-accent-color', colorName);
-        // We will reload to apply the theme classes correctly at the layout level
-        window.location.reload();
     };
 
     return (
