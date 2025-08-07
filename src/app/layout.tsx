@@ -8,12 +8,15 @@ import { AuthProvider } from '@/hooks/useAuth';
 import { CartProvider } from '@/hooks/useCart';
 import { WhatsAppButton } from '@/components/anella/WhatsAppButton';
 import { cn } from '@/lib/utils';
-import { ThemeProvider } from '@/hooks/useTheme';
+import { useEffect, useState } from 'react';
 
 const metadata: Metadata = {
   title: 'Anella Boutique',
   description: 'Regalos personalizados desde Cajamarca, Perú.',
 };
+
+type Theme = 'dark' | 'light';
+type AccentColor = 'default' | 'green' | 'blue' | 'orange';
 
 export default function RootLayout({
   children,
@@ -24,6 +27,23 @@ export default function RootLayout({
   const isAdminOrSalesPath = pathname.startsWith('/admin') || pathname.startsWith('/sales');
   const showWhatsAppButton = !isAdminOrSalesPath;
   
+  const [theme, setTheme] = useState<Theme>('light');
+  const [accentColor, setAccentColor] = useState<AccentColor>('default');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('anella-theme') as Theme | null;
+    const savedAccent = localStorage.getItem('anella-accent-color') as AccentColor | null;
+    if (savedTheme) setTheme(savedTheme);
+    if (savedAccent) setAccentColor(savedAccent);
+  }, []);
+  
+  const bodyClasses = cn(
+    'antialiased',
+    isAdminOrSalesPath ? 'sales-dashboard' : '',
+    theme,
+    accentColor !== 'default' ? `theme-${accentColor}` : ''
+  );
+  
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
@@ -33,8 +53,7 @@ export default function RootLayout({
         <title>{String(metadata.title)}</title>
         <meta name="description" content={String(metadata.description)} />
       </head>
-      <body className={cn(isAdminOrSalesPath ? 'sales-dashboard' : '', "antialiased")}>
-        <ThemeProvider>
+      <body className={bodyClasses}>
             <AuthProvider>
             <CartProvider>
                 {children}
@@ -42,7 +61,6 @@ export default function RootLayout({
             </CartProvider>
             </AuthProvider>
             <Toaster />
-        </ThemeProvider>
       </body>
     </html>
   );

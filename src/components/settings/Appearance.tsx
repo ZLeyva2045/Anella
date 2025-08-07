@@ -8,8 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Moon, Sun, Palette, Check } from 'lucide-react';
 import { Separator } from '../ui/separator';
-import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 
 const accentColors = [
@@ -17,10 +17,34 @@ const accentColors = [
     { name: 'blue', label: 'Azul', color: 'hsl(221.2 83.2% 53.3%)' },
     { name: 'green', label: 'Verde', color: 'hsl(142.1 76.2% 36.3%)' },
     { name: 'orange', label: 'Naranja', color: 'hsl(24.6 95% 53.1%)' },
-];
+] as const;
+
+type Theme = 'dark' | 'light';
+type AccentColor = (typeof accentColors)[number]['name'];
 
 export function Appearance() {
-    const { theme, setTheme, accentColor, setAccentColor } = useTheme();
+    const [theme, setTheme] = useState<Theme>('light');
+    const [accentColor, setAccentColor] = useState<AccentColor>('default');
+
+    useEffect(() => {
+        setTheme((localStorage.getItem('anella-theme') as Theme) || 'light');
+        setAccentColor((localStorage.getItem('anella-accent-color') as AccentColor) || 'default');
+    }, []);
+
+    const handleThemeChange = (checked: boolean) => {
+        const newTheme = checked ? 'dark' : 'light';
+        setTheme(newTheme);
+        localStorage.setItem('anella-theme', newTheme);
+        document.documentElement.classList.toggle('dark', checked);
+        document.documentElement.classList.toggle('light', !checked);
+        window.location.reload();
+    };
+    
+    const handleAccentChange = (colorName: AccentColor) => {
+        setAccentColor(colorName);
+        localStorage.setItem('anella-accent-color', colorName);
+        window.location.reload();
+    };
 
     return (
         <Card>
@@ -39,7 +63,7 @@ export function Appearance() {
                     <Switch 
                         id="dark-mode"
                         checked={theme === 'dark'}
-                        onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                        onCheckedChange={handleThemeChange}
                     />
                 </div>
                 <Separator />
@@ -53,7 +77,7 @@ export function Appearance() {
                                 key={ac.name} 
                                 variant="outline" 
                                 className={cn("flex items-center gap-2", accentColor === ac.name && "border-2 border-primary")}
-                                onClick={() => setAccentColor(ac.name)}
+                                onClick={() => handleAccentChange(ac.name)}
                             >
                                 <span className="h-4 w-4 rounded-full" style={{ backgroundColor: ac.color }} />
                                 {ac.label}
