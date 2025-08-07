@@ -120,8 +120,8 @@ const AdminNav = () => {
         <SidebarFooter>
              <SidebarMenu className="px-4">
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild className="text-gray-600 hover:text-primary" tooltip={{ children: "Configuración" }}>
-                         <Link href="#"><Settings /><span>Configuración</span></Link>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/settings')} className="text-gray-600 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{ children: "Configuración" }}>
+                         <Link href="/admin/settings"><Settings /><span>Configuración</span></Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
