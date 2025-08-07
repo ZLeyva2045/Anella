@@ -1,7 +1,7 @@
 
 // src/components/settings/Appearance.tsx
 'use client';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -27,7 +27,7 @@ export function Appearance() {
             <CardHeader>
                 <CardTitle>Apariencia y Tema</CardTitle>
                 <CardDescription>
-                    Personaliza cómo se ve y se siente el panel de control.
+                    Personaliza cómo se ve y se siente el panel de control. Los cambios se guardan automáticamente.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -67,19 +67,16 @@ export function Appearance() {
                     <Label>Densidad de la Interfaz</Label>
                     <RadioGroup defaultValue="normal" className="flex gap-4 pt-2">
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="compact" id="compact" />
-                            <Label htmlFor="compact" className="font-normal">Compacta</Label>
+                            <RadioGroupItem value="compact" id="compact" disabled/>
+                            <Label htmlFor="compact" className="font-normal text-muted-foreground">Compacta (Próximamente)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="normal" id="normal" />
+                            <RadioGroupItem value="normal" id="normal" checked />
                             <Label htmlFor="normal" className="font-normal">Normal</Label>
                         </div>
                     </RadioGroup>
                 </div>
             </CardContent>
-            <CardFooter>
-                 <Button>Guardar Apariencia</Button>
-            </CardFooter>
         </Card>
     );
 }
