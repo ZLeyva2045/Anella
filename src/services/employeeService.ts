@@ -74,6 +74,4 @@ export async function deleteEmployee(employeeId: string) {
   // In a real app, you would now call your cloud function:
   // const deleteUserFunction = httpsCallable(functions, 'deleteUser');
   // await deleteUserFunction({ uid: employeeId });
-
-  console.warn(`User document for ${employeeId} deleted. Remember to delete the Auth user from the Firebase console or a backend function.`);
 }

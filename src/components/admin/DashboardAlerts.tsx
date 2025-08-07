@@ -98,7 +98,7 @@ export function DashboardAlerts() {
             unsubPending();
             unsubInProgress();
         };
-    }
+    };
 
     loadAlerts();
 
@@ -165,6 +165,6 @@ export function DashboardAlerts() {
                 <p className="text-center text-sm text-muted-foreground pt-4">¡Todo en orden!</p>
             )}
         </CardContent>
-    </div>
+    </Card>
   );
 }
