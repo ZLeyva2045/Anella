@@ -80,17 +80,10 @@ function LeaveHistory() {
                       <TableCell>{format(req.leaveDate.toDate(), "P", { locale: es })}</TableCell>
                       <TableCell className="capitalize">{req.shift}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-start gap-1">
                            <Badge variant={getStatusVariant(req.status)} className="capitalize">{req.status}</Badge>
                            {req.status === 'rejected' && req.rejectionReason && (
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <MessageCircleWarning className="h-4 w-4 text-destructive" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="max-w-xs">Motivo del rechazo: {req.rejectionReason}</p>
-                                </TooltipContent>
-                              </Tooltip>
+                             <p className="text-xs text-destructive italic pl-1">Motivo: {req.rejectionReason}</p>
                            )}
                         </div>
                       </TableCell>
