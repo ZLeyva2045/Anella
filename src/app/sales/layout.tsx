@@ -38,7 +38,7 @@ const salesNavItems: NavItem[] = [
   { href: '/sales/orders', label: 'Pedidos', icon: ShoppingCart },
   { href: '/sales/customers', label: 'Clientes', icon: Users },
   { href: '/sales/calculator', label: 'Calculadora', icon: Calculator },
-  { href: '/admin/payroll', label: 'RR.HH.', icon: ClipboardList },
+  { href: '/sales/payroll', label: 'Permisos', icon: ClipboardList },
   { href: '/products', label: 'Catálogo', icon: Package },
 ];
 
@@ -114,11 +114,11 @@ const SalesNav = () => {
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
-                            isActive={isActive('/admin/payroll')}
-                            tooltip={{ children: "RR.HH. / Permisos" }}
+                            isActive={isActive('/sales/payroll')}
+                            tooltip={{ children: "Mis Permisos" }}
                             className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
                         >
-                             <Link href="/admin/payroll"><ClipboardList /><span>RR.HH. / Permisos</span></Link>
+                             <Link href="/sales/payroll"><ClipboardList /><span>Mis Permisos</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
@@ -136,8 +136,8 @@ const SalesNav = () => {
             <SidebarFooter>
                  <SidebarMenu className="px-4">
                     <SidebarMenuItem>
-                         <SidebarMenuButton asChild isActive={isActive('/admin/settings')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{ children: "Configuración" }}>
-                             <Link href="/admin/settings"><Settings /><span>Configuración</span></Link>
+                         <SidebarMenuButton asChild isActive={isActive('/sales/settings')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{ children: "Configuración" }}>
+                             <Link href="/sales/settings"><Settings /><span>Configuración</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>

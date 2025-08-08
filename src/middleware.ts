@@ -1,38 +1,49 @@
 // src/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import type { UserRole } from './types/firestore';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Usamos la cookie 'isLoggedIn' que establecemos manualmente
+  
   const isLoggedIn = request.cookies.get('isLoggedIn')?.value === 'true';
+  const userRole = request.cookies.get('userRole')?.value as UserRole | undefined;
 
-  // Rutas protegidas que requieren autenticación
-  const protectedPaths = ['/dashboard', '/admin', '/sales'];
   const isAdminPath = pathname.startsWith('/admin');
   const isSalesPath = pathname.startsWith('/sales');
   const isDashboardPath = pathname.startsWith('/dashboard');
 
-  // Si el usuario intenta acceder a una ruta protegida y no está logueado
-  if ((isAdminPath || isSalesPath || isDashboardPath) && !isLoggedIn) {
-    // Redirigir a la página de login
+  // Si no está logueado y trata de acceder a una ruta protegida -> redirigir a login
+  if (!isLoggedIn && (isAdminPath || isSalesPath || isDashboardPath)) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirectedFrom', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Si el usuario está logueado e intenta acceder a login o signup
-  const authPaths = ['/login', '/signup', '/forgot-password'];
-  if (authPaths.includes(pathname) && isLoggedIn) {
-    // Redirigir al dashboard como ruta por defecto para usuarios logueados
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Si está logueado...
+  if (isLoggedIn) {
+    // Si intenta acceder a login/signup -> redirigir a su dashboard
+    const authPaths = ['/login', '/signup', '/forgot-password'];
+    if (authPaths.includes(pathname)) {
+        const homeURL = userRole === 'customer' ? '/dashboard' : `/${userRole}`;
+        return NextResponse.redirect(new URL(homeURL, request.url));
+    }
+
+    // --- Control de Acceso por Rol ---
+    // Si un vendedor intenta acceder a una ruta de admin
+    if (userRole === 'sales' && isAdminPath) {
+        return NextResponse.redirect(new URL('/sales', request.url)); // Redirigir a su dashboard de ventas
+    }
+    // Si un cliente intenta acceder a una ruta de admin o ventas
+    if (userRole === 'customer' && (isAdminPath || isSalesPath)) {
+        return NextResponse.redirect(new URL('/dashboard', request.url)); // Redirigir a su dashboard de cliente
+    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  // Ejecutar el middleware en estas rutas
+  // Aplicar middleware a todas las rutas protegidas y de autenticación
   matcher: ['/dashboard/:path*', '/admin/:path*', '/sales/:path*', '/login', '/signup', '/forgot-password'],
 };

@@ -15,7 +15,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
-import type { User as FirestoreUser } from '@/types/firestore';
+import type { User as FirestoreUser, UserRole } from '@/types/firestore';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -26,7 +26,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<UserCredential>;
   signOut: () => Promise<void>;
   sendPasswordResetEmail: (email: string) => Promise<void>;
-  getUserRole: (userId: string) => Promise<string | null>;
+  getUserRole: (userId: string) => Promise<UserRole | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await getUserRole(user.uid);
       } else {
         eraseCookie('isLoggedIn');
+        eraseCookie('userRole'); // Clear role cookie on logout
         setFirestoreUser(null);
       }
       setLoading(false);
@@ -74,8 +75,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (userDoc.exists()) {
       const userData = { id: userDoc.id, ...userDoc.data() } as FirestoreUser;
       setFirestoreUser(userData);
+      if(userData.role) {
+        setCookie('userRole', userData.role, 7); // Set role cookie
+      }
       return userData.role || null;
     }
+    eraseCookie('userRole'); // Clear role cookie if no user doc
     setFirestoreUser(null);
     return null;
   };
@@ -111,8 +116,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 orders: [],
                 role: 'customer',
                 photoURL: user.photoURL || '',
+                createdAt: new Date(),
             };
             await setDoc(userDocRef, newUser);
+            setCookie('userRole', 'customer', 7);
         }
     }
     return userCredential;
@@ -121,6 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await firebaseSignOut(auth);
     eraseCookie('isLoggedIn');
+    eraseCookie('userRole');
     setFirestoreUser(null);
   };
   
