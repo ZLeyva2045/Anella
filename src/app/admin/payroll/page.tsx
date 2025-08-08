@@ -79,7 +79,7 @@ export default function PayrollPage() {
         </TabsContent>
 
         <TabsContent value="permisos">
-            {isAdmin ? <LeaveManagement /> : <LeaveRequestForm />}
+            <LeaveManagement />
         </TabsContent>
 
         <TabsContent value="reportes">

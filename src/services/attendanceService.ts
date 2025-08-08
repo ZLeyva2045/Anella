@@ -128,3 +128,45 @@ export async function recordAttendance(registrarId: string, employeeIdFromQR: st
 
   return { ...newRecord, id: newDocRef.id };
 }
+
+/**
+ * Records a manual attendance entry by an administrator.
+ * @param registrarId - The ID of the admin performing the action.
+ * @param data - The details of the manual attendance record.
+ */
+export async function recordManualAttendance(
+  registrarId: string,
+  data: {
+    employeeId: string;
+    type: 'check-in' | 'check-out';
+    shift: 'morning' | 'afternoon';
+    isLate: boolean;
+    date: Date;
+  }
+): Promise<string> {
+  const { employeeId, type, shift, isLate, date } = data;
+
+  // Set the timestamp to a specific time within the selected shift on the selected day
+  let recordTimestamp: Date;
+  if (type === 'check-in') {
+      recordTimestamp = shift === 'morning' 
+          ? new Date(date.getFullYear(), date.getMonth(), date.getDate(), 8, 0, 0)
+          : new Date(date.getFullYear(), date.getMonth(), date.getDate(), 15, 0, 0);
+  } else { // check-out
+      recordTimestamp = shift === 'morning' 
+          ? new Date(date.getFullYear(), date.getMonth(), date.getDate(), 13, 0, 0)
+          : new Date(date.getFullYear(), date.getMonth(), date.getDate(), 20, 0, 0);
+  }
+
+  const newRecord: Omit<Attendance, 'id'> = {
+    employeeId: employeeId,
+    registrarId: registrarId,
+    timestamp: Timestamp.fromDate(recordTimestamp),
+    type: type,
+    shift: shift,
+    status: isLate && type === 'check-in' ? 'late' : 'on-time',
+  };
+
+  const newDocRef = await addDoc(collection(db, 'attendance'), newRecord);
+  return newDocRef.id;
+}
