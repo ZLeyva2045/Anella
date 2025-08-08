@@ -50,7 +50,7 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/expenses', label: 'Gastos', icon: Receipt },
   { href: '/admin/customers', label: 'Clientes', icon: Users },
   { href: '/admin/employees', label: 'Empleados', icon: UserCog },
-  { href: '/admin/payroll', label: 'Nómina', icon: ClipboardList },
+  { href: '/admin/payroll', label: 'RR.HH.', icon: ClipboardList },
   { href: '/admin/reports', label: 'Reportes', icon: FileText },
   { href: '/admin/statistics', label: 'Estadísticas', icon: LineChart },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
@@ -103,7 +103,7 @@ const AdminNav = () => {
                     <SidebarMenuButton asChild isActive={isActive('/admin/expenses')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Gastos"}}><Link href="/admin/expenses"><Receipt /><span>Gastos</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/admin/payroll')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Nómina"}}><Link href="/admin/payroll"><ClipboardList /><span>RR.HH. / Nómina</span></Link></SidebarMenuButton>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/payroll')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "RR.HH. / Nómina"}}><Link href="/admin/payroll"><ClipboardList /><span>RR.HH. / Nómina</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive('/admin/analytics')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Análisis"}}><Link href="/admin/analytics"><BarChart2 /><span>Análisis</span></Link></SidebarMenuButton>

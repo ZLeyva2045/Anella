@@ -11,6 +11,7 @@ import {
   Store,
   Calculator,
   Bell,
+  ClipboardList,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -37,6 +38,7 @@ const salesNavItems: NavItem[] = [
   { href: '/sales/orders', label: 'Pedidos', icon: ShoppingCart },
   { href: '/sales/customers', label: 'Clientes', icon: Users },
   { href: '/sales/calculator', label: 'Calculadora', icon: Calculator },
+  { href: '/admin/payroll', label: 'RR.HH.', icon: ClipboardList },
   { href: '/products', label: 'Catálogo', icon: Package },
 ];
 
@@ -107,6 +109,16 @@ const SalesNav = () => {
                             className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
                         >
                              <Link href="/sales/customers"><Users /><span>Clientes</span></Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={isActive('/admin/payroll')}
+                            tooltip={{ children: "RR.HH. / Permisos" }}
+                            className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary"
+                        >
+                             <Link href="/admin/payroll"><ClipboardList /><span>RR.HH. / Permisos</span></Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
