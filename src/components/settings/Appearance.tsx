@@ -19,6 +19,9 @@ const accentColors = [
     { name: 'wine', label: 'Vino', color: 'hsl(347 77% 40%)' },
     { name: 'military-green', label: 'Verde Militar', color: 'hsl(84 20% 30%)' },
     { name: 'gold', label: 'Dorado', color: 'hsl(45 74% 47%)' },
+    { name: 'forest-green', label: 'Verde Bosque', color: '#002b1d' },
+    { name: 'intense-red', label: 'Rojo Intenso', color: '#ce0809' },
+    { name: 'purple', label: 'Púrpura', color: '#9d00ff' },
 ] as const;
 
 type Theme = 'dark' | 'light';

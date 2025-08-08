@@ -150,6 +150,30 @@
     --secondary-foreground: 45 74% 47%;
     --ring: 45 74% 47%;
   }
+  
+  .sales-dashboard.theme-forest-green {
+    --primary: 160 100% 9%;
+    --primary-foreground: 160 100% 95%;
+    --secondary: 160 100% 97%;
+    --secondary-foreground: 160 100% 9%;
+    --ring: 160 100% 9%;
+  }
+
+  .sales-dashboard.theme-intense-red {
+    --primary: 360 95% 42%;
+    --primary-foreground: 360 95% 95%;
+    --secondary: 360 95% 97%;
+    --secondary-foreground: 360 95% 42%;
+    --ring: 360 95% 42%;
+  }
+  
+  .sales-dashboard.theme-purple {
+    --primary: 277 100% 50%;
+    --primary-foreground: 277 100% 95%;
+    --secondary: 277 100% 97%;
+    --secondary-foreground: 277 100% 50%;
+    --ring: 277 100% 50%;
+  }
 }
 
 @layer components {
