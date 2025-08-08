@@ -25,10 +25,15 @@ import { AttendanceTracker } from '@/components/admin/payroll/AttendanceTracker'
 import { PerformanceReview } from '@/components/admin/payroll/PerformanceReview';
 import { FeedbackManager } from '@/components/admin/payroll/FeedbackManager';
 import { ReportGenerator } from '@/components/admin/payroll/reports/ReportGenerator';
+import { LeaveRequestForm } from '@/components/admin/payroll/LeaveRequestForm';
+import { LeaveManagement } from '@/components/admin/payroll/LeaveManagement';
+import { useAuth } from '@/hooks/useAuth';
 
 
 export default function PayrollPage() {
   const [employees, setEmployees] = useState<User[]>([]);
+  const { firestoreUser } = useAuth();
+  const isAdmin = firestoreUser?.role === 'manager';
 
   useEffect(() => {
     const employeeRoles = ['manager', 'sales', 'designer', 'manufacturing', 'creative'];
@@ -53,10 +58,11 @@ export default function PayrollPage() {
       </div>
 
       <Tabs defaultValue="asistencias" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="asistencias">Asistencias</TabsTrigger>
           <TabsTrigger value="evaluaciones">Evaluaciones</TabsTrigger>
           <TabsTrigger value="retroalimentacion">Retroalimentación</TabsTrigger>
+          <TabsTrigger value="permisos">Permisos</TabsTrigger>
           <TabsTrigger value="reportes">Reportes</TabsTrigger>
         </TabsList>
 
@@ -70,6 +76,10 @@ export default function PayrollPage() {
 
         <TabsContent value="retroalimentacion">
           <FeedbackManager employees={employees} />
+        </TabsContent>
+
+        <TabsContent value="permisos">
+            {isAdmin ? <LeaveManagement /> : <LeaveRequestForm />}
         </TabsContent>
 
         <TabsContent value="reportes">

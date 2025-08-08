@@ -280,6 +280,20 @@ export interface Feedback {
   createdAt: Timestamp;
 }
 
+export interface LeaveRequest {
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    requestDate: Timestamp;
+    leaveDate: Timestamp;
+    shift: 'morning' | 'afternoon' | 'full-day';
+    justification: string;
+    attachmentUrl?: string;
+    status: 'pending' | 'approved' | 'rejected';
+    reviewedBy?: string; // Admin's ID
+    reviewedAt?: Timestamp;
+}
+
 /**
  * Represents the attendance status for a single day.
  */
