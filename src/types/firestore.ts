@@ -294,6 +294,18 @@ export interface LeaveRequest {
     reviewedAt?: Timestamp;
 }
 
+export interface Notification {
+    id: string;
+    userId: string;
+    title: string;
+    message: string;
+    link?: string;
+    isRead: boolean;
+    createdAt: Timestamp;
+    type: 'leave_approved' | 'leave_rejected' | 'new_order' | 'low_stock';
+}
+
+
 /**
  * Represents the attendance status for a single day.
  */

@@ -31,6 +31,10 @@ import { usePathname } from 'next/navigation';
 import { BottomNavBar, type NavItem } from '@/components/shared/BottomNavBar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { collection, query, where, onSnapshot, writeBatch } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import type { Notification } from '@/types/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 const salesNavItems: NavItem[] = [
   { href: '/sales', label: 'Dashboard', icon: Home },
@@ -153,6 +157,7 @@ export default function SalesLayout({
 }) {
     const { firestoreUser } = useAuth();
     const [themeClasses, setThemeClasses] = useState('');
+    const { toast } = useToast();
     
     useEffect(() => {
         const updateTheme = () => {
@@ -169,6 +174,42 @@ export default function SalesLayout({
             window.removeEventListener('storage', updateTheme);
         };
     }, []);
+
+    useEffect(() => {
+        if (!firestoreUser?.id) return;
+
+        const notificationsRef = collection(db, 'notifications');
+        const q = query(
+            notificationsRef, 
+            where('userId', '==', firestoreUser.id),
+            where('isRead', '==', false)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (snapshot.empty) return;
+
+            const batch = writeBatch(db);
+            snapshot.docs.forEach(doc => {
+                const notification = doc.data() as Notification;
+                toast({
+                    title: notification.title,
+                    description: notification.message,
+                    action: notification.link ? (
+                        <Button asChild variant="secondary" size="sm">
+                           <Link href={notification.link}>Ver</Link>
+                        </Button>
+                    ) : undefined,
+                });
+                const docRef = doc.ref;
+                batch.update(docRef, { isRead: true });
+            });
+
+            batch.commit().catch(err => console.error("Error updating notifications: ", err));
+        });
+
+        return () => unsubscribe();
+
+    }, [firestoreUser?.id, toast]);
 
     return (
         <div className={cn('sales-dashboard', themeClasses)}>
