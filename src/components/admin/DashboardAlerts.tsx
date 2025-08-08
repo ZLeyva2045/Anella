@@ -109,8 +109,8 @@ export function DashboardAlerts() {
 
   if (loading) {
     return (
-        <Card className="flex items-center justify-center h-full">
-            <CardContent>
+        <Card className="flex items-center justify-center min-h-[160px]">
+            <CardContent className="p-6">
                 <Loader2 className="h-8 w-8 animate-spin" />
             </CardContent>
         </Card>
@@ -119,16 +119,16 @@ export function DashboardAlerts() {
 
   return (
     <Card className="flex flex-col justify-center h-full">
-        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+        <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
              <div className="p-3 rounded-full bg-amber-100 text-amber-500 dark:bg-amber-900/50 dark:text-amber-400">
-                <AlertTriangle className="h-7 w-7 text-current" />
+                <AlertTriangle className="h-6 w-6 text-current" />
              </div>
              <div>
                 <CardTitle>Alertas Activas</CardTitle>
-                <CardDescription className="text-2xl font-bold">{totalAlerts}</CardDescription>
+                <CardDescription className="text-xl font-bold">{totalAlerts}</CardDescription>
              </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 pt-2">
              <AlertItem
               icon={ShoppingCart}
               title="Pedidos Pendientes"

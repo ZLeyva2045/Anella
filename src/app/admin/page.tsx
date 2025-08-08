@@ -9,15 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, Users, CreditCard, Loader2, QrCode } from 'lucide-react';
+import { DollarSign, Users, CreditCard, Loader2 } from 'lucide-react';
 import type { Order, User } from '@/types/firestore';
 import { collection, onSnapshot, query, orderBy, limit, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { DashboardAlerts } from '@/components/admin/DashboardAlerts';
 import { Button } from '@/components/ui/button';
-import { QrCodeScannerDialog } from '@/components/shared/QrCodeScannerDialog';
 import { useToast } from '@/hooks/use-toast';
-import { recordAttendance } from '@/services/attendanceService';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -97,7 +95,6 @@ export default function AdminDashboardPage() {
     completedSales: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { toast } = useToast();
   const { firestoreUser } = useAuth();
 
@@ -141,25 +138,6 @@ export default function AdminDashboardPage() {
     };
   }, []);
 
-  const handleScanSuccess = useCallback(async (qrContent: string) => {
-    setIsScannerOpen(false);
-    if (!firestoreUser) return;
-
-    try {
-      await recordAttendance(firestoreUser.id, qrContent);
-      toast({
-        title: 'Asistencia Registrada',
-        description: 'Tu entrada/salida ha sido registrada correctamente.',
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error al registrar',
-        description: error.message,
-      });
-    }
-  }, [firestoreUser, toast]);
-
   return (
     <>
       <div className="max-w-7xl mx-auto">
@@ -187,31 +165,11 @@ export default function AdminDashboardPage() {
               icon={Users}
               loading={loading}
               />
-               <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Acceso Rápido</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Button onClick={() => setIsScannerOpen(true)} className="w-full">
-                        <QrCode className="mr-2 h-4 w-4" />
-                        Registrar Mi Asistencia
-                    </Button>
-                  </CardContent>
-              </Card>
+              <DashboardAlerts />
           </div>
           
-          <div className="mt-6">
-            <DashboardAlerts />
-          </div>
-
           <RecentActivityTable />
       </div>
-
-      <QrCodeScannerDialog
-        isOpen={isScannerOpen}
-        setIsOpen={setIsScannerOpen}
-        onScanSuccess={handleScanSuccess}
-      />
     </>
   );
 }
