@@ -23,34 +23,48 @@ const accentColors = [
 
 type Theme = 'dark' | 'light';
 type AccentColor = (typeof accentColors)[number]['name'];
+type Density = 'normal' | 'compact';
+
 
 export function Appearance() {
     const [theme, setTheme] = useState<Theme>('light');
     const [accentColor, setAccentColor] = useState<AccentColor>('default');
+    const [density, setDensity] = useState<Density>('normal');
     
     useEffect(() => {
         const savedTheme = localStorage.getItem('anella-theme') as Theme | null;
         const savedAccent = localStorage.getItem('anella-accent-color') as AccentColor | null;
+        const savedDensity = localStorage.getItem('anella-density') as Density | null;
+
         if (savedTheme) setTheme(savedTheme);
         if (savedAccent) setAccentColor(savedAccent);
+        if (savedDensity) setDensity(savedDensity);
+
     }, []);
     
-    const triggerThemeChange = () => {
-        window.dispatchEvent(new Event('themeChange'));
+    const triggerStorageChange = () => {
+        // This event is listened to by the layouts to update the className
+        window.dispatchEvent(new Event('storage'));
     };
 
     const handleThemeChange = (checked: boolean) => {
         const newTheme = checked ? 'dark' : 'light';
         setTheme(newTheme);
         localStorage.setItem('anella-theme', newTheme);
-        triggerThemeChange();
+        triggerStorageChange();
     };
     
     const handleAccentChange = (colorName: AccentColor) => {
         setAccentColor(colorName);
         localStorage.setItem('anella-accent-color', colorName);
-        triggerThemeChange();
+        triggerStorageChange();
     };
+
+    const handleDensityChange = (densityValue: Density) => {
+        setDensity(densityValue);
+        localStorage.setItem('anella-density', densityValue);
+        triggerStorageChange();
+    }
 
     return (
         <Card>
@@ -95,13 +109,13 @@ export function Appearance() {
                  <Separator />
                  <div className="space-y-2">
                     <Label>Densidad de la Interfaz</Label>
-                    <RadioGroup defaultValue="normal" className="flex gap-4 pt-2">
+                    <RadioGroup value={density} onValueChange={(value) => handleDensityChange(value as Density)} className="flex gap-4 pt-2">
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="compact" id="compact" disabled/>
-                            <Label htmlFor="compact" className="font-normal text-muted-foreground">Compacta (Próximamente)</Label>
+                            <RadioGroupItem value="compact" id="compact" />
+                            <Label htmlFor="compact" className="font-normal">Compacta</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="normal" id="normal" checked />
+                            <RadioGroupItem value="normal" id="normal" />
                             <Label htmlFor="normal" className="font-normal">Normal</Label>
                         </div>
                     </RadioGroup>

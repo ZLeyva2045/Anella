@@ -134,28 +134,27 @@ const AdminNav = () => {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { firestoreUser } = useAuth();
-    const [accentColor, setAccentColor] = useState('default');
+    const [themeClasses, setThemeClasses] = useState('');
     
     useEffect(() => {
-        const savedAccent = localStorage.getItem('anella-accent-color') || 'default';
-        setAccentColor(savedAccent);
-        
-        const handleStorageChange = () => {
-            const updatedAccent = localStorage.getItem('anella-accent-color') || 'default';
-            setAccentColor(updatedAccent);
+        const updateTheme = () => {
+            const accent = localStorage.getItem('anella-accent-color') || 'default';
+            const density = localStorage.getItem('anella-density') || 'normal';
+            setThemeClasses(`theme-${accent} density-${density}`);
         };
         
-        window.addEventListener('storage', handleStorageChange);
-        window.addEventListener('themeChange', handleStorageChange);
+        updateTheme();
+        
+        // Use 'storage' event to listen for changes from other tabs/windows
+        window.addEventListener('storage', updateTheme);
 
         return () => {
-            window.removeEventListener('storage', handleStorageChange);
-            window.removeEventListener('themeChange', handleStorageChange);
+            window.removeEventListener('storage', updateTheme);
         };
     }, []);
     
     return (
-        <div className={cn("sales-dashboard", accentColor !== 'default' && `theme-${accentColor}`)}>
+        <div className={cn("sales-dashboard", themeClasses)}>
             <SidebarProvider>
                 <div className="flex min-h-screen">
                     <AdminNav />

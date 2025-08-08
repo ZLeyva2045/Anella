@@ -72,7 +72,7 @@
       --primary-foreground: 330 100% 10%;
       --secondary: 330 83% 95%;
       --secondary-foreground: 330 84% 70%;
-      --accent: 207 100% 82%;
+      --accent: 330 83% 97%;
       --accent-foreground: 222.2 47.4% 11.2%;
       --muted: 210 40% 96.1%;
       --muted-foreground: 215.4 16.3% 46.9%;
@@ -94,7 +94,7 @@
     --secondary-foreground: 210 20% 98%;
     --muted: 215 27.9% 16.9%;
     --muted-foreground: 215 25% 65.1%;
-    --accent: 215 27.9% 16.9%;
+    --accent: 215 28% 22%;
     --accent-foreground: 210 20% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 85.7% 97.3%;
@@ -150,7 +150,27 @@
     --secondary-foreground: 45 74% 47%;
     --ring: 45 74% 47%;
   }
+}
 
+@layer components {
+  /* Fixing circular dependency by using raw CSS instead of @apply */
+  .density-compact .p-6 { padding: 1rem; }
+  .density-compact .p-4 { padding: 0.75rem; }
+  .density-compact .h-10 { height: 2.25rem; }
+  .density-compact .h-12 { height: 2.75rem; }
+  .density-compact .h-20 { height: 4rem; }
+  .density-compact .text-lg { font-size: 1rem; line-height: 1.5rem; }
+  .density-compact .text-base { font-size: 0.875rem; line-height: 1.25rem; }
+  .density-compact .text-sm { font-size: 0.75rem; line-height: 1rem; }
+  .density-compact .text-xs { font-size: 0.65rem; line-height: 0.9rem; }
+  .density-compact .text-3xl { font-size: 1.5rem; line-height: 2rem; }
+  .density-compact .text-2xl { font-size: 1.25rem; line-height: 1.75rem; }
+  .density-compact .gap-2 { gap: 0.375rem; }
+  .density-compact .gap-4 { gap: 0.75rem; }
+  .density-compact .gap-6 { gap: 1rem; }
+  .density-compact .gap-8 { gap: 1.5rem; }
+  .density-compact .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+  .density-compact .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
 }
 
 @layer base {
