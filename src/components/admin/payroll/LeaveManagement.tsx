@@ -23,7 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { updateLeaveRequestStatus } from '@/services/leaveService';
 import { useToast } from '@/hooks/use-toast';
 import { LeaveRejectionDialog } from './LeaveRejectionDialog';
-import { Tooltip, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 export function LeaveManagement() {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
