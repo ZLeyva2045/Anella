@@ -7,6 +7,9 @@ import {
   serverTimestamp,
   Timestamp,
   updateDoc,
+  getDoc,
+  WriteBatch,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { LeaveRequest, Notification } from '@/types/firestore';
@@ -20,7 +23,7 @@ type LeaveRequestData = Omit<LeaveRequest, 'id' | 'requestDate' | 'status'>;
  * @param data - The data for the new leave request.
  */
 export async function createLeaveRequest(
-  data: Omit<LeaveRequestData, 'reviewedBy' | 'reviewedAt'>
+  data: Omit<LeaveRequestData, 'reviewedBy' | 'reviewedAt' | 'rejectionReason'>
 ): Promise<string> {
   const leaveRequestsCollection = collection(db, 'leaveRequests');
   const newRequestData: Omit<LeaveRequest, 'id'> = {
@@ -38,24 +41,29 @@ export async function createLeaveRequest(
  * @param requestId - The ID of the leave request to update.
  * @param status - The new status ('approved' or 'rejected').
  * @param reviewedById - The ID of the admin who reviewed the request.
+ * @param rejectionReason - The reason for rejection, if applicable.
  */
 export async function updateLeaveRequestStatus(
   requestId: string,
   status: 'approved' | 'rejected',
-  reviewedById: string
+  reviewedById: string,
+  rejectionReason?: string
 ): Promise<void> {
   const requestRef = doc(db, 'leaveRequests', requestId);
   const notificationRef = doc(collection(db, 'notifications'));
+  const batch = writeBatch(db);
 
-  // Use a transaction or batch write to ensure atomicity
-  const batch = setDoc(db);
-  
-  const requestUpdate = {
-    status: status,
+  const requestUpdate: Partial<LeaveRequest> = {
+    status,
     reviewedBy: reviewedById,
-    reviewedAt: serverTimestamp(),
+    reviewedAt: serverTimestamp() as Timestamp,
   };
-  updateDoc(requestRef, requestUpdate);
+  
+  if (status === 'rejected' && rejectionReason) {
+    requestUpdate.rejectionReason = rejectionReason;
+  }
+
+  batch.update(requestRef, requestUpdate);
 
   // Get the leave request to create the notification message
   const requestSnap = await getDoc(requestRef);
@@ -64,21 +72,27 @@ export async function updateLeaveRequestStatus(
   }
   const leaveRequest = requestSnap.data() as LeaveRequest;
 
+  let message = `Tu solicitud para el día ${format(leaveRequest.leaveDate.toDate(), 'P', { locale: es })} ha sido ${status === 'approved' ? 'aprobada' : 'rechazada'}.`;
+  if(status === 'rejected' && rejectionReason) {
+    message += ` Motivo: ${rejectionReason}`;
+  }
+
   // Create notification
   const notification: Omit<Notification, 'id'> = {
     userId: leaveRequest.employeeId,
     title: `Solicitud de Permiso ${status === 'approved' ? 'Aprobada' : 'Rechazada'}`,
-    message: `Tu solicitud para el día ${format(leaveRequest.leaveDate.toDate(), 'P', { locale: es })} ha sido ${status === 'approved' ? 'aprobada' : 'rechazada'}.`,
+    message: message,
     link: '/sales/payroll',
     isRead: false,
     createdAt: serverTimestamp() as Timestamp,
     type: status === 'approved' ? 'leave_approved' : 'leave_rejected',
   };
-  setDoc(notificationRef, notification);
+  batch.set(notificationRef, notification);
+
+  await batch.commit();
   
   // Here you would add logic to update the attendance record if approved.
   // This might involve creating a special "leave" record in the attendance collection
   // or a related collection to prevent marking the employee as absent.
   // This logic is complex and depends on the final attendance system structure.
 }
-

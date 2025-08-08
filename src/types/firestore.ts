@@ -292,6 +292,8 @@ export interface LeaveRequest {
     status: 'pending' | 'approved' | 'rejected';
     reviewedBy?: string; // Admin's ID
     reviewedAt?: Timestamp;
+    rejectionReason?: string; // Reason for rejection
+    employeeAppeal?: string; // Employee's appeal comment
 }
 
 export interface Notification {

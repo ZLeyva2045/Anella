@@ -8,13 +8,19 @@ import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestor
 import { db } from '@/lib/firebase/config';
 import { useAuth } from '@/hooks/useAuth';
 import type { LeaveRequest } from '@/types/firestore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageCircleWarning } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 
 function LeaveHistory() {
   const { firestoreUser } = useAuth();
@@ -47,42 +53,56 @@ function LeaveHistory() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Mi Historial de Permisos</CardTitle>
-        <CardDescription>Consulta el estado de todas tus solicitudes.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin" /></div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha Solicitada</TableHead>
-                <TableHead>Turno</TableHead>
-                <TableHead>Estado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requests.length === 0 ? (
-                <TableRow><TableCell colSpan={3} className="text-center h-24">No tienes solicitudes.</TableCell></TableRow>
-              ) : (
-                requests.map(req => (
-                  <TableRow key={req.id}>
-                    <TableCell>{format(req.leaveDate.toDate(), "P", { locale: es })}</TableCell>
-                    <TableCell className="capitalize">{req.shift}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(req.status)} className="capitalize">{req.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+    <TooltipProvider>
+      <Card>
+        <CardHeader>
+          <CardTitle>Mi Historial de Permisos</CardTitle>
+          <CardDescription>Consulta el estado de todas tus solicitudes.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin" /></div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha Solicitada</TableHead>
+                  <TableHead>Turno</TableHead>
+                  <TableHead>Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests.length === 0 ? (
+                  <TableRow><TableCell colSpan={3} className="text-center h-24">No tienes solicitudes.</TableCell></TableRow>
+                ) : (
+                  requests.map(req => (
+                    <TableRow key={req.id}>
+                      <TableCell>{format(req.leaveDate.toDate(), "P", { locale: es })}</TableCell>
+                      <TableCell className="capitalize">{req.shift}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                           <Badge variant={getStatusVariant(req.status)} className="capitalize">{req.status}</Badge>
+                           {req.status === 'rejected' && req.rejectionReason && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <MessageCircleWarning className="h-4 w-4 text-destructive" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="max-w-xs">Motivo del rechazo: {req.rejectionReason}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                           )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 }
 
