@@ -23,7 +23,7 @@ const accentColors = [
 
 type Theme = 'dark' | 'light';
 type AccentColor = (typeof accentColors)[number]['name'];
-type Density = 'normal' | 'compact';
+type Density = 'normal' | 'compact' | 'spacious';
 
 
 export function Appearance() {
@@ -117,6 +117,10 @@ export function Appearance() {
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="normal" />
                             <Label htmlFor="normal" className="font-normal">Normal</Label>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="spacious" id="spacious" />
+                            <Label htmlFor="spacious" className="font-normal">Extensa</Label>
                         </div>
                     </RadioGroup>
                 </div>
