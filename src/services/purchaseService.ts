@@ -5,7 +5,8 @@ import {
   writeBatch,
   serverTimestamp,
   runTransaction,
-  increment
+  increment,
+  DocumentReference,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { LoteItem, Product } from '@/types/firestore';
@@ -23,29 +24,44 @@ export async function savePurchaseLote(loteItems: LoteItem[]): Promise<void> {
   }
 
   await runTransaction(db, async (transaction) => {
+    const productRefs = new Map<string, DocumentReference>();
+    const productDataMap = new Map<string, Product>();
+
+    // --- READ PHASE ---
+    // First, gather all product documents that need to be read.
+    for (const item of loteItems) {
+      const productRef = doc(db, 'products', item.productoId);
+      productRefs.set(item.productoId, productRef);
+    }
+    
+    // Then, execute all reads.
+    for (const [productId, productRef] of productRefs.entries()) {
+      const productDoc = await transaction.get(productRef);
+      if (!productDoc.exists()) {
+        throw new Error(`El producto con ID ${productId} no fue encontrado.`);
+      }
+      productDataMap.set(productId, productDoc.data() as Product);
+    }
+
+    // --- WRITE PHASE ---
+    // All reads are done, now we can perform writes.
     for (const item of loteItems) {
       // 1. Create a new document in the 'lotes' collection
       const newLoteRef = doc(collection(db, 'lotes'));
       transaction.set(newLoteRef, item);
 
       // 2. Update the corresponding product in the 'products' collection
-      const productRef = doc(db, 'products', item.productoId);
-      const productDoc = await transaction.get(productRef);
-
-      if (!productDoc.exists()) {
-        throw new Error(`El producto con ID ${item.productoId} no fue encontrado.`);
-      }
+      const productRef = productRefs.get(item.productoId);
       
-      const productData = productDoc.data() as Product;
+      if (productRef) {
+          const updatedData: Partial<Product> = {
+              stock: increment(item.cantidadInicial), // Use cantidadInicial as it's a new lot
+              costPrice: item.costoUnitarioCompra, // We'll just use the latest cost price for simplicity
+              updatedAt: serverTimestamp()
+          } as any; // Cast because serverTimestamp is not a standard field
 
-      // Increment stock and update cost price
-      const updatedData: Partial<Product> = {
-          stock: increment(item.cantidadInicial), // Use cantidadInicial as it's a new lot
-          costPrice: item.costoUnitarioCompra, // We'll just use the latest cost price for simplicity
-          updatedAt: serverTimestamp()
-      } as any; // Cast because serverTimestamp is not a standard field
-
-      transaction.update(productRef, updatedData);
+          transaction.update(productRef, updatedData);
+      }
     }
   });
 }
