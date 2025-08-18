@@ -66,7 +66,7 @@ const AdminNav = () => {
     return (
       <Sidebar>
         <SidebarHeader className="h-20 justify-center">
-          <Link href="/admin">
+          <Link href="/">
             <Image
               src="https://i.ibb.co/MyXzBh0r/Anella.png"
               alt="Anella Boutique Logo"
