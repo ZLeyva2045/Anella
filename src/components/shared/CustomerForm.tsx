@@ -108,7 +108,7 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
     setLoading(false);
   };
   
-  const years = Array.from({ length: 70 }, (_, i) => new Date().getFullYear() - i);
+  const years = Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 18 - i);
   const months = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: format(new Date(0, i), 'MMMM', { locale: es }) }));
   const daysInMonth = (year && month) ? new Date(parseInt(year), parseInt(month), 0).getDate() : 31;
   const days = Array.from({length: daysInMonth}, (_, i) => i + 1);
@@ -155,19 +155,19 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
                  <FormLabel>Fecha de Nacimiento (Opcional)</FormLabel>
                  <div className="flex gap-3">
                     <Select value={month} onValueChange={setMonth}>
-                        <SelectTrigger className="w-full h-20 text-2xl font-bold"><SelectValue placeholder="Mes" /></SelectTrigger>
+                        <SelectTrigger className="w-full h-12 text-base"><SelectValue placeholder="Mes" /></SelectTrigger>
                         <SelectContent>
                             {months.map(m => <SelectItem key={m.value} value={String(m.value)} className="capitalize">{m.label}</SelectItem>)}
                         </SelectContent>
                     </Select>
-                     <Select value={day} onValueChange={setDay} disabled={!month || !year}>
-                        <SelectTrigger className="w-full h-20 text-2xl font-bold"><SelectValue placeholder="Día" /></SelectTrigger>
+                     <Select value={day} onValueChange={setDay} disabled={!month}>
+                        <SelectTrigger className="w-full h-12 text-base"><SelectValue placeholder="Día" /></SelectTrigger>
                         <SelectContent>
                             {days.map(d => <SelectItem key={d} value={String(d)}>{d}</SelectItem>)}
                         </SelectContent>
                     </Select>
                      <Select value={year} onValueChange={setYear}>
-                        <SelectTrigger className="w-full h-20 text-2xl font-bold"><SelectValue placeholder="Año" /></SelectTrigger>
+                        <SelectTrigger className="w-full h-12 text-base"><SelectValue placeholder="Año" /></SelectTrigger>
                         <SelectContent>
                             {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
                         </SelectContent>
