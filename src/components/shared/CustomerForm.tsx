@@ -1,7 +1,7 @@
 // src/components/shared/CustomerForm.tsx
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,10 +26,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { User } from '@/types/firestore';
-import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const customerSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -51,6 +49,10 @@ interface CustomerFormProps {
 
 export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: CustomerFormProps) {
   const [loading, setLoading] = React.useState(false);
+  
+  const [day, setDay] = useState<string | undefined>();
+  const [month, setMonth] = useState<string | undefined>();
+  const [year, setYear] = useState<string | undefined>();
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -67,27 +69,49 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
   useEffect(() => {
     if (isOpen) {
       if (customer) {
+        const birthDate = customer.birthDate ? (customer.birthDate as any).toDate() : undefined;
         form.reset({
           name: customer.name || '',
           email: customer.email || '',
           phone: customer.phone || '',
           address: customer.address || '',
           dni_ruc: customer.dni_ruc || '',
-          birthDate: customer.birthDate ? (customer.birthDate as any).toDate() : undefined,
+          birthDate: birthDate,
         });
+        if (birthDate) {
+            setDay(String(birthDate.getDate()));
+            setMonth(String(birthDate.getMonth() + 1));
+            setYear(String(birthDate.getFullYear()));
+        } else {
+            setDay(undefined); setMonth(undefined); setYear(undefined);
+        }
       } else {
         form.reset({
           name: '', email: '', phone: '', address: '', dni_ruc: '', birthDate: undefined,
         });
+        setDay(undefined); setMonth(undefined); setYear(undefined);
       }
     }
   }, [customer, form, isOpen]);
+
+  useEffect(() => {
+    if(day && month && year) {
+        const newDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        form.setValue('birthDate', newDate, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [day, month, year, form]);
+
 
   const handleFormSubmit = async (data: CustomerFormValues) => {
     setLoading(true);
     await onSubmit(data);
     setLoading(false);
   };
+  
+  const years = Array.from({ length: 70 }, (_, i) => new Date().getFullYear() - i);
+  const months = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: format(new Date(0, i), 'MMMM', { locale: es }) }));
+  const daysInMonth = (year && month) ? new Date(parseInt(year), parseInt(month), 0).getDate() : 31;
+  const days = Array.from({length: daysInMonth}, (_, i) => i + 1);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -126,51 +150,32 @@ export function CustomerForm({ isOpen, setIsOpen, customer, onSubmit }: Customer
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField
-              control={form.control}
-              name="birthDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Fecha de Nacimiento (Opcional)</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP", { locale: es })
-                          ) : (
-                            <span>Selecciona una fecha</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        captionLayout="dropdown-buttons"
-                        fromYear={1950}
-                        toYear={new Date().getFullYear()}
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                        locale={es}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            
+            <FormItem>
+                 <FormLabel>Fecha de Nacimiento (Opcional)</FormLabel>
+                 <div className="flex gap-3">
+                    <Select value={month} onValueChange={setMonth}>
+                        <SelectTrigger className="w-full h-20 text-2xl font-bold"><SelectValue placeholder="Mes" /></SelectTrigger>
+                        <SelectContent>
+                            {months.map(m => <SelectItem key={m.value} value={String(m.value)} className="capitalize">{m.label}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                     <Select value={day} onValueChange={setDay} disabled={!month || !year}>
+                        <SelectTrigger className="w-full h-20 text-2xl font-bold"><SelectValue placeholder="Día" /></SelectTrigger>
+                        <SelectContent>
+                            {days.map(d => <SelectItem key={d} value={String(d)}>{d}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                     <Select value={year} onValueChange={setYear}>
+                        <SelectTrigger className="w-full h-20 text-2xl font-bold"><SelectValue placeholder="Año" /></SelectTrigger>
+                        <SelectContent>
+                            {years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                 </div>
+                 <FormMessage>{form.formState.errors.birthDate?.message}</FormMessage>
+            </FormItem>
+
             <FormField control={form.control} name="address" render={({ field }) => (
               <FormItem>
                 <FormLabel>Dirección (Opcional)</FormLabel>
