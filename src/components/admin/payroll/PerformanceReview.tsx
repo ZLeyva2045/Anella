@@ -13,10 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Save, User, Calendar, Wand2, PlusCircle } from 'lucide-react';
+import { Loader2, Save, User, Calendar, Wand2, PlusCircle, AlertCircle } from 'lucide-react';
 import type { User, Evaluation } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { saveEvaluation } from '@/services/payrollService';
+import { saveEvaluation, getEvaluations } from '@/services/payrollService';
 import { useAuth } from '@/hooks/useAuth';
 import { EvaluationHistory } from './EvaluationHistory';
 
@@ -54,6 +54,8 @@ interface PerformanceReviewProps {
 export function PerformanceReview({ employees }: PerformanceReviewProps) {
   const [loading, setLoading] = useState(false);
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
+  const [evaluationExists, setEvaluationExists] = useState(false);
+  const [checkingEvaluation, setCheckingEvaluation] = useState(false);
   const { user: evaluator } = useAuth();
   const { toast } = useToast();
 
@@ -69,15 +71,41 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
     },
   });
   
+  const selectedEmployeeId = useWatch({ control: form.control, name: 'employeeId' });
+  const period = useWatch({ control: form.control, name: 'period' });
+
   useEffect(() => {
     if (selectedEvaluation) {
       form.reset({
         ...selectedEvaluation,
         createdAt: selectedEvaluation.createdAt.toDate(),
       });
+      setEvaluationExists(false); // Allow editing
     }
   }, [selectedEvaluation, form]);
 
+  useEffect(() => {
+    const checkExistingEvaluation = async () => {
+        if (!selectedEmployeeId || !period || selectedEvaluation?.employeeId === selectedEmployeeId) {
+            setEvaluationExists(false);
+            return;
+        }
+
+        setCheckingEvaluation(true);
+        try {
+            const existingEvaluations = await getEvaluations(selectedEmployeeId, period);
+            const exists = existingEvaluations.length > 0;
+            setEvaluationExists(exists);
+        } catch (error) {
+            console.error("Error checking for existing evaluation:", error);
+            setEvaluationExists(false); // Assume it doesn't exist on error
+        } finally {
+            setCheckingEvaluation(false);
+        }
+    };
+    checkExistingEvaluation();
+  }, [selectedEmployeeId, period, selectedEvaluation]);
+  
   const scores = useWatch({ control: form.control, name: 'scores' });
 
   const totalScore = useMemo(() => {
@@ -129,8 +157,6 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
     });
   }
 
-  const selectedEmployeeId = useWatch({ control: form.control, name: 'employeeId' });
-
   return (
      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       <Card>
@@ -170,6 +196,18 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
               
               {!selectedEmployeeId ? (
                   <div className="text-center text-muted-foreground py-10">Por favor, selecciona un empleado para comenzar.</div>
+              ) : checkingEvaluation ? (
+                 <div className="flex justify-center items-center h-40"><Loader2 className="animate-spin" /></div>
+              ) : evaluationExists ? (
+                <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 space-y-2 rounded-md">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5"/>
+                        <h4 className="font-bold">Evaluación Existente</h4>
+                    </div>
+                    <p className="text-sm">
+                        Este empleado ya ha sido evaluado para este período. Para hacer cambios, por favor busca la evaluación en el historial.
+                    </p>
+                </div>
               ) : (
                   <div className="space-y-6">
                   {evaluationCriteria.map(criterion => (
