@@ -256,7 +256,7 @@ export interface Attendance {
  * Represents a performance evaluation for an employee.
  */
 export interface Evaluation {
-  id?: string;
+  id: string;
   employeeId: string;
   evaluatorId: string;
   period: string; // e.g., "Agosto 2024"
