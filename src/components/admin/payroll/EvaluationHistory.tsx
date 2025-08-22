@@ -10,6 +10,7 @@ import { getEvaluations, deleteEvaluation } from '@/services/payrollService';
 import { Loader2, Edit, Trash2, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Separator } from '@/components/ui/separator';
 
 interface EvaluationHistoryProps {
   employees: User[];
