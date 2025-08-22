@@ -13,7 +13,7 @@ import { z } from 'genkit';
 
 const DocumentTypeSchema = z.enum(['recognition', 'action_plan', 'memorandum']);
 
-export const GenerateDocumentInputSchema = z.object({
+const GenerateDocumentInputSchema = z.object({
   employeeName: z.string().describe('The name of the employee.'),
   period: z.string().describe('The evaluation period, e.g., "Agosto 2024".'),
   scores: z.record(z.string(), z.number()).describe('A record of scores for different criteria.'),
@@ -24,7 +24,7 @@ export const GenerateDocumentInputSchema = z.object({
 });
 export type GenerateDocumentInput = z.infer<typeof GenerateDocumentInputSchema>;
 
-export const GenerateDocumentOutputSchema = z.object({
+const GenerateDocumentOutputSchema = z.object({
   title: z.string().describe('The generated title for the document.'),
   content: z.string().describe('The generated content of the document, formatted with markdown.'),
 });
