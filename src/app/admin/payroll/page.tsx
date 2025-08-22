@@ -24,7 +24,6 @@ import { useToast } from '@/hooks/use-toast';
 import { AttendanceTracker } from '@/components/admin/payroll/AttendanceTracker';
 import { PerformanceReview } from '@/components/admin/payroll/PerformanceReview';
 import { FeedbackManager } from '@/components/admin/payroll/FeedbackManager';
-import { ReportGenerator } from '@/components/admin/payroll/reports/ReportGenerator';
 import { LeaveRequestForm } from '@/components/admin/payroll/LeaveRequestForm';
 import { LeaveManagement } from '@/components/admin/payroll/LeaveManagement';
 import { useAuth } from '@/hooks/useAuth';
@@ -58,16 +57,15 @@ export default function PayrollPage() {
       </div>
 
       <Tabs defaultValue="asistencias" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="asistencias">Asistencias</TabsTrigger>
           <TabsTrigger value="evaluaciones">Evaluaciones</TabsTrigger>
           <TabsTrigger value="retroalimentacion">Retroalimentación</TabsTrigger>
           <TabsTrigger value="permisos">Permisos</TabsTrigger>
-          <TabsTrigger value="reportes">Reportes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="asistencias">
-          <AttendanceTracker />
+          <AttendanceTracker employees={employees} />
         </TabsContent>
 
         <TabsContent value="evaluaciones">
@@ -80,10 +78,6 @@ export default function PayrollPage() {
 
         <TabsContent value="permisos">
             <LeaveManagement />
-        </TabsContent>
-
-        <TabsContent value="reportes">
-          <ReportGenerator employees={employees} />
         </TabsContent>
       </Tabs>
     </div>
