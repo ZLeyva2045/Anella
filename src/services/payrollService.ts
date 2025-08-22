@@ -14,7 +14,7 @@ import {
 import { db } from '@/lib/firebase/config';
 import type { Evaluation, Feedback } from '@/types/firestore';
 
-type EvaluationData = Omit<Evaluation, 'id' | 'createdAt'>;
+type EvaluationData = Omit<Evaluation, 'id'>;
 type FeedbackData = Omit<Feedback, 'id' | 'createdAt'> & { createdAt: Date };
 
 /**

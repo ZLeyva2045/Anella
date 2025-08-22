@@ -13,12 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Save, User, Calendar, Wand2, PlusCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Save, User, Calendar, Wand2, PlusCircle, AlertCircle, FileText, Bot } from 'lucide-react';
 import type { User, Evaluation } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { saveEvaluation, getEvaluations } from '@/services/payrollService';
 import { useAuth } from '@/hooks/useAuth';
 import { EvaluationHistory } from './EvaluationHistory';
+import { generateEvaluationDocument, type GenerateDocumentOutput, type GenerateDocumentInput } from '@/ai/flows/generate-evaluation-document';
+import { EvaluationDocumentViewer } from './EvaluationDocumentViewer';
 
 const evaluationCriteria = [
   { id: 'punctuality', label: 'Puntualidad', description: 'Asistencia y llegada a tiempo, apertura del local.', maxScore: 2.5 },
@@ -56,6 +58,12 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
   const [evaluationExists, setEvaluationExists] = useState(false);
   const [checkingEvaluation, setCheckingEvaluation] = useState(false);
+  
+  // AI Document Generation State
+  const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
+  const [generatedDoc, setGeneratedDoc] = useState<GenerateDocumentOutput | null>(null);
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  
   const { user: evaluator } = useAuth();
   const { toast } = useToast();
 
@@ -125,7 +133,7 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
     }
     setLoading(true);
     try {
-        await saveEvaluation({
+        const savedId = await saveEvaluation({
             employeeId: data.employeeId,
             evaluatorId: evaluator.uid,
             period: data.period,
@@ -136,7 +144,14 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
             createdAt: data.createdAt || new Date(),
         }, data.id);
         toast({ title: `Evaluación ${data.id ? 'actualizada' : 'guardada'}`, description: 'La evaluación de desempeño ha sido registrada correctamente.'});
-        handleNewEvaluation(); // Reset form after saving
+        
+        const latestEvaluation = await getEvaluations(data.employeeId, data.period);
+        if (latestEvaluation.length > 0) {
+            setSelectedEvaluation(latestEvaluation[0]);
+        } else {
+            handleNewEvaluation();
+        }
+
     } catch (error: any) {
         console.error('Error saving evaluation: ', error);
         toast({ variant: 'destructive', title: 'Error', description: 'No se pudo guardar la evaluación.'});
@@ -157,7 +172,41 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
     });
   }
 
+  const handleGenerateDocument = async (documentType: 'recognition' | 'action_plan' | 'memorandum') => {
+      if (!selectedEvaluation) {
+          toast({ variant: 'destructive', title: 'Sin evaluación', description: 'Guarda o selecciona una evaluación para generar un documento.'});
+          return;
+      }
+      setIsGeneratingDoc(true);
+      try {
+          const scoresWithLabels = evaluationCriteria.reduce((acc, criterion) => {
+              acc[criterion.label] = selectedEvaluation.scores[criterion.id] ?? 0;
+              return acc;
+          }, {} as Record<string, number>);
+
+          const input: GenerateDocumentInput = {
+              employeeName: employees.find(e => e.id === selectedEvaluation.employeeId)?.name || 'Empleado',
+              period: selectedEvaluation.period,
+              scores: scoresWithLabels,
+              totalScore: selectedEvaluation.totalScore,
+              bonus: selectedEvaluation.bonus,
+              comments: selectedEvaluation.comments,
+              documentType: documentType
+          }
+          const result = await generateEvaluationDocument(input);
+          setGeneratedDoc(result);
+          setIsDocViewerOpen(true);
+      } catch (error) {
+          console.error("Error generating document: ", error);
+          toast({ variant: 'destructive', title: 'Error de IA', description: 'No se pudo generar el documento.' });
+      } finally {
+          setIsGeneratingDoc(false);
+      }
+  }
+
+
   return (
+     <>
      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       <Card>
         <CardHeader className="flex flex-row justify-between items-start">
@@ -218,11 +267,11 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
                               <FormLabel className="text-base">{criterion.label}</FormLabel>
                               <p className="text-xs text-muted-foreground">{criterion.description}</p>
                            </div>
-                           <span className="font-bold text-lg text-primary w-20 text-center">{field.value.toFixed(1)} / {criterion.maxScore}</span>
+                           <span className="font-bold text-lg text-primary w-20 text-center">{field.value?.toFixed(1) || '0.0'} / {criterion.maxScore}</span>
                         </div>
                         <FormControl>
                           <Slider
-                            value={[field.value]}
+                            value={[field.value || 0]}
                             onValueChange={(value) => field.onChange(value[0])}
                             max={criterion.maxScore}
                             step={0.5}
@@ -264,6 +313,29 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
                       {selectedEvaluation ? 'Actualizar' : 'Guardar'} Evaluación
                     </Button>
                   </div>
+
+                 {selectedEvaluation && (
+                     <Card>
+                         <CardHeader>
+                             <CardTitle className="flex items-center gap-2 text-lg"><Bot /> Asistente de RR.HH.</CardTitle>
+                             <CardDescription>Genera documentos basados en esta evaluación.</CardDescription>
+                         </CardHeader>
+                         <CardContent className="flex flex-wrap gap-2">
+                             <Button type="button" variant="outline" size="sm" onClick={() => handleGenerateDocument('recognition')} disabled={isGeneratingDoc || totalScore < 12.5}>
+                                 {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                                 Reconocimiento
+                             </Button>
+                             <Button type="button" variant="outline" size="sm" onClick={() => handleGenerateDocument('action_plan')} disabled={isGeneratingDoc}>
+                                  {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                                 Plan de Acción
+                             </Button>
+                              <Button type="button" variant="destructive" size="sm" onClick={() => handleGenerateDocument('memorandum')} disabled={isGeneratingDoc || totalScore > 10}>
+                                  {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                                 Memorándum
+                             </Button>
+                         </CardContent>
+                     </Card>
+                 )}
                 </div>
               )}
 
@@ -273,5 +345,14 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
       </Card>
       <EvaluationHistory employees={employees} onEdit={setSelectedEvaluation} />
     </div>
+    {generatedDoc && (
+        <EvaluationDocumentViewer
+            isOpen={isDocViewerOpen}
+            setIsOpen={setIsDocViewerOpen}
+            title={generatedDoc.title}
+            content={generatedDoc.content}
+        />
+    )}
+    </>
   );
 }
