@@ -1,26 +1,26 @@
 // src/ai/flows/generate-feedback-comment.ts
 'use server';
 /**
- * @fileOverview A flow for generating HR feedback comments based on employee evaluations.
+ * @fileOverview Un flujo para generar comentarios de retroalimentación de RR.HH. basados en evaluaciones de empleados.
  *
- * - generateFeedbackComment - A function to generate the comment.
- * - GenerateFeedbackCommentInput - The input type for the function.
+ * - generateFeedbackComment - Una función para generar el comentario.
+ * - GenerateFeedbackCommentInput - El tipo de entrada para la función.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateFeedbackCommentInputSchema = z.object({
-  employeeName: z.string().describe('The name of the employee.'),
-  scores: z.record(z.string(), z.number()).describe('A record of scores for different criteria.'),
-  totalScore: z.number().describe('The total score of the evaluation.'),
-  evaluatorComments: z.string().optional().describe('General comments from the evaluator.'),
-  feedbackType: z.enum(['recognition', 'improvement']).describe('The type of feedback to generate.'),
+  employeeName: z.string().describe('El nombre del empleado.'),
+  scores: z.record(z.string(), z.number()).describe('Un registro de puntajes para diferentes criterios.'),
+  totalScore: z.number().describe('El puntaje total de la evaluación.'),
+  evaluatorComments: z.string().optional().describe('Comentarios generales del evaluador.'),
+  feedbackType: z.enum(['recognition', 'improvement']).describe('El tipo de retroalimentación a generar.'),
 });
 export type GenerateFeedbackCommentInput = z.infer<typeof GenerateFeedbackCommentInputSchema>;
 
 const GenerateFeedbackCommentOutputSchema = z.object({
-    comment: z.string().describe('The generated feedback comment.'),
+    comment: z.string().describe('El comentario de retroalimentación generado.'),
 });
 export type GenerateFeedbackCommentOutput = z.infer<typeof GenerateFeedbackCommentOutputSchema>;
 
@@ -33,36 +33,36 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateFeedbackCommentInputSchema },
   output: { schema: GenerateFeedbackCommentOutputSchema },
   prompt: `
-    You are an expert HR manager for "Anella Boutique". Your task is to generate a concise and constructive feedback comment for an employee based on their monthly performance evaluation. The comment should be 1-2 paragraphs long.
+    Eres un experto gerente de RR.HH. para "Anella Boutique". Tu tarea es generar un comentario de retroalimentación conciso y constructivo para un empleado basado en su evaluación de desempeño mensual. El comentario debe tener una longitud de 1 a 2 párrafos.
 
-    **Employee Name:** {{{employeeName}}}
-    **Total Score:** {{{totalScore}}} / 20
-    **Evaluator Comments:** {{{evaluatorComments}}}
-    **Feedback Type to Generate:** {{{feedbackType}}}
+    **Nombre del Empleado:** {{{employeeName}}}
+    **Puntaje Total:** {{{totalScore}}} / 20
+    **Comentarios del Evaluador:** {{{evaluatorComments}}}
+    **Tipo de Feedback a Generar:** {{{feedbackType}}}
 
-    **Evaluation Criteria & Scores:**
+    **Criterios y Puntajes de Evaluación:**
     {{#each scores}}
     - {{@key}}: {{this}}
     {{/each}}
 
-    **Instructions:**
+    **Instrucciones:**
 
-    *   **If feedbackType is 'recognition':**
-        *   **Tone:** Positive, encouraging, and specific.
-        *   **Content:**
-            *   Start by congratulating {{{employeeName}}}.
-            *   Identify the **2 highest-scoring criteria**.
-            *   Write a comment that specifically praises their performance in these areas, explaining why it's valuable for the team and Anella Boutique.
-            *   Keep it professional and motivating.
+    *   **Si feedbackType es 'recognition':**
+        *   **Tono:** Positivo, alentador y específico.
+        *   **Contenido:**
+            *   Comienza felicitando a {{{employeeName}}}.
+            *   Identifica los **2 criterios con el puntaje más alto**.
+            *   Escribe un comentario que elogie específicamente su desempeño en estas áreas, explicando por qué es valioso para el equipo y Anella Boutique.
+            *   Mantenlo profesional y motivador.
 
-    *   **If feedbackType is 'improvement':**
-        *   **Tone:** Constructive, supportive, and forward-looking. Do not sound punitive.
-        *   **Content:**
-            *   Start by acknowledging the employee's efforts.
-            *   Identify the **2 lowest-scoring criteria**.
-            *   Write a comment that frames these areas as opportunities for growth.
-            *   Suggest concrete but brief actions or focus points for improvement without being overly prescriptive.
-            *   End on a supportive and encouraging note.
+    *   **Si feedbackType es 'improvement':**
+        *   **Tono:** Constructivo, de apoyo y orientado al futuro. No debe sonar punitivo.
+        *   **Contenido:**
+            *   Comienza reconociendo los esfuerzos del empleado.
+            *   Identifica los **2 criterios con el puntaje más bajo**.
+            *   Escribe un comentario que enmarque estas áreas como oportunidades de crecimiento.
+            *   Sugiere acciones o puntos de enfoque concretos pero breves para la mejora, sin ser demasiado prescriptivo.
+            *   Termina con una nota de apoyo y aliento.
   `,
 });
 
