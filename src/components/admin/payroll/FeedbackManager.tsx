@@ -15,13 +15,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import type { User, Feedback } from '@/types/firestore';
-import { saveFeedback } from '@/services/payrollService';
-import { Loader2, Save, MessageSquarePlus, ThumbsUp, Goal, User as UserIcon } from 'lucide-react';
+import type { User, Feedback, Evaluation } from '@/types/firestore';
+import { saveFeedback, getEvaluations } from '@/services/payrollService';
+import { Loader2, Save, MessageSquarePlus, ThumbsUp, Goal, User as UserIcon, Wand2 } from 'lucide-react';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { generateFeedbackComment, type GenerateFeedbackCommentInput } from '@/ai/flows/generate-feedback-comment';
+import { evaluationCriteria } from './PerformanceReview';
+
 
 const feedbackSchema = z.object({
   employeeId: z.string().min(1, 'Debes seleccionar un empleado.'),
@@ -37,8 +40,10 @@ interface FeedbackManagerProps {
 
 export function FeedbackManager({ employees }: FeedbackManagerProps) {
   const [loading, setLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+  const [latestEvaluation, setLatestEvaluation] = useState<Evaluation | null>(null);
   const [feedbackHistory, setFeedbackHistory] = useState<Feedback[]>([]);
   const { user: evaluator } = useAuth();
   const { toast } = useToast();
@@ -47,23 +52,41 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
     resolver: zodResolver(feedbackSchema),
     defaultValues: { employeeId: '', type: 'recognition', comment: '' },
   });
+  
+  const feedbackType = form.watch('type');
 
   useEffect(() => {
-    if (!selectedEmployeeId) {
-      setFeedbackHistory([]);
-      return;
+    const fetchLatestEvaluation = async (employeeId: string) => {
+        try {
+            const evals = await getEvaluations(employeeId);
+            if (evals.length > 0) {
+                setLatestEvaluation(evals[0]);
+            } else {
+                setLatestEvaluation(null);
+            }
+        } catch (error) {
+            console.error(error);
+            setLatestEvaluation(null);
+        }
     }
-    setLoadingHistory(true);
-    const q = query(
-      collection(db, 'feedback'),
-      where('employeeId', '==', selectedEmployeeId),
-      orderBy('createdAt', 'desc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setFeedbackHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Feedback)));
-      setLoadingHistory(false);
-    });
-    return () => unsubscribe();
+
+    if (selectedEmployeeId) {
+      setLoadingHistory(true);
+      fetchLatestEvaluation(selectedEmployeeId);
+      const q = query(
+        collection(db, 'feedback'),
+        where('employeeId', '==', selectedEmployeeId),
+        orderBy('createdAt', 'desc')
+      );
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setFeedbackHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Feedback)));
+        setLoadingHistory(false);
+      });
+      return () => unsubscribe();
+    } else {
+        setFeedbackHistory([]);
+        setLatestEvaluation(null);
+    }
   }, [selectedEmployeeId]);
 
   const onSubmit = async (data: FeedbackFormValues) => {
@@ -85,6 +108,35 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
     }
   };
   
+  const handleGenerateComment = async () => {
+      if (!latestEvaluation) {
+          toast({ variant: 'destructive', title: 'Sin evaluación', description: 'No se encontró una evaluación reciente para este empleado.' });
+          return;
+      }
+      setIsGenerating(true);
+      try {
+          const scoresWithLabels = evaluationCriteria.reduce((acc, criterion) => {
+              acc[criterion.label] = latestEvaluation.scores[criterion.id] ?? 0;
+              return acc;
+          }, {} as Record<string, number>);
+
+          const input: GenerateFeedbackCommentInput = {
+              employeeName: employees.find(e => e.id === latestEvaluation.employeeId)?.name || 'Empleado',
+              scores: scoresWithLabels,
+              totalScore: latestEvaluation.totalScore,
+              evaluatorComments: latestEvaluation.comments,
+              feedbackType: feedbackType,
+          };
+          const result = await generateFeedbackComment(input);
+          form.setValue('comment', result.comment, { shouldValidate: true });
+          
+      } catch (error) {
+           toast({ variant: 'destructive', title: 'Error de IA', description: 'No se pudo generar el comentario.' });
+      } finally {
+          setIsGenerating(false);
+      }
+  }
+
   const handleEmployeeChange = (employeeId: string) => {
     setSelectedEmployeeId(employeeId);
     form.setValue('employeeId', employeeId);
@@ -127,7 +179,13 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
                   )} />
                   <FormField name="comment" control={form.control} render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Comentario Detallado</FormLabel>
+                      <div className="flex justify-between items-center">
+                        <FormLabel>Comentario Detallado</FormLabel>
+                        <Button type="button" variant="ghost" size="sm" onClick={handleGenerateComment} disabled={!latestEvaluation || isGenerating}>
+                            {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4"/>}
+                            Generar con IA
+                        </Button>
+                      </div>
                       <FormControl><Textarea placeholder="Describe el comportamiento o situación específica..." {...field} rows={5} /></FormControl>
                       <FormMessage />
                     </FormItem>

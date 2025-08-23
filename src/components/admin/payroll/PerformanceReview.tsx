@@ -22,7 +22,7 @@ import { EvaluationHistory } from './EvaluationHistory';
 import { generateEvaluationDocument, type GenerateDocumentOutput, type GenerateDocumentInput } from '@/ai/flows/generate-evaluation-document';
 import { EvaluationDocumentViewer } from './EvaluationDocumentViewer';
 
-const evaluationCriteria = [
+export const evaluationCriteria = [
   { id: 'punctuality', label: 'Puntualidad', description: 'Asistencia y llegada a tiempo, apertura del local.', maxScore: 2.5 },
   { id: 'attitude', label: 'Actitud', description: 'Disposición, respeto, empatía y forma de tratar a compañeras y clientes.', maxScore: 2.5 },
   { id: 'teamwork', label: 'Trabajo en Equipo', description: 'Cómo se relaciona con las demás, disposición a colaborar y resolver en conjunto.', maxScore: 2.5 },

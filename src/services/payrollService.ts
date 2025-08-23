@@ -10,6 +10,8 @@ import {
   doc,
   deleteDoc,
   setDoc,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Evaluation, Feedback } from '@/types/firestore';
@@ -40,16 +42,31 @@ export async function saveEvaluation(data: EvaluationData, evaluationId?: string
 }
 
 /**
- * Fetches evaluations based on employee and period.
+ * Fetches evaluations based on employee and optionally by period.
+ * If period is not provided, it fetches the most recent one.
  * @param employeeId - The ID of the employee.
- * @param period - The evaluation period (e.g., "Agosto 2024").
+ * @param period - The evaluation period (e.g., "Agosto 2024"). Optional.
  */
-export async function getEvaluations(employeeId: string, period: string): Promise<Evaluation[]> {
-    const q = query(
-        collection(db, 'evaluations'),
-        where('employeeId', '==', employeeId),
-        where('period', '==', period)
-    );
+export async function getEvaluations(employeeId: string, period?: string): Promise<Evaluation[]> {
+    const evaluationsRef = collection(db, 'evaluations');
+    let q;
+
+    if (period) {
+        q = query(
+            evaluationsRef,
+            where('employeeId', '==', employeeId),
+            where('period', '==', period)
+        );
+    } else {
+        // Fetch the most recent evaluation for the employee
+        q = query(
+            evaluationsRef,
+            where('employeeId', '==', employeeId),
+            orderBy('createdAt', 'desc'),
+            limit(1)
+        );
+    }
+
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Evaluation));
 }
