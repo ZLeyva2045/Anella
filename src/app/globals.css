@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -221,7 +223,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Plus Jakarta Sans', 'Noto Sans', sans-serif;
+    font-family: 'Lexend', 'Noto Sans', sans-serif;
   }
 }
 

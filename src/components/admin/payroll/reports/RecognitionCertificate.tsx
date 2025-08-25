@@ -17,6 +17,11 @@ export function RecognitionCertificate({ employee, evaluation, certificateConten
   const formattedDate = format(new Date(), "'a los' d 'días del mes de' MMMM 'de' yyyy", { locale: es });
   
   return (
+    <>
+    {/* This style tag is specific to this component and won't cause hydration issues */}
+    <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Parisienne&display=swap');
+    `}</style>
     <div 
       className="w-full h-full p-10 flex flex-col justify-between items-center text-center bg-white relative" 
       style={{ fontFamily: "'Lexend', sans-serif" }}
@@ -78,5 +83,6 @@ export function RecognitionCertificate({ employee, evaluation, certificateConten
         <p className="text-sm text-gray-500">Gerente General</p>
       </div>
     </div>
+    </>
   );
 }
