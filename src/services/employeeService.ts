@@ -13,6 +13,8 @@ import {
 } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase/config';
 import type { User } from '@/types/firestore';
+import { initializeApp, getApps, deleteApp } from 'firebase/app';
+
 
 // Note: For full user deletion, you need a Firebase Function to delete the auth user.
 // The client-side can only delete the Firestore document.
@@ -24,29 +26,42 @@ export async function createEmployee(data: Omit<EmployeeData, 'password'> & { pa
     throw new Error('Password is required for new employee creation.');
   }
 
-  // Create user in Firebase Auth
-  const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-  const newUserId = userCredential.user.uid;
+  // To avoid signing out the current admin, we create a temporary secondary Firebase app
+  // instance just for creating the new user. This is a common pattern for admin actions.
+  const secondaryAppName = `create-employee-${Date.now()}`;
+  const secondaryApp = initializeApp(auth.app.options, secondaryAppName);
+  const secondaryAuth = getAuth(secondaryApp);
 
-  // Create user document in Firestore
-  const userRef = doc(db, 'users', newUserId);
-  const newUserDoc: Omit<User, 'id'> = {
-    name: data.name,
-    email: data.email,
-    role: data.role || 'sales',
-    schedule: data.schedule || 'full-day',
-    photoURL: data.photoURL || '',
-    createdAt: serverTimestamp() as Timestamp,
-    // Initialize other fields as needed
-    phone: '',
-    address: '',
-    orders: [],
-    loyaltyPoints: 0,
-  };
+  try {
+    // Create user in Firebase Auth using the temporary app instance
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, data.email, data.password);
+    const newUserId = userCredential.user.uid;
 
-  await setDoc(userRef, newUserDoc);
+    // Create user document in Firestore using the main app instance
+    const userRef = doc(db, 'users', newUserId);
+    const newUserDoc: Omit<User, 'id'> = {
+      name: data.name,
+      email: data.email,
+      role: data.role || 'sales',
+      schedule: data.schedule || 'full-day',
+      photoURL: data.photoURL || '',
+      createdAt: serverTimestamp() as Timestamp,
+      phone: '',
+      address: '',
+      orders: [],
+      loyaltyPoints: 0,
+    };
 
-  return newUserId;
+    await setDoc(userRef, newUserDoc);
+
+    return newUserId;
+  } catch (error) {
+    // Re-throw the error to be handled by the calling component
+    throw error;
+  } finally {
+    // Clean up the temporary app instance
+    await deleteApp(secondaryApp);
+  }
 }
 
 
