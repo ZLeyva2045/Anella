@@ -274,6 +274,7 @@ export interface Feedback {
   id?: string;
   employeeId: string;
   evaluatorId: string;
+  evaluationId?: string; // Link to the evaluation this feedback is based on
   type: 'recognition' | 'improvement';
   comment: string;
   period: string;

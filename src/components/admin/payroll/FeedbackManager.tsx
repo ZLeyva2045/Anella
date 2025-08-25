@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import type { User, Feedback, Evaluation } from '@/types/firestore';
 import { saveFeedback, getEvaluations } from '@/services/payrollService';
-import { Loader2, Save, MessageSquarePlus, ThumbsUp, Goal, User as UserIcon, Wand2 } from 'lucide-react';
+import { Loader2, Save, MessageSquarePlus, ThumbsUp, Goal, User as UserIcon, Wand2, Award } from 'lucide-react';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,7 @@ import { evaluationCriteria } from './PerformanceReview';
 
 const feedbackSchema = z.object({
   employeeId: z.string().min(1, 'Debes seleccionar un empleado.'),
+  evaluationId: z.string().optional(),
   type: z.enum(['recognition', 'improvement'], { required_error: 'Debes seleccionar un tipo de feedback.' }),
   comment: z.string().min(10, 'El comentario debe tener al menos 10 caracteres.'),
 });
@@ -47,10 +49,11 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
   const [feedbackHistory, setFeedbackHistory] = useState<Feedback[]>([]);
   const { user: evaluator } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<FeedbackFormValues>({
     resolver: zodResolver(feedbackSchema),
-    defaultValues: { employeeId: '', type: 'recognition', comment: '' },
+    defaultValues: { employeeId: '', evaluationId: '', type: 'recognition', comment: '' },
   });
   
   const feedbackType = form.watch('type');
@@ -61,8 +64,10 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
             const evals = await getEvaluations(employeeId);
             if (evals.length > 0) {
                 setLatestEvaluation(evals[0]);
+                form.setValue('evaluationId', evals[0].id);
             } else {
                 setLatestEvaluation(null);
+                 form.setValue('evaluationId', undefined);
             }
         } catch (error) {
             console.error(error);
@@ -87,7 +92,7 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
         setFeedbackHistory([]);
         setLatestEvaluation(null);
     }
-  }, [selectedEmployeeId]);
+  }, [selectedEmployeeId, form]);
 
   const onSubmit = async (data: FeedbackFormValues) => {
     if (!evaluator) return;
@@ -136,6 +141,14 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
           setIsGenerating(false);
       }
   }
+  
+  const handleGenerateCertificate = (evaluationId: string | undefined) => {
+      if (!evaluationId) {
+          toast({variant: "destructive", title: "Error", description: "Este feedback no está asociado a una evaluación."});
+          return;
+      }
+      router.push(`/admin/payroll/certificate/${evaluationId}`);
+  };
 
   const handleEmployeeChange = (employeeId: string) => {
     setSelectedEmployeeId(employeeId);
@@ -225,7 +238,14 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
                       {fb.type === 'recognition' ? <ThumbsUp className="mr-2 h-3 w-3"/> : <Goal className="mr-2 h-3 w-3"/>}
                       {fb.type === 'recognition' ? 'Reconocimiento' : 'Área de Mejora'}
                    </Badge>
-                  <p className="text-xs text-muted-foreground">{format(fb.createdAt.toDate(), "PPP", { locale: es })}</p>
+                  <div className="flex items-center gap-2">
+                     <p className="text-xs text-muted-foreground">{format(fb.createdAt.toDate(), "P", { locale: es })}</p>
+                    {fb.type === 'recognition' && fb.evaluationId && (
+                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleGenerateCertificate(fb.evaluationId)}>
+                            <Award className="h-4 w-4 text-primary"/>
+                        </Button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm">{fb.comment}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3"/>Evaluador: {employees.find(e => e.id === fb.evaluatorId)?.name || 'Desconocido'}</p>

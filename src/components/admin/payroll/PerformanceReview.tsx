@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { saveEvaluation, getEvaluations } from '@/services/payrollService';
 import { useAuth } from '@/hooks/useAuth';
 import { EvaluationHistory } from './EvaluationHistory';
-import { generateEvaluationDocument, type GenerateDocumentOutput, type GenerateDocumentInput } from '@/ai/flows/generate-evaluation-document';
+import { generateEvaluationDocument, type GenerateDocumentOutput } from '@/ai/flows/generate-evaluation-document';
 import { EvaluationDocumentViewer } from './EvaluationDocumentViewer';
 import { useRouter } from 'next/navigation';
 
@@ -175,14 +175,6 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
     });
   }
 
-  const handleGenerateCertificate = () => {
-      if (!selectedEvaluation?.id) {
-          toast({ variant: 'destructive', title: 'Sin evaluación', description: 'Guarda o selecciona una evaluación para generar un certificado.'});
-          return;
-      }
-       router.push(`/admin/payroll/certificate/${selectedEvaluation.id}`);
-  }
-
   const handleGenerateDocument = async (documentType: 'action_plan' | 'memorandum') => {
       if (!selectedEvaluation) {
           toast({ variant: 'destructive', title: 'Sin evaluación', description: 'Guarda o selecciona una evaluación para generar un documento.'});
@@ -332,10 +324,6 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
                              <CardDescription>Genera documentos basados en esta evaluación.</CardDescription>
                          </CardHeader>
                          <CardContent className="flex flex-wrap gap-2">
-                             <Button type="button" variant="outline" size="sm" onClick={handleGenerateCertificate} disabled={totalScore < 12.5}>
-                                 <Award className="mr-2 h-4 w-4" />
-                                 Certificado
-                             </Button>
                              <Button type="button" variant="outline" size="sm" onClick={() => handleGenerateDocument('action_plan')} disabled={isGeneratingDoc}>
                                   {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                                  Plan de Acción
