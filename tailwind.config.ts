@@ -21,6 +21,8 @@ export default {
         body: ['Montserrat', 'sans-serif'],
         headline: ['Amarillo', 'cursive'],
         code: ['monospace'],
+        lexend: ['Lexend', 'sans-serif'],
+        parisienne: ['Parisienne', 'cursive'],
       },
       colors: {
         border: 'hsl(var(--border))',

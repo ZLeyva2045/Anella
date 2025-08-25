@@ -19,7 +19,7 @@ export function RecognitionCertificate({ employee, evaluation, certificateConten
   return (
     <div 
       className="w-full h-full p-10 flex flex-col justify-between items-center text-center bg-white relative" 
-      style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+      style={{ fontFamily: "'Lexend', sans-serif" }}
     >
       {/* Borders and Corners */}
       <div className="absolute inset-2 border-2 border-amber-400"></div>
@@ -46,17 +46,17 @@ export function RecognitionCertificate({ employee, evaluation, certificateConten
           className="object-contain"
           priority
         />
-        <h1 className="text-4xl font-bold mt-4 tracking-wider uppercase text-gray-800" style={{fontFamily: "'Helvetica', 'Arial', sans-serif"}}>Certificado</h1>
+        <h1 className="text-4xl font-bold mt-4 tracking-wider uppercase text-gray-800">Certificado</h1>
         <div className="relative mt-2">
             <div className="absolute inset-0 bg-amber-500 transform -skew-y-2"></div>
-            <h2 className="relative px-6 py-1 text-lg font-semibold tracking-widest text-white" style={{fontFamily: "'Helvetica', 'Arial', sans-serif"}}>DE RECONOCIMIENTO</h2>
+            <h2 className="relative px-6 py-1 text-lg font-semibold tracking-widest text-white">DE RECONOCIMIENTO</h2>
         </div>
       </div>
 
       {/* Content */}
       <div className="w-full text-center my-8 z-10 px-4">
         <p className="text-md italic mt-4 text-gray-600">Otorgado a:</p>
-        <p className="text-5xl my-2" style={{ fontFamily: "'Brush Script MT', cursive", color: '#111827' }}>{employee.name}</p>
+        <p className="text-6xl my-2" style={{ fontFamily: "'Parisienne', cursive", color: '#111827' }}>{employee.name}</p>
         <div className="flex items-center justify-center my-4">
             <span className="h-px w-16 bg-amber-400"></span>
             <span className="w-2 h-2 rounded-full bg-amber-400 mx-2"></span>
@@ -74,8 +74,8 @@ export function RecognitionCertificate({ employee, evaluation, certificateConten
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mx-2"></span>
             <span className="h-px w-12 bg-amber-400"></span>
         </div>
-        <p className="text-md font-semibold text-gray-800" style={{fontFamily: "'Helvetica', 'Arial', sans-serif"}}>Ana Gabriela Urteaga Aguilar</p>
-        <p className="text-sm text-gray-500" style={{fontFamily: "'Helvetica', 'Arial', sans-serif"}}>Gerente General</p>
+        <p className="text-md font-semibold text-gray-800">Ana Gabriela Urteaga Aguilar</p>
+        <p className="text-sm text-gray-500">Gerente General</p>
       </div>
     </div>
   );
