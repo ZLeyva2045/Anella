@@ -141,14 +141,6 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
           setIsGenerating(false);
       }
   }
-  
-  const handleGenerateCertificate = (evaluationId: string | undefined) => {
-      if (!evaluationId) {
-          toast({variant: "destructive", title: "Error", description: "Este feedback no está asociado a una evaluación."});
-          return;
-      }
-      router.push(`/admin/payroll/certificate/${evaluationId}`);
-  };
 
   const handleEmployeeChange = (employeeId: string) => {
     setSelectedEmployeeId(employeeId);
@@ -238,14 +230,7 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
                       {fb.type === 'recognition' ? <ThumbsUp className="mr-2 h-3 w-3"/> : <Goal className="mr-2 h-3 w-3"/>}
                       {fb.type === 'recognition' ? 'Reconocimiento' : 'Área de Mejora'}
                    </Badge>
-                  <div className="flex items-center gap-2">
-                     <p className="text-xs text-muted-foreground">{format(fb.createdAt.toDate(), "P", { locale: es })}</p>
-                    {fb.type === 'recognition' && fb.evaluationId && (
-                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleGenerateCertificate(fb.evaluationId)}>
-                            <Award className="h-4 w-4 text-primary"/>
-                        </Button>
-                    )}
-                  </div>
+                  <p className="text-xs text-muted-foreground">{format(fb.createdAt.toDate(), "P", { locale: es })}</p>
                 </div>
                 <p className="text-sm">{fb.comment}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3"/>Evaluador: {employees.find(e => e.id === fb.evaluatorId)?.name || 'Desconocido'}</p>

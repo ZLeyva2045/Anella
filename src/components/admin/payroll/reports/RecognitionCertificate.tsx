@@ -9,10 +9,10 @@ import { es } from 'date-fns/locale';
 interface RecognitionCertificateProps {
   employee: User;
   evaluation: Evaluation;
-  feedbackComment: string;
+  certificateContent: string;
 }
 
-export function RecognitionCertificate({ employee, evaluation, feedbackComment }: RecognitionCertificateProps) {
+export function RecognitionCertificate({ employee, evaluation, certificateContent }: RecognitionCertificateProps) {
 
   const formattedDate = format(new Date(), "'a los' d 'días del mes de' MMMM 'de' yyyy", { locale: es });
   
@@ -47,10 +47,10 @@ export function RecognitionCertificate({ employee, evaluation, feedbackComment }
         <p className="text-lg italic mt-4 text-gray-600">Otorgado a:</p>
         <p className="text-5xl font-bold my-4" style={{ fontFamily: "'Brush Script MT', cursive", color: '#b45309' }}>{employee.name}</p>
         <p className="text-lg max-w-2xl mx-auto leading-relaxed text-gray-700">
-           Por su destacada labor durante el período de <strong>{evaluation.period}</strong>. En particular, se reconoce:
+           Por su destacada labor durante el período de <strong>{evaluation.period}</strong>.
         </p>
          <blockquote className="text-lg max-w-2xl mx-auto leading-relaxed text-gray-800 italic mt-4 p-4 bg-amber-50/50 border-l-4 border-amber-400">
-            &quot;{feedbackComment}&quot;
+            &quot;{certificateContent}&quot;
         </blockquote>
          <p className="text-lg max-w-2xl mx-auto leading-relaxed text-gray-700 mt-4">
            Su dedicación es una inspiración para todo el equipo y un pilar fundamental para el éxito de Anella Boutique.

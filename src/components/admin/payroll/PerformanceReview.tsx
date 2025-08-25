@@ -175,30 +175,41 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
     });
   }
 
-  const handleGenerateDocument = async (documentType: 'action_plan' | 'memorandum') => {
-      if (!selectedEvaluation) {
-          toast({ variant: 'destructive', title: 'Sin evaluación', description: 'Guarda o selecciona una evaluación para generar un documento.'});
-          return;
-      }
+  const handleGenerateDocument = async (documentType: 'action_plan' | 'memorandum' | 'recognition') => {
+      const currentData = form.getValues();
+      const currentTotalScore = Object.values(currentData.scores).reduce((sum, score) => sum + score, 0);
+      const currentBonus = bonusScale[currentTotalScore.toFixed(1)] || 0;
+
       setIsGeneratingDoc(true);
       try {
           const scoresWithLabels = evaluationCriteria.reduce((acc, criterion) => {
-              acc[criterion.label] = selectedEvaluation.scores[criterion.id] ?? 0;
+              acc[criterion.label] = currentData.scores[criterion.id] ?? 0;
               return acc;
           }, {} as Record<string, number>);
 
-          const input: GenerateDocumentInput = {
-              employeeName: employees.find(e => e.id === selectedEvaluation.employeeId)?.name || 'Empleado',
-              period: selectedEvaluation.period,
+          const input = {
+              employeeName: employees.find(e => e.id === currentData.employeeId)?.name || 'Empleado',
+              period: currentData.period,
               scores: scoresWithLabels,
-              totalScore: selectedEvaluation.totalScore,
-              bonus: selectedEvaluation.bonus,
-              comments: selectedEvaluation.comments,
+              totalScore: currentTotalScore,
+              bonus: currentBonus,
+              comments: currentData.comments,
               documentType: documentType
           }
           const result = await generateEvaluationDocument(input);
-          setGeneratedDoc(result);
-          setIsDocViewerOpen(true);
+          
+          if (documentType === 'recognition') {
+            const evaluationId = selectedEvaluation?.id || form.getValues('id');
+            if (!evaluationId) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Guarda la evaluación primero para generar un certificado.'});
+                setIsGeneratingDoc(false);
+                return;
+            }
+            router.push(`/admin/payroll/certificate/${evaluationId}`);
+          } else {
+            setGeneratedDoc(result);
+            setIsDocViewerOpen(true);
+          }
       } catch (error) {
           console.error("Error generating document: ", error);
           toast({ variant: 'destructive', title: 'Error de IA', description: 'No se pudo generar el documento.' });
@@ -321,9 +332,13 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
                      <Card>
                          <CardHeader>
                              <CardTitle className="flex items-center gap-2 text-lg"><Bot /> Asistente de RR.HH.</CardTitle>
-                             <CardDescription>Genera documentos basados en esta evaluación.</CardDescription>
+                             <CardDescription>Genera documentos o certificados basados en esta evaluación.</CardDescription>
                          </CardHeader>
                          <CardContent className="flex flex-wrap gap-2">
+                            <Button type="button" variant="secondary" size="sm" onClick={() => handleGenerateDocument('recognition')} disabled={isGeneratingDoc}>
+                                  {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
+                                 Certificado de Reconocimiento
+                             </Button>
                              <Button type="button" variant="outline" size="sm" onClick={() => handleGenerateDocument('action_plan')} disabled={isGeneratingDoc}>
                                   {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                                  Plan de Acción

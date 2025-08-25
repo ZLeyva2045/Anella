@@ -3,18 +3,21 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { User, Evaluation, Feedback } from '@/types/firestore';
+import type { User, Evaluation } from '@/types/firestore';
 import { RecognitionCertificate } from '@/components/admin/payroll/reports/RecognitionCertificate';
 import { Button } from '@/components/ui/button';
 import { Loader2, Printer, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { generateEvaluationDocument, type GenerateDocumentOutput } from '@/ai/flows/generate-evaluation-document';
+import { evaluationCriteria } from '@/components/admin/payroll/PerformanceReview';
+
 
 type ReportData = {
     employee: User;
     evaluation: Evaluation;
-    feedback: Feedback;
+    certificateContent: string;
 }
 
 export default function CertificatePage() {
@@ -41,18 +44,25 @@ export default function CertificatePage() {
           if (!userSnap.exists()) throw new Error('No se encontró al empleado asociado a esta evaluación.');
           const employee = { id: userSnap.id, ...userSnap.data() } as User;
           
-          // Fetch associated Recognition Feedback
-          const feedbackQuery = query(
-            collection(db, 'feedback'),
-            where('evaluationId', '==', evaluationId),
-            where('type', '==', 'recognition'),
-            limit(1)
-          );
-          const feedbackSnap = await getDocs(feedbackQuery);
-          if (feedbackSnap.empty) throw new Error('No se encontró un feedback de reconocimiento para esta evaluación.');
-          const feedback = feedbackSnap.docs[0].data() as Feedback;
+          // Generate certificate content
+          const scoresWithLabels = evaluationCriteria.reduce((acc, criterion) => {
+              acc[criterion.label] = evaluation.scores[criterion.id] ?? 0;
+              return acc;
+          }, {} as Record<string, number>);
 
-          setData({ evaluation, employee, feedback });
+           const docInput = {
+              employeeName: employee.name,
+              period: evaluation.period,
+              scores: scoresWithLabels,
+              totalScore: evaluation.totalScore,
+              bonus: evaluation.bonus,
+              comments: evaluation.comments,
+              documentType: 'recognition' as const
+          };
+
+          const result = await generateEvaluationDocument(docInput);
+
+          setData({ evaluation, employee, certificateContent: result.content });
 
         } catch (err: any) {
           setError(err.message || 'Ocurrió un error al cargar los datos del reporte.');
@@ -122,7 +132,7 @@ export default function CertificatePage() {
       </div>
 
        <div className="printable-area bg-white shadow-lg">
-        {data && <RecognitionCertificate employee={data.employee} evaluation={data.evaluation} feedbackComment={data.feedback.comment} />}
+        {data && <RecognitionCertificate employee={data.employee} evaluation={data.evaluation} certificateContent={data.certificateContent} />}
        </div>
 
     </div>

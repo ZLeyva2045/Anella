@@ -13,6 +13,7 @@ import { z } from 'genkit';
 
 const DocumentTypeSchema = z.enum(['recognition', 'action_plan', 'memorandum']);
 
+export type GenerateDocumentInput = z.infer<typeof GenerateDocumentInputSchema>;
 const GenerateDocumentInputSchema = z.object({
   employeeName: z.string().describe('The name of the employee.'),
   period: z.string().describe('The evaluation period, e.g., "Agosto 2024".'),
@@ -22,13 +23,13 @@ const GenerateDocumentInputSchema = z.object({
   comments: z.string().optional().describe('General comments from the evaluator.'),
   documentType: DocumentTypeSchema.describe('The type of document to generate.'),
 });
-export type GenerateDocumentInput = z.infer<typeof GenerateDocumentInputSchema>;
 
+
+export type GenerateDocumentOutput = z.infer<typeof GenerateDocumentOutputSchema>;
 const GenerateDocumentOutputSchema = z.object({
   title: z.string().describe('The generated title for the document.'),
   content: z.string().describe('The generated content of the document, formatted with markdown.'),
 });
-export type GenerateDocumentOutput = z.infer<typeof GenerateDocumentOutputSchema>;
 
 
 export async function generateEvaluationDocument(input: GenerateDocumentInput): Promise<GenerateDocumentOutput> {
@@ -65,13 +66,12 @@ const prompt = ai.definePrompt({
         **DOCUMENT SPECIFICATIONS:**
 
         *   **If documentType is 'recognition':**
-            *   **Tone:** Positive, encouraging, and appreciative.
+            *   **Tone:** Positive, encouraging, and highly appreciative.
             *   **Title:** "Carta de Reconocimiento"
             *   **Content:**
                 *   Start by congratulating the employee by name for their excellent performance during the period.
                 *   Mention their high score ({{{totalScore}}}) and the bonus (S/{{{bonus}}}) they've earned as a result.
-                *   Highlight 2-3 specific criteria where they excelled, using the provided scores as a reference.
-                *   Incorporate any positive evaluator comments.
+                *   **Based on the scores and evaluator comments, write a concise summary (max 80 words) highlighting their key contributions and positive attributes.** This summary will be the main body of the recognition.
                 *   End with a message of encouragement, expressing appreciation for their contribution to Anella Boutique.
 
         *   **If documentType is 'action_plan':**
@@ -111,3 +111,4 @@ const generateDocumentFlow = ai.defineFlow(
     return output!;
   }
 );
+
