@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Save, User, Calendar, Wand2, PlusCircle, AlertCircle, FileText, Bot } from 'lucide-react';
+import { Loader2, Save, User, Calendar, Wand2, PlusCircle, AlertCircle, FileText, Bot, Award } from 'lucide-react';
 import type { User, Evaluation } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { saveEvaluation, getEvaluations } from '@/services/payrollService';
@@ -21,6 +21,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { EvaluationHistory } from './EvaluationHistory';
 import { generateEvaluationDocument, type GenerateDocumentOutput, type GenerateDocumentInput } from '@/ai/flows/generate-evaluation-document';
 import { EvaluationDocumentViewer } from './EvaluationDocumentViewer';
+import { useRouter } from 'next/navigation';
+
 
 export const evaluationCriteria = [
   { id: 'punctuality', label: 'Puntualidad', description: 'Asistencia y llegada a tiempo, apertura del local.', maxScore: 2.5 },
@@ -58,6 +60,7 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
   const [evaluationExists, setEvaluationExists] = useState(false);
   const [checkingEvaluation, setCheckingEvaluation] = useState(false);
+  const router = useRouter();
   
   // AI Document Generation State
   const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
@@ -172,7 +175,15 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
     });
   }
 
-  const handleGenerateDocument = async (documentType: 'recognition' | 'action_plan' | 'memorandum') => {
+  const handleGenerateCertificate = () => {
+      if (!selectedEvaluation?.id) {
+          toast({ variant: 'destructive', title: 'Sin evaluación', description: 'Guarda o selecciona una evaluación para generar un certificado.'});
+          return;
+      }
+       router.push(`/admin/payroll/certificate/${selectedEvaluation.id}`);
+  }
+
+  const handleGenerateDocument = async (documentType: 'action_plan' | 'memorandum') => {
       if (!selectedEvaluation) {
           toast({ variant: 'destructive', title: 'Sin evaluación', description: 'Guarda o selecciona una evaluación para generar un documento.'});
           return;
@@ -321,9 +332,9 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
                              <CardDescription>Genera documentos basados en esta evaluación.</CardDescription>
                          </CardHeader>
                          <CardContent className="flex flex-wrap gap-2">
-                             <Button type="button" variant="outline" size="sm" onClick={() => handleGenerateDocument('recognition')} disabled={isGeneratingDoc || totalScore < 12.5}>
-                                 {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
-                                 Reconocimiento
+                             <Button type="button" variant="outline" size="sm" onClick={handleGenerateCertificate} disabled={totalScore < 12.5}>
+                                 <Award className="mr-2 h-4 w-4" />
+                                 Certificado
                              </Button>
                              <Button type="button" variant="outline" size="sm" onClick={() => handleGenerateDocument('action_plan')} disabled={isGeneratingDoc}>
                                   {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
