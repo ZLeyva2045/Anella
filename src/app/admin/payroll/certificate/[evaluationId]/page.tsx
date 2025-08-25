@@ -3,9 +3,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { User, Evaluation } from '@/types/firestore';
+import type { User, Evaluation, Feedback } from '@/types/firestore';
 import { RecognitionCertificate } from '@/components/admin/payroll/reports/RecognitionCertificate';
 import { Button } from '@/components/ui/button';
 import { Loader2, Printer, ArrowLeft } from 'lucide-react';
@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 type ReportData = {
     employee: User;
     evaluation: Evaluation;
+    feedback: Feedback;
 }
 
 export default function CertificatePage() {
@@ -28,25 +29,30 @@ export default function CertificatePage() {
     if (evaluationId) {
       const fetchReportData = async () => {
         try {
+          // Fetch Evaluation
           const evalRef = doc(db, 'evaluations', evaluationId);
           const evalSnap = await getDoc(evalRef);
-
-          if (!evalSnap.exists()) {
-            throw new Error('No se encontró la evaluación especificada.');
-          }
-
+          if (!evalSnap.exists()) throw new Error('No se encontró la evaluación especificada.');
           const evaluation = { id: evalSnap.id, ...evalSnap.data() } as Evaluation;
 
+          // Fetch Employee
           const userRef = doc(db, 'users', evaluation.employeeId);
           const userSnap = await getDoc(userRef);
-
-           if (!userSnap.exists()) {
-            throw new Error('No se encontró al empleado asociado a esta evaluación.');
-          }
-
+          if (!userSnap.exists()) throw new Error('No se encontró al empleado asociado a esta evaluación.');
           const employee = { id: userSnap.id, ...userSnap.data() } as User;
           
-          setData({ evaluation, employee });
+          // Fetch associated Recognition Feedback
+          const feedbackQuery = query(
+            collection(db, 'feedback'),
+            where('evaluationId', '==', evaluationId),
+            where('type', '==', 'recognition'),
+            limit(1)
+          );
+          const feedbackSnap = await getDocs(feedbackQuery);
+          if (feedbackSnap.empty) throw new Error('No se encontró un feedback de reconocimiento para esta evaluación.');
+          const feedback = feedbackSnap.docs[0].data() as Feedback;
+
+          setData({ evaluation, employee, feedback });
 
         } catch (err: any) {
           setError(err.message || 'Ocurrió un error al cargar los datos del reporte.');
@@ -116,7 +122,7 @@ export default function CertificatePage() {
       </div>
 
        <div className="printable-area bg-white shadow-lg">
-        {data && <RecognitionCertificate employee={data.employee} evaluation={data.evaluation} />}
+        {data && <RecognitionCertificate employee={data.employee} evaluation={data.evaluation} feedbackComment={data.feedback.comment} />}
        </div>
 
     </div>
