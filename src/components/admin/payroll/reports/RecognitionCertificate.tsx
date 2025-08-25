@@ -45,7 +45,7 @@ export function RecognitionCertificate({ employee, evaluation, certificateConten
       <div className="w-full flex flex-col items-center z-10">
         <Image
           src="https://firebasestorage.googleapis.com/v0/b/anella-boutique.firebasestorage.app/o/public%2FLogo.png?alt=media&token=b2c1ff63-242c-40ed-bf19-406e84992d7f"
-          alt="Anella Boutique Logo"
+          alt="Anella Logo"
           width={120}
           height={30}
           className="object-contain"

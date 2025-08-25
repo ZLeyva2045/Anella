@@ -56,7 +56,7 @@ const SalesNav = () => {
                  <Link href="/">
                     <Image
                     src="https://i.ibb.co/MyXzBh0r/Anella.png"
-                    alt="Anella Boutique Logo"
+                    alt="Anella Logo"
                     width={140}
                     height={35}
                     className="object-contain"

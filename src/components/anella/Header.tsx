@@ -117,7 +117,7 @@ export function Header() {
               <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
                 <Image
                   src="https://i.ibb.co/MyXzBh0r/Anella.png"
-                  alt="Anella Boutique Logo"
+                  alt="Anella Logo"
                   width={140}
                   height={35}
                   className="object-contain"
@@ -145,14 +145,14 @@ export function Header() {
           <Link href="/" className="flex items-center gap-3 text-[var(--text-primary)]">
              <Image
                 src="https://i.ibb.co/MyXzBh0r/Anella.png"
-                alt="Anella Boutique Logo"
+                alt="Anella Logo"
                 width={140}
                 height={35}
                 className="object-contain hidden sm:block"
             />
              <Image
                 src="https://i.ibb.co/MyXzBh0r/Anella.png"
-                alt="Anella Boutique Logo"
+                alt="Anella Logo"
                 width={100}
                 height={25}
                 className="object-contain sm:hidden"

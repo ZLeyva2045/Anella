@@ -63,7 +63,7 @@ export default function SignUpPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Crear Cuenta</CardTitle>
           <CardDescription>
-            Únete a Anella Boutique para regalos únicos
+            Únete a Anella para regalos únicos
           </CardDescription>
         </CardHeader>
         <CardContent>

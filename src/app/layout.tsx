@@ -11,8 +11,8 @@ import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 
 const metadata: Metadata = {
-  title: 'Anella Boutique',
-  description: 'Regalos personalizados desde Cajamarca, Perú.',
+  title: 'Anella',
+  description: 'El regalo perfecto, desde Cajamarca, Perú.',
 };
 
 export default function RootLayout({

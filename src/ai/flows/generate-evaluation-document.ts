@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
     input: { schema: GenerateDocumentInputSchema },
     output: { schema: GenerateDocumentOutputSchema },
     prompt: `
-        You are an expert HR manager for "Anella Boutique", a personalized gift shop. Your task is to generate an official document for an employee based on their monthly performance evaluation.
+        You are an expert HR manager for "Anella", a personalized gift shop. Your task is to generate an official document for an employee based on their monthly performance evaluation.
 
         **Document Type to Generate:** {{{documentType}}}
         **Employee Name:** {{{employeeName}}}
@@ -72,7 +72,7 @@ const prompt = ai.definePrompt({
                 *   Start by congratulating the employee by name for their excellent performance during the period.
                 *   Mention their high score ({{{totalScore}}}) and the bonus (S/{{{bonus}}}) they've earned as a result.
                 *   **Based on the scores and evaluator comments, write a concise summary (max 80 words) highlighting their key contributions and positive attributes.** This summary will be the main body of the recognition.
-                *   End with a message of encouragement, expressing appreciation for their contribution to Anella Boutique.
+                *   End with a message of encouragement, expressing appreciation for their contribution to Anella.
 
         *   **If documentType is 'action_plan':**
             *   **Tone:** Constructive, supportive, and forward-looking.
@@ -111,4 +111,3 @@ const generateDocumentFlow = ai.defineFlow(
     return output!;
   }
 );
-

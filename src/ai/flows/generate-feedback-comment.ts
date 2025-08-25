@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateFeedbackCommentInputSchema },
   output: { schema: GenerateFeedbackCommentOutputSchema },
   prompt: `
-    Eres un experto gerente de RR.HH. para "Anella Boutique". Tu tarea es generar un comentario de retroalimentación conciso y constructivo para un empleado basado en su evaluación de desempeño mensual. El comentario debe tener una longitud de 1 a 2 párrafos.
+    Eres un experto gerente de RR.HH. para "Anella". Tu tarea es generar un comentario de retroalimentación conciso y constructivo para un empleado basado en su evaluación de desempeño mensual. El comentario debe tener una longitud de 1 a 2 párrafos.
 
     **Nombre del Empleado:** {{{employeeName}}}
     **Puntaje Total:** {{{totalScore}}} / 20
@@ -52,7 +52,7 @@ const prompt = ai.definePrompt({
         *   **Contenido:**
             *   Comienza felicitando a {{{employeeName}}}.
             *   Identifica los **2 criterios con el puntaje más alto**.
-            *   Escribe un comentario que elogie específicamente su desempeño en estas áreas, explicando por qué es valioso para el equipo y Anella Boutique.
+            *   Escribe un comentario que elogie específicamente su desempeño en estas áreas, explicando por qué es valioso para el equipo y Anella.
             *   Mantenlo profesional y motivador.
 
     *   **Si feedbackType es 'improvement':**

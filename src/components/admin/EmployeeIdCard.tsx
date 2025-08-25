@@ -51,7 +51,7 @@ export function EmployeeIdCard({ employee }: EmployeeIdCardProps) {
 
        <Image
           src="https://i.ibb.co/MyXzBh0r/Anella.png"
-          alt="Anella Boutique Logo"
+          alt="Anella Logo"
           width={60}
           height={15}
           className="object-contain absolute top-4 right-4 z-10 opacity-70"

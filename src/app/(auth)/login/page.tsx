@@ -68,7 +68,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-floating animate-subtle-bounce">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Iniciar Sesión</CardTitle>
-          <CardDescription>Accede a tu cuenta de Anella Boutique</CardDescription>
+          <CardDescription>Accede a tu cuenta de Anella</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (

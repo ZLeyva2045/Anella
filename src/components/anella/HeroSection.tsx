@@ -12,7 +12,7 @@ export function HeroSection() {
                 <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage: `url(${heroImageUrl})`}} data-ai-hint="gift giving celebration"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/10"></div>
                 <div className="relative flex flex-col items-center justify-center h-full p-8 text-center text-white">
-                    <h1 className="text-4xl font-extrabold leading-tight tracking-tighter sm:text-5xl lg:text-6xl">Encuentra el regalo perfecto</h1>
+                    <h1 className="text-4xl font-extrabold leading-tight tracking-tighter sm:text-5xl lg:text-6xl">El regalo perfecto</h1>
                     <p className="mt-4 max-w-2xl text-lg text-gray-200">Explora nuestra colección de regalos cuidadosamente seleccionados para cada ocasión.</p>
                     <Button asChild size="lg" className="mt-8 text-base font-bold shadow-lg transition-transform hover:scale-105">
                         <Link href="/products">
