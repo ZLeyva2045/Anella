@@ -1,13 +1,19 @@
 // src/components/settings/AdminSettings.tsx
 'use client';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { AlertCircle } from 'lucide-react';
+import { ResetStoreDialog } from './ResetStoreDialog';
 
 export function AdminSettings() {
+    const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+
     return (
+       <>
         <Card>
             <CardHeader>
                 <CardTitle>Configuración Avanzada</CardTitle>
@@ -42,5 +48,30 @@ export function AdminSettings() {
                  <Button disabled>Guardar Cambios Avanzados</Button>
             </CardFooter>
         </Card>
+
+        <Card className="border-destructive">
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                     <AlertCircle className="h-6 w-6 text-destructive" />
+                    <div>
+                        <CardTitle className="text-destructive">Zona de Peligro</CardTitle>
+                        <CardDescription>Estas acciones son irreversibles. Procede con extrema precaución.</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="flex justify-between items-center p-4 bg-destructive/5 rounded-lg">
+                    <div>
+                        <h4 className="font-semibold">Restaurar Datos de la Tienda</h4>
+                        <p className="text-sm text-muted-foreground">Elimina todos los datos de ventas, clientes y reportes. El inventario no se verá afectado.</p>
+                    </div>
+                    <Button variant="destructive" onClick={() => setIsResetDialogOpen(true)}>
+                        Restaurar
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+        <ResetStoreDialog isOpen={isResetDialogOpen} setIsOpen={setIsResetDialogOpen} />
+       </>
     );
 }
