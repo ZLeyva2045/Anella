@@ -9,17 +9,16 @@ import {
 } from 'firebase/firestore';
 import { 
   createUserWithEmailAndPassword,
+  getAuth,
   // deleteUser // This needs to be called from a backend environment (Firebase Function)
 } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase/config';
-import type { User } from '@/types/firestore';
-import { initializeApp, getApps, deleteApp } from 'firebase/app';
+import type { User, EmployeeData } from '@/types/firestore';
+import { initializeApp, deleteApp } from 'firebase/app';
 
 
 // Note: For full user deletion, you need a Firebase Function to delete the auth user.
 // The client-side can only delete the Firestore document.
-
-type EmployeeData = Omit<User, 'id' | 'createdAt' | 'orders'>;
 
 export async function createEmployee(data: Omit<EmployeeData, 'password'> & { password?: string }) {
   if (!data.password) {
