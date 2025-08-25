@@ -225,7 +225,7 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
           ) : (
             feedbackHistory.map(fb => (
               <div key={fb.id} className="p-3 border rounded-lg space-y-2">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-start">
                    <Badge variant={fb.type === 'recognition' ? 'secondary' : 'destructive'} className={cn(fb.type === 'recognition' && "text-green-600 border-green-200 bg-green-50")}>
                       {fb.type === 'recognition' ? <ThumbsUp className="mr-2 h-3 w-3"/> : <Goal className="mr-2 h-3 w-3"/>}
                       {fb.type === 'recognition' ? 'Reconocimiento' : 'Área de Mejora'}
@@ -233,7 +233,19 @@ export function FeedbackManager({ employees }: FeedbackManagerProps) {
                   <p className="text-xs text-muted-foreground">{format(fb.createdAt.toDate(), "P", { locale: es })}</p>
                 </div>
                 <p className="text-sm">{fb.comment}</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3"/>Evaluador: {employees.find(e => e.id === fb.evaluatorId)?.name || 'Desconocido'}</p>
+                 <div className="flex justify-between items-center">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3"/>Evaluador: {employees.find(e => e.id === fb.evaluatorId)?.name || 'Desconocido'}</p>
+                    {fb.type === 'recognition' && fb.evaluationId && (
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => router.push(`/admin/payroll/certificate/${fb.evaluationId}`)}
+                        >
+                            <Award className="mr-2 h-4 w-4" />
+                            Certificado
+                        </Button>
+                    )}
+                </div>
               </div>
             ))
           )}

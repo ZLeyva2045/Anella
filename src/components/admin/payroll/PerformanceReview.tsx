@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Save, User, Calendar, Wand2, PlusCircle, AlertCircle, FileText, Bot, Award } from 'lucide-react';
+import { Loader2, Save, User, Calendar, Wand2, PlusCircle, AlertCircle, FileText, Bot } from 'lucide-react';
 import type { User, Evaluation } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { saveEvaluation, getEvaluations } from '@/services/payrollService';
@@ -175,7 +175,7 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
     });
   }
 
-  const handleGenerateDocument = async (documentType: 'action_plan' | 'memorandum' | 'recognition') => {
+  const handleGenerateDocument = async (documentType: 'action_plan' | 'memorandum') => {
       const currentData = form.getValues();
       const currentTotalScore = Object.values(currentData.scores).reduce((sum, score) => sum + score, 0);
       const currentBonus = bonusScale[currentTotalScore.toFixed(1)] || 0;
@@ -198,18 +198,9 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
           }
           const result = await generateEvaluationDocument(input);
           
-          if (documentType === 'recognition') {
-            const evaluationId = selectedEvaluation?.id || form.getValues('id');
-            if (!evaluationId) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Guarda la evaluación primero para generar un certificado.'});
-                setIsGeneratingDoc(false);
-                return;
-            }
-            router.push(`/admin/payroll/certificate/${evaluationId}`);
-          } else {
-            setGeneratedDoc(result);
-            setIsDocViewerOpen(true);
-          }
+          setGeneratedDoc(result);
+          setIsDocViewerOpen(true);
+          
       } catch (error) {
           console.error("Error generating document: ", error);
           toast({ variant: 'destructive', title: 'Error de IA', description: 'No se pudo generar el documento.' });
@@ -335,10 +326,6 @@ export function PerformanceReview({ employees }: PerformanceReviewProps) {
                              <CardDescription>Genera documentos o certificados basados en esta evaluación.</CardDescription>
                          </CardHeader>
                          <CardContent className="flex flex-wrap gap-2">
-                            <Button type="button" variant="secondary" size="sm" onClick={() => handleGenerateDocument('recognition')} disabled={isGeneratingDoc}>
-                                  {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
-                                 Certificado de Reconocimiento
-                             </Button>
                              <Button type="button" variant="outline" size="sm" onClick={() => handleGenerateDocument('action_plan')} disabled={isGeneratingDoc}>
                                   {isGeneratingDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                                  Plan de Acción
