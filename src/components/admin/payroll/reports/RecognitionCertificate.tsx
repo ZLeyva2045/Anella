@@ -20,7 +20,7 @@ export function RecognitionCertificate({ employee, evaluation, certificateConten
     <>
     {/* This style tag is specific to this component and won't cause hydration issues */}
     <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Parisienne&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700;800&family=Parisienne&display=swap');
     `}</style>
     <div 
       className="w-full h-full p-10 flex flex-col justify-between items-center text-center bg-white relative" 
