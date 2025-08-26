@@ -79,7 +79,6 @@ export function ProductFilters({
                 defaultValue={[500]}
                 max={500}
                 step={10}
-                value={priceRange}
                 onValueChange={(value) => setPriceRange(value as [number])}
               />
             </AccordionContent>
