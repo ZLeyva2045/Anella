@@ -12,7 +12,7 @@ import { useEffect } from 'react';
 
 const metadata: Metadata = {
   title: 'Anella',
-  description: 'El regalo perfecto, desde Cajamarca, Perú.',
+  description: 'El regalo perfecto',
 };
 
 export default function RootLayout({
@@ -61,6 +61,7 @@ export default function RootLayout({
         <meta name="description" content={String(metadata.description)} />
       </head>
       <body>
+        <div id="app-container">
             <AuthProvider>
             <CartProvider>
                 {children}
@@ -68,6 +69,7 @@ export default function RootLayout({
             </CartProvider>
             </AuthProvider>
             <Toaster />
+        </div>
       </body>
     </html>
   );

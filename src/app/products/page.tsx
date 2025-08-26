@@ -27,18 +27,21 @@ export default function ProductsPage() {
   const activeTheme = themes.find(t => t.name === selectedThemes[0]);
 
   useEffect(() => {
+    const appContainer = document.getElementById('app-container');
+    if (!appContainer) return;
+
     if (activeTheme?.backgroundUrl) {
-      document.body.style.setProperty('--page-background-image', `url(${activeTheme.backgroundUrl})`);
-      document.body.classList.add('bg-page-themed');
+      appContainer.style.setProperty('--page-background-image', `url(${activeTheme.backgroundUrl})`);
+      appContainer.classList.add('themed-background');
     } else {
-      document.body.style.removeProperty('--page-background-image');
-      document.body.classList.remove('bg-page-themed');
+      appContainer.style.removeProperty('--page-background-image');
+      appContainer.classList.remove('themed-background');
     }
     
     // Cleanup on component unmount
     return () => {
-        document.body.style.removeProperty('--page-background-image');
-        document.body.classList.remove('bg-page-themed');
+        appContainer.style.removeProperty('--page-background-image');
+        appContainer.classList.remove('themed-background');
     }
   }, [activeTheme]);
 
