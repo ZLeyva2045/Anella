@@ -13,13 +13,12 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
-import type { Product, Category, Theme, Subcategory } from '@/types/firestore';
+import type { Product, Category, Subcategory } from '@/types/firestore';
 
 // Omit fields that are auto-generated or handled by the backend
 type ProductData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'rating'>;
 type CategoryData = Omit<Category, 'id'>;
 type SubcategoryData = Omit<Subcategory, 'id'>;
-type ThemeData = Omit<Theme, 'id' | 'logoUrl' | 'backgroundUrl'>;
 
 export async function uploadImage(file: File, path: string): Promise<string> {
   const storageRef = ref(storage, `${path}/${Date.now()}-${file.name}`);

@@ -34,7 +34,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { addTheme, uploadImage } from '@/services/productService';
+import { uploadImage } from '@/services/productService';
+import { addTheme } from '@/services/themeService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const giftProductSchema = z.object({
@@ -122,7 +123,8 @@ export function GiftForm({ isOpen, setIsOpen, gift }: GiftFormProps) {
     const currentThemes = form.getValues('themes') || [];
     if (existing || currentThemes.includes(themeName)) return;
 
-    await addTheme({ name: themeName });
+    // We pass an empty logo and background, as they can be edited later.
+    await addTheme({ name: themeName, logoUrl: '', backgroundUrl: '' });
     form.setValue('themes', [...currentThemes, themeName]);
   }
 
