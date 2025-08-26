@@ -5,23 +5,29 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
 import { ProductGrid } from '@/components/products/ProductGrid';
-import { mockProducts } from '@/lib/mock-data';
-import type { Product } from '@/types/firestore';
+import type { Gift } from '@/types/firestore';
 import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+
 
 export default function WishlistPage() {
-  const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
+  const [favoriteProducts, setFavoriteProducts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // En una aplicación real, obtendríamos los IDs de los favoritos de la base de datos o localStorage
-    // Por ahora, simularemos que algunos productos son favoritos.
-    const favoriteIds = ['1', '4', '7']; // IDs de ejemplo
-    const favs = mockProducts.filter(p => favoriteIds.includes(p.id));
-    setFavoriteProducts(favs);
-    setLoading(false);
+    // Por ahora, simularemos que los primeros 3 productos son favoritos.
+    const unsub = onSnapshot(collection(db, 'gifts'), (snapshot) => {
+        const allGifts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Gift));
+        const favs = allGifts.slice(0, 3); // Simulamos favoritos
+        setFavoriteProducts(favs);
+        setLoading(false);
+    });
+
+    return () => unsub();
   }, []);
 
   return (
@@ -35,8 +41,10 @@ export default function WishlistPage() {
             </p>
         </div>
 
-        {favoriteProducts.length > 0 ? (
-          <ProductGrid products={favoriteProducts} loading={loading} />
+        {loading ? (
+           <ProductGrid gifts={[]} loading={true} />
+        ) : favoriteProducts.length > 0 ? (
+          <ProductGrid gifts={favoriteProducts} loading={false} />
         ) : (
           <div className="text-center py-20">
             <Heart className="mx-auto h-24 w-24 text-muted-foreground" />
