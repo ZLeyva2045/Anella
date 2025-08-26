@@ -61,7 +61,7 @@ export default function RootLayout({
         <meta name="description" content={String(metadata.description)} />
       </head>
       <body>
-        <div id="app-container">
+        <div id="app-container" className="bg-background">
             <AuthProvider>
             <CartProvider>
                 {children}

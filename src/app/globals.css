@@ -222,29 +222,20 @@
   body {
     @apply bg-background text-foreground;
   }
-  
-  .themed-background {
-    position: relative;
-    background-color: hsl(var(--background));
-    isolation: isolate;
-  }
-  
-  .themed-background::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image: var(--page-background-image);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.15;
-    z-index: -1;
-    transition: background-image 0.5s ease-in-out;
-  }
 }
+
+.themed-background {
+  min-height: 100vh;
+  background:
+    linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)),
+    var(--page-background-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.5s ease-in-out, opacity 0.3s ease;
+  isolation: isolate;
+}
+
 
 @layer utilities {
     .bg-soft-pink {

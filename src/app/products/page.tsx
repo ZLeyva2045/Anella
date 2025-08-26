@@ -29,20 +29,22 @@ export default function ProductsPage() {
   useEffect(() => {
     const appContainer = document.getElementById('app-container');
     if (!appContainer) return;
-
+  
     if (activeTheme?.backgroundUrl) {
-      appContainer.style.setProperty('--page-background-image', `url(${activeTheme.backgroundUrl})`);
       appContainer.classList.add('themed-background');
+      appContainer.style.setProperty('--page-background-image', `url(${activeTheme.backgroundUrl})`);
     } else {
-      appContainer.style.removeProperty('--page-background-image');
       appContainer.classList.remove('themed-background');
+      appContainer.style.removeProperty('--page-background-image');
     }
-    
-    // Cleanup on component unmount
+  
     return () => {
-        appContainer.style.removeProperty('--page-background-image');
+      // Solo limpiar si se había aplicado
+      if (activeTheme?.backgroundUrl && appContainer) {
         appContainer.classList.remove('themed-background');
-    }
+        appContainer.style.removeProperty('--page-background-image');
+      }
+    };
   }, [activeTheme]);
 
   useEffect(() => {
@@ -112,7 +114,7 @@ export default function ProductsPage() {
   }, [searchQuery, sortOption, gifts, selectedThemes, priceRange, rating]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen">
       <Header />
       <div className="container mx-auto px-4 py-8">
         <main className="grid grid-cols-1 lg:grid-cols-4 gap-8">
