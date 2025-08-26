@@ -222,6 +222,28 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  body.bg-page-themed::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: var(--page-background-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+    opacity: 0;
+    animation: fade-in-bg 1s ease-in-out forwards;
+  }
+
+  @keyframes fade-in-bg {
+    to {
+      opacity: 0.15;
+    }
+  }
 }
 
 @layer utilities {

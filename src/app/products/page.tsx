@@ -10,6 +10,7 @@ import { Toolbar } from '@/components/products/Toolbar';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Gift, Theme } from '@/types/firestore';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function ProductsPage() {
   const [gifts, setGifts] = useState<Gift[]>([]);
@@ -21,6 +22,24 @@ export default function ProductsPage() {
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number]>([500]);
   const [rating, setRating] = useState(0);
+
+  const activeTheme = themes.find(t => t.name === selectedThemes[0]);
+
+  useEffect(() => {
+    if (activeTheme?.backgroundUrl) {
+      document.body.style.setProperty('--page-background-image', `url(${activeTheme.backgroundUrl})`);
+      document.body.classList.add('bg-page-themed');
+    } else {
+      document.body.style.removeProperty('--page-background-image');
+      document.body.classList.remove('bg-page-themed');
+    }
+    
+    // Cleanup on component unmount
+    return () => {
+        document.body.style.removeProperty('--page-background-image');
+        document.body.classList.remove('bg-page-themed');
+    }
+  }, [activeTheme]);
 
   useEffect(() => {
     setLoading(true);
@@ -71,7 +90,7 @@ export default function ProductsPage() {
         tempGifts.sort((a, b) => a.price - b.price);
         break;
       case 'price-desc':
-        tempGifts.sort((a, b) => b.price - a.price);
+        tempGifts.sort((a, b) => b.price - b.price);
         break;
       case 'newest':
         tempGifts.sort((a, b) => {
@@ -105,6 +124,20 @@ export default function ProductsPage() {
             />
           </aside>
           <div className="lg:col-span-3">
+            <AnimatePresence>
+                {activeTheme && (
+                    <motion.div
+                        key={activeTheme.id}
+                        initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                        transition={{ duration: 0.5, ease: "circOut" }}
+                        className="flex justify-center mb-12"
+                    >
+                        <img src={activeTheme.logoUrl} alt={`${activeTheme.name} Logo`} className="max-h-28" />
+                    </motion.div>
+                )}
+            </AnimatePresence>
             <h2 className="text-3xl font-bold text-center text-foreground tracking-tight mb-12">Todos los Regalos</h2>
             <Toolbar
               searchQuery={searchQuery}

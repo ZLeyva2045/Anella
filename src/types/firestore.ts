@@ -95,8 +95,10 @@ export interface Subcategory {
  * Representa una temática en la colección 'themes' de Firestore.
  */
 export interface Theme {
-    id: string; // ID único autogenerado por Firestore
-    name: string; // Nombre de la temática, ej: "Harry Potter"
+    id: string;
+    name: string;
+    logoUrl: string;
+    backgroundUrl: string;
 }
 
 export type PaymentMethod = 'yapePlin' | 'bankTransfer' | 'card' | 'mercadoPago' | 'paypal' | 'cash';

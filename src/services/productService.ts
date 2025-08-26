@@ -19,7 +19,7 @@ import type { Product, Category, Theme, Subcategory } from '@/types/firestore';
 type ProductData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'rating'>;
 type CategoryData = Omit<Category, 'id'>;
 type SubcategoryData = Omit<Subcategory, 'id'>;
-type ThemeData = Omit<Theme, 'id'>;
+type ThemeData = Omit<Theme, 'id' | 'logoUrl' | 'backgroundUrl'>;
 
 export async function uploadImage(file: File, path: string): Promise<string> {
   const storageRef = ref(storage, `${path}/${Date.now()}-${file.name}`);
@@ -135,19 +135,4 @@ export async function addSubcategory(categoryId: string, data: SubcategoryData):
 }
 
 // --- Theme Functions ---
-
-export async function getThemes(): Promise<Theme[]> {
-  const themesCollection = collection(db, 'themes');
-  const snapshot = await getDocs(themesCollection);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Theme));
-}
-
-export async function addTheme(data: ThemeData): Promise<string> {
-  const q = query(collection(db, 'themes'), where("name", "==", data.name));
-  const querySnapshot = await getDocs(q);
-  if (!querySnapshot.empty) {
-    return querySnapshot.docs[0].id;
-  }
-  const newDocRef = await addDoc(collection(db, 'themes'), data);
-  return newDocRef.id;
-}
+// Moved to a dedicated themeService.ts

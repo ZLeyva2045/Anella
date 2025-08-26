@@ -18,6 +18,7 @@ import {
   Bell,
   ClipboardList,
   UserCog,
+  Palette,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -46,6 +47,7 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/orders', label: 'Pedidos', icon: ShoppingCart },
   { href: '/admin/gifts', label: 'Regalos', icon: Gift },
   { href: '/admin/products', label: 'Inventario', icon: Package },
+  { href: '/admin/themes', label: 'Temáticas', icon: Palette },
   { href: '/admin/compras', label: 'Compras', icon: ShoppingBasket },
   { href: '/admin/expenses', label: 'Gastos', icon: Receipt },
   { href: '/admin/customers', label: 'Clientes', icon: Users },
@@ -92,6 +94,9 @@ const AdminNav = () => {
                 </SidebarMenuItem>
                  <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive('/admin/gifts')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Regalos"}}><Link href="/admin/gifts"><Gift /><span>Regalos</span></Link></SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/admin/themes')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Temáticas"}}><Link href="/admin/themes"><Palette /><span>Temáticas</span></Link></SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive('/admin/orders')} className="text-foreground/70 hover:text-primary data-[active=true]:bg-secondary data-[active=true]:text-primary" tooltip={{children: "Pedidos"}}><Link href="/admin/orders"><ShoppingCart /><span>Pedidos</span></Link></SidebarMenuButton>
