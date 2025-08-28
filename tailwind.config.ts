@@ -1,4 +1,3 @@
-
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -113,6 +112,7 @@ export default {
         'subtle-bounce': 'subtle-bounce 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
         'button-press': 'button-press 0.2s ease-in-out',
         bounce: 'bounce 1s infinite',
+        'spin-slow': 'spin 5s linear infinite',
       },
       backgroundImage: {
         'soft-gradient': 'linear-gradient(120deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1), hsl(var(--background)))',
@@ -121,5 +121,6 @@ export default {
   },
   plugins: [
     require('tailwindcss-animate'),
+    require('@tailwindcss/line-clamp'),
   ],
 } satisfies Config;

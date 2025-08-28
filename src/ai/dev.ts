@@ -4,3 +4,4 @@ config();
 import '@/ai/flows/gift-recommendation.ts';
 import '@/ai/flows/generate-evaluation-document.ts';
 import '@/ai/flows/generate-feedback-comment.ts';
+import '@/ai/flows/ianella-assistant.ts';

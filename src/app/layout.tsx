@@ -9,6 +9,7 @@ import { CartProvider } from '@/hooks/useCart';
 import { WhatsAppButton } from '@/components/anella/WhatsAppButton';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
+import { IAnellaButton } from '@/components/anella/IAnellaButton';
 
 const metadata: Metadata = {
   title: 'Anella',
@@ -65,6 +66,7 @@ export default function RootLayout({
             <AuthProvider>
             <CartProvider>
                 {children}
+                {showWhatsAppButton && <IAnellaButton />}
                 {showWhatsAppButton && <WhatsAppButton />}
             </CartProvider>
             </AuthProvider>
