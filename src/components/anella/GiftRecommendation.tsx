@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { recommendGift, type RecommendGiftOutput } from '@/ai/flows/gift-recommendation';
+import { recommendGiftTool, type RecommendGiftOutput } from '@/ai/flows/gift-recommendation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -40,7 +40,7 @@ export function GiftRecommendation() {
     setError(null);
     setRecommendation(null);
     try {
-      const result = await recommendGift(values);
+      const result = await recommendGiftTool(values);
       setRecommendation(result);
     } catch (e) {
       console.error(e);

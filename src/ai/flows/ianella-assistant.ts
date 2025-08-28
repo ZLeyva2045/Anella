@@ -8,31 +8,11 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { recommendGift } from './gift-recommendation';
+import { recommendGiftTool } from './gift-recommendation';
 import type { ChatWithAnellaInput } from '@/types/ianella';
 
 
 export async function chatWithAnella(input: ChatWithAnellaInput): Promise<string> {
-    // Detect if the user is asking for a gift recommendation
-    const isRecommendationQuery = await ai.generate({
-        prompt: `Analiza el siguiente mensaje de usuario. Responde 'true' si parece que está pidiendo una recomendación de regalo, y 'false' en caso contrario. Mensaje: "${input.message}"`,
-        model: 'googleai/gemini-2.0-flash',
-        output: {
-            schema: z.boolean(),
-        },
-    });
-
-    if (isRecommendationQuery.output) {
-         const giftRecommendationResult = await recommendGift({
-            occasion: "cualquiera", // We let the model figure it out from the context
-            budget: "cualquiera",
-            recipientInterests: input.message,
-        });
-        
-        return `${giftRecommendationResult.reasoning}\n\nAquí tienes algunas ideas:\n- ${giftRecommendationResult.giftIdeas.join('\n- ')}`;
-    }
-
-    // If not a recommendation, use the general conversational prompt
     const response = await assistantPrompt.generate({
         input: input,
     });
@@ -50,6 +30,7 @@ const assistantPrompt = ai.definePrompt({
         })),
         message: z.string(),
       }) },
+    tools: [recommendGiftTool],
     prompt: `
         Eres "IAnella", una asistente virtual amigable, experta y un poco divertida para "Anella", una tienda de regalos personalizados. Tu objetivo es ayudar a los usuarios a encontrar el regalo perfecto y responder sus preguntas sobre la tienda.
 
@@ -77,7 +58,8 @@ const assistantPrompt = ai.definePrompt({
             {{/if}}
         2.  **Responde la Pregunta Actual:** Responde directamente al último mensaje del usuario.
             - **Mensaje del Usuario:** {{{message}}}
-        3.  **Sé Proactiva:** Si el usuario parece perdido, sugiérele que explore la sección de regalos o que te pida una recomendación. Si pregunta por una recomendación, anímale a describir los intereses de la persona, la ocasión y su presupuesto.
-        4.  **No Inventes:** Si no sabes la respuesta a algo, di algo como "Esa es una excelente pregunta. No tengo la información a la mano, pero puedes contactarnos por WhatsApp para una respuesta más detallada. 😊"
+        3.  **Usa Herramientas si es Necesario:** Si el usuario pide una recomendación de regalo, utiliza la herramienta \`recommendGiftTool\` para obtener sugerencias. No inventes regalos, usa la herramienta. Cuando obtengas la respuesta, preséntala de forma amigable.
+        4.  **Sé Proactiva:** Si el usuario parece perdido, sugiérele que explore la sección de regalos o que te pida una recomendación.
+        5.  **No Inventes:** Si no sabes la respuesta a algo, di algo como "Esa es una excelente pregunta. No tengo la información a la mano, pero puedes contactarnos por WhatsApp para una respuesta más detallada. 😊"
     `
 });
