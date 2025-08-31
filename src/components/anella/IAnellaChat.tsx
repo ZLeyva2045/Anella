@@ -1,3 +1,4 @@
+
 // src/components/anella/IAnellaChat.tsx
 'use client';
 
@@ -17,6 +18,8 @@ import { chatWithAnella } from '@/ai/flows/ianella-assistant';
 import type { ChatMessage } from '@/types/ianella';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import { parseIntent } from '@/lib/intent';
+import ProductSuggestion from './ProductSuggestion';
 
 interface IAnellaChatProps {
   isOpen: boolean;
@@ -29,23 +32,54 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (text: string) => {
+    if (!text.trim()) return;
 
-    const userMessage: ChatMessage = { role: 'user', content: input };
+    const userMessage: ChatMessage = { role: 'user', content: text };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-        const response = await chatWithAnella({
-            history: messages,
-            message: input,
+      const intent = parseIntent(text);
+
+      if (intent.recipient) {
+         const res = await fetch('/api/products/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              recipient: intent.recipient,
+              budget: intent.budget,
+              interests: intent.interests,
+              occasion: intent.occasion,
+            }),
         });
 
+        const json = await res.json();
+
+        if (json.ok && json.products?.length) {
+            const productsMessage: ChatMessage = {
+                role: 'model',
+                content: "¡Claro! Basado en lo que me dijiste, aquí tienes algunas ideas de nuestro catálogo:",
+                products: json.products,
+            };
+            setMessages(prev => [...prev, productsMessage]);
+        } else {
+            const noResultMessage: ChatMessage = {
+                role: 'model',
+                content: "No encontré algo exacto en el catálogo, ¿te gustaría que te ofrezca un regalo personalizado? Puedo ayudarte a diseñarlo desde cero.",
+            };
+            setMessages(prev => [...prev, noResultMessage]);
+        }
+      } else {
+        // If no specific gift intent, use the general conversational AI
+        const response = await chatWithAnella({
+            history: messages,
+            message: text,
+        });
         const modelMessage: ChatMessage = { role: 'model', content: response };
         setMessages(prev => [...prev, modelMessage]);
-
+      }
     } catch (error) {
         const errorMessage: ChatMessage = { role: 'model', content: '¡Uy! Algo salió mal. Por favor, inténtalo de nuevo más tarde.' };
         setMessages(prev => [...prev, errorMessage]);
@@ -55,7 +89,6 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
   };
 
   useEffect(() => {
-    // Auto-scroll to the bottom when new messages arrive
     if (scrollAreaRef.current) {
         const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
         if (viewport) {
@@ -89,7 +122,12 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
               <div key={index} className={cn('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                 {msg.role === 'model' && <Bot className="w-6 h-6 text-primary flex-shrink-0" />}
                 <div className={cn('p-3 rounded-lg max-w-sm prose prose-sm', msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    {msg.products && msg.products.length > 0 && (
+                        <div className="space-y-2 mt-2 not-prose">
+                            {msg.products.map(p => <ProductSuggestion key={p.id} p={p} />)}
+                        </div>
+                    )}
                 </div>
                  {msg.role === 'user' && <User className="w-6 h-6 text-muted-foreground flex-shrink-0" />}
               </div>
@@ -99,7 +137,7 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
                     <Bot className="w-6 h-6 text-primary flex-shrink-0" />
                      <div className="p-3 rounded-lg bg-secondary flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin"/>
-                        <span>Pensando...</span>
+                        <span>Buscando ideas...</span>
                     </div>
                 </div>
             )}
@@ -110,11 +148,11 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Pide una recomendación..."
-            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
+            placeholder="Regalo para mi novio por aniversario..."
+            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend(input)}
             disabled={isLoading}
           />
-          <Button onClick={handleSend} disabled={isLoading || !input.trim()}>
+          <Button onClick={() => handleSend(input)} disabled={isLoading || !input.trim()}>
             <Send className="w-4 h-4" />
           </Button>
         </div>
