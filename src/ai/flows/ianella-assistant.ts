@@ -1,4 +1,3 @@
-// src/ai/flows/ianella-assistant.ts
 'use server';
 /**
  * @fileOverview Flujo principal para el asistente de chat "IAnella".
@@ -11,24 +10,58 @@ import { z } from 'genkit';
 import { recommendGiftTool } from './gift-recommendation';
 import type { ChatWithAnellaInput, ChatMessage } from '@/types/ianella';
 
-
 export async function chatWithAnella(input: ChatWithAnellaInput): Promise<string> {
-    const { history, message } = input;
-    
-    // The history and the new message (prompt) are passed as separate properties
-    const response = await assistantPrompt.generate({
-        history: history,
-        prompt: message,
-    });
-    
-    return response.text();
+    console.log('chatWithAnella called at', new Date().toISOString());
+    console.log('raw input:', JSON.stringify(input));
+
+    try {
+        if (!input) {
+            console.error('chatWithAnella: no input provided');
+            return '__IANELLA_ERROR__: No input provided';
+        }
+
+        const { history, message } = input as any;
+
+        if (!message || typeof message !== 'string') {
+            console.error('chatWithAnella: invalid message', { message });
+            return '__IANELLA_ERROR__: Mensaje inválido o vacío';
+        }
+
+        // Ejecuta el prompt
+        const response = await assistantPrompt.generate({
+            history: Array.isArray(history) ? history : [],
+            prompt: message,
+        });
+
+        // response.text puede ser función o propiedad, manejamos ambos casos:
+        let text: string;
+        if (response == null) {
+            throw new Error('assistantPrompt.generate returned null/undefined');
+        } else if (typeof response.text === 'function') {
+            text = await response.text();
+        } else if (typeof response.text === 'string') {
+            text = response.text;
+        } else {
+            // Fallback: convierte el objeto respuesta a string para debug
+            text = String(response);
+        }
+
+        console.log('assistant response length:', text?.length ?? 0);
+        return text;
+    } catch (err: any) {
+        // Loguea stack para diagnostico
+        console.error('chatWithAnella error:', err?.stack ?? err);
+        // Devuelve un string con prefijo identificable para que el cliente lo muestre en dev
+        return `__IANELLA_SERVER_ERROR__: ${err?.message ?? String(err)}`;
+    }
 }
 
 const assistantPrompt = ai.definePrompt({
     name: 'ianellaAssistantPrompt',
-    // The input schema is now defined directly, not nested under an 'input' object
     inputSchema: z.object({
-        history: z.array(z.custom<ChatMessage>()),
+        // Usamos z.any() para evitar fallas si z.custom no está disponible en runtime.
+        // Cambia a un esquema más estricto si quieres validar roles/contenidos:
+        history: z.array(z.any()),
         prompt: z.string(),
       }),
     tools: [recommendGiftTool],
