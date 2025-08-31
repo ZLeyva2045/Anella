@@ -9,25 +9,28 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { recommendGiftTool } from './gift-recommendation';
-import type { ChatWithAnellaInput } from '@/types/ianella';
+import type { ChatWithAnellaInput, ChatMessage } from '@/types/ianella';
 
 
 export async function chatWithAnella(input: ChatWithAnellaInput): Promise<string> {
-    const response = await assistantPrompt.generate(input);
+    const { history, message } = input;
+    
+    // The history and the new message (prompt) are passed as separate properties
+    const response = await assistantPrompt.generate({
+        history: history,
+        prompt: message,
+    });
     
     return response.text();
 }
 
-
 const assistantPrompt = ai.definePrompt({
     name: 'ianellaAssistantPrompt',
-    input: { schema: z.object({
-        history: z.array(z.object({
-          role: z.enum(['user', 'model']),
-          content: z.string(),
-        })),
-        message: z.string(),
-      }) },
+    // The input schema is now defined directly, not nested under an 'input' object
+    inputSchema: z.object({
+        history: z.array(z.custom<ChatMessage>()),
+        prompt: z.string(),
+      }),
     tools: [recommendGiftTool],
     prompt: `
         Eres "IAnella", una asistente virtual amigable, experta y un poco divertida para "Anella", una tienda de regalos personalizados. Tu objetivo es ayudar a los usuarios a encontrar el regalo perfecto y responder sus preguntas sobre la tienda.
@@ -55,7 +58,7 @@ const assistantPrompt = ai.definePrompt({
             {{/each}}
             {{/if}}
         2.  **Responde la Pregunta Actual:** Responde directamente al último mensaje del usuario.
-            - **Mensaje del Usuario:** {{{message}}}
+            - **Mensaje del Usuario:** {{{prompt}}}
         3.  **Usa Herramientas si es Necesario:** Si el usuario pide una recomendación de regalo, utiliza la herramienta \`recommendGiftTool\` para obtener sugerencias. No inventes regalos, usa la herramienta. Cuando obtengas la respuesta, preséntala de forma amigable.
         4.  **Sé Proactiva:** Si el usuario parece perdido, sugiérele que explore la sección de regalos o que te pida una recomendación.
         5.  **No Inventes:** Si no sabes la respuesta a algo, di algo como "Esa es una excelente pregunta. No tengo la información a la mano, pero puedes contactarnos por WhatsApp para una respuesta más detallada. 😊"
