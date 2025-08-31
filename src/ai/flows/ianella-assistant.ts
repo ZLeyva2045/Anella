@@ -27,8 +27,8 @@ export async function chatWithAnella(input: ChatWithAnellaInput): Promise<string
             return '__IANELLA_ERROR__: Mensaje inválido o vacío';
         }
 
-        // Ejecuta el prompt
-        const response = await assistantPrompt.generate({
+        // Ejecuta el prompt con la sintaxis correcta
+        const response = await assistantPrompt({
             history: Array.isArray(history) ? history : [],
             prompt: message,
         });
