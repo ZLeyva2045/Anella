@@ -13,9 +13,7 @@ import type { ChatWithAnellaInput } from '@/types/ianella';
 
 
 export async function chatWithAnella(input: ChatWithAnellaInput): Promise<string> {
-    const response = await assistantPrompt.generate({
-        input: input,
-    });
+    const response = await assistantPrompt.generate(input);
     
     return response.text();
 }
