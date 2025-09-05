@@ -5,34 +5,34 @@
 
 @layer base {
   :root {
-    /* Nueva Paleta para el sitio público */
-    --background: 53 38% 91%; /* #F4F1DE - Warm Beige */
-    --foreground: 224 71.4% 4.1%;
+    /* Nueva Paleta Anella - Cálida y Elegante */
+    --background: 34 43% 87%; /* #F3E8DB */
+    --foreground: 12 11% 21%; /* #3B2F2E */
 
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card: 37 100% 97%; /* #FFF9F2 */
+    --card-foreground: 12 11% 21%; /* #3B2F2E */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
+    --popover: 37 100% 97%; /* #FFF9F2 */
+    --popover-foreground: 12 11% 21%; /* #3B2F2E */
 
-    --primary: 336 84% 60%; /* #ea47b4 */
-    --primary-foreground: 355.7 100% 97.3%;
+    --primary: 352 54% 63%; /* #D56B77 */
+    --primary-foreground: 0 0% 100%; /* White */
+    
+    --secondary: 344 71% 83%; /* #F4A3B7 - Rosa claro */
+    --secondary-foreground: 12 11% 21%; /* #3B2F2E */
+    
+    --muted: 32 21% 82%; /* #DDD2C6 - Borde neutro */
+    --muted-foreground: 15 10% 40%; /* #6F605D */
 
-    --secondary: 330 60% 98%; /* #fdf7fa */
-    --secondary-foreground: 336 84% 60%;
-
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --accent: 34 47% 60%; /* #C79D68 - Dorado suave */
+    --accent-foreground: 12 11% 21%; /* #3B2F2E */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
+    --border: 33 42% 83%;      /* #EBDCCD - Beige borde/sutil */
+    --input: 33 42% 83%;       /* #EBDCCD - Beige borde/sutil */
+    --ring: 352 54% 63%;       /* #D56B77 - Rosa marca */
 
     --radius: 0.5rem;
   }
