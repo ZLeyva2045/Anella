@@ -45,9 +45,14 @@ export function Header() {
         <button aria-label="Buscar" className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
             <Search className="h-5 w-5" />
         </button>
-        <button aria-label="Carrito" className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
+         <Link href="/cart" aria-label="Carrito" className="relative flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
             <ShoppingCart className="h-5 w-5" />
-        </button>
+            {cartCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--brand-pink)] text-xs font-bold text-white">
+                    {cartCount}
+                </span>
+            )}
+        </Link>
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
             <button aria-label="Menú de usuario" className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
@@ -104,18 +109,18 @@ export function Header() {
 
   const MainNav = ({ className }: { className?: string }) => (
     <nav className={cn("hidden items-center gap-9 md:flex", className)}>
-        <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium leading-normal" href="/">Inicio</a>
-        <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium leading-normal" href="/products">Regalos</a>
-        <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium leading-normal" href="/#gallery">Galería</a>
-        <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium leading-normal" href="/personalize">Personalizar</a>
+        <Link className="text-[var(--secondary-text)] hover:text-[var(--main-text)] text-sm font-medium leading-normal" href="/">Inicio</Link>
+        <Link className="text-[var(--secondary-text)] hover:text-[var(--main-text)] text-sm font-medium leading-normal" href="/products">Regalos</Link>
+        <Link className="text-[var(--secondary-text)] hover:text-[var(--main-text)] text-sm font-medium leading-normal" href="/#gallery">Galería</Link>
+        <Link className="text-[var(--secondary-text)] hover:text-[var(--main-text)] text-sm font-medium leading-normal" href="/personalize">Personalizar</Link>
     </nav>
   );
 
   return (
-    <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[hsl(var(--border-beige))] px-10 py-4 bg-[hsl(var(--surface-beige))]/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="flex items-center gap-3 text-[hsl(var(--main-text))]">
-            <Image alt="Anella Logo" width={32} height={32} className="h-8 w-8 text-[hsl(var(--brand-pink))]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAYhmI8Slc2WLi7Exz7PvDE8MSR7DvuApGIGA1Fj_qkH4DNJF_9TMjXFultxoxybke23dwTU7KAdOHSjg1uDZGxW0_goOPVF_9CZg4LlD0NRdYn2J20y5LkNKNLZ900CwJE7JDAP67i4doZtgheVOk7t2Ru4rmUmdfkXwyUgxyR3nQR8apyEXIjkXUdZkh6_054UF80Br6DDLPeBMsy4u0jD4gjEmHHpznaSmUa-S4FUccvwUkucJiqzRrfE5Kijc_78EF2dKgMXI"/>
-            <h2 className="text-[hsl(var(--main-text))] text-2xl font-bold tracking-[-0.015em]">Anella</h2>
+    <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[var(--border-beige)] px-10 py-4 bg-[var(--surface-beige)]/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="flex items-center gap-3 text-[var(--main-text)]">
+            <Image alt="Anella Logo" width={32} height={32} className="h-8 w-8 text-[var(--brand-pink)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAYhmI8Slc2WLi7Exz7PvDE8MSR7DvuApGIGA1Fj_qkH4DNJF_9TMjXFultxoxybke23dwTU7KAdOHSjg1uDZGxW0_goOPVF_9CZg4LlD0NRdYn2J20y5LkNKNLZ900CwJE7JDAP67i4doZtgheVOk7t2Ru4rmUmdfkXwyUgxyR3nQR8apyEXIjkXUdZkh6_054UF80Br6DDLPeBMsy4u0jD4gjEmHHpznaSmUa-S4FUccvwUkucJiqzRrfE5Kijc_78EF2dKgMXI"/>
+            <h2 className="text-[var(--main-text)] text-2xl font-bold tracking-[-0.015em]">Anella</h2>
         </div>
         <nav className="flex flex-1 justify-center">
             <MainNav />
