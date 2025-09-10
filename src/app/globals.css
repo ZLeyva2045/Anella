@@ -5,36 +5,51 @@
 
 @layer base {
   :root {
-    /* Nueva Paleta Anella - Cálida y Elegante */
-    --background: 34 43% 87%; /* #F3E8DB */
-    --foreground: 12 11% 21%; /* #3B2F2E */
+    --base-beige: 34 43% 87%;
+    --surface-beige: 37 100% 97%;
+    --border-beige: 33 42% 83%;
+    --brand-pink: 352 54% 63%;
+    --brand-pink-light: 353 54% 58%;
+    --light-pink-bg: 344 71% 83%;
+    --soft-gold: 34 47% 60%;
+    --light-gold: 41 88% 82%;
+    --dark-gold: 33 42% 50%;
+    --main-text: 12 11% 21%;
+    --secondary-text: 15 10% 40%;
+    --neutral-border: 32 21% 82%;
+    --warm-white: 40 100% 99%;
+    --pastel-pink: 6 52% 82%;
+    --sparkle-yellow: 43 100% 83%;
 
-    --card: 37 100% 97%; /* #FFF9F2 */
-    --card-foreground: 12 11% 21%; /* #3B2F2E */
+    --background: var(--base-beige);
+    --foreground: var(--main-text);
 
-    --popover: 37 100% 97%; /* #FFF9F2 */
-    --popover-foreground: 12 11% 21%; /* #3B2F2E */
+    --card: var(--surface-beige);
+    --card-foreground: var(--main-text);
 
-    --primary: 352 54% 63%; /* #D56B77 */
-    --primary-foreground: 0 0% 100%; /* White */
+    --popover: var(--surface-beige);
+    --popover-foreground: var(--main-text);
+
+    --primary: var(--brand-pink);
+    --primary-foreground: var(--warm-white);
     
-    --secondary: 344 71% 83%; /* #F4A3B7 - Rosa claro */
-    --secondary-foreground: 12 11% 21%; /* #3B2F2E */
+    --secondary: var(--light-pink-bg);
+    --secondary-foreground: var(--main-text);
     
-    --muted: 32 21% 82%; /* #DDD2C6 - Borde neutro */
-    --muted-foreground: 15 10% 40%; /* #6F605D */
+    --muted: var(--neutral-border);
+    --muted-foreground: var(--secondary-text);
 
-    --accent: 34 47% 60%; /* #C79D68 - Dorado suave */
-    --accent-foreground: 12 11% 21%; /* #3B2F2E */
+    --accent: var(--soft-gold);
+    --accent-foreground: var(--main-text);
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: 33 42% 83%;      /* #EBDCCD - Beige borde/sutil */
-    --input: 33 42% 83%;       /* #EBDCCD - Beige borde/sutil */
-    --ring: 352 54% 63%;       /* #D56B77 - Rosa marca */
+    --border: var(--border-beige);
+    --input: var(--border-beige);
+    --ring: var(--brand-pink);
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -59,160 +74,6 @@
     --input: 215 27.9% 16.9%;
     --ring: 336 72.2% 53.5%;
   }
-
-  /* Estilos específicos para los dashboards de admin/sales */
-  .sales-dashboard {
-      --background: 0 0% 98%;
-      --foreground: 222.2 47.4% 11.2%;
-      --card: 0 0% 100%;
-      --card-foreground: 222.2 47.4% 11.2%;
-      --popover: 0 0% 100%;
-      --popover-foreground: 222.2 47.4% 11.2%;
-      --primary: 330 84% 70%;
-      --primary-foreground: 330 100% 10%;
-      --secondary: 330 83% 95%;
-      --secondary-foreground: 330 84% 70%;
-      --accent: 330 83% 97%;
-      --accent-foreground: 222.2 47.4% 11.2%;
-      --muted: 210 40% 96.1%;
-      --muted-foreground: 215.4 16.3% 46.9%;
-      --border: 214.3 31.8% 91.4%;
-      --input: 214.3 31.8% 91.4%;
-      --ring: 330 84% 70%;
-  }
-  
-  .dark .sales-dashboard {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 216 34% 17%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 336 72.2% 53.5%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 215 28% 27%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 215 25% 65.1%;
-    --accent: 215 28% 22%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-    --border: 215 28% 22%;
-    --input: 215 27.9% 16.9%;
-    --ring: 336 72.2% 53.5%;
-  }
-
-  .sales-dashboard.theme-blue {
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 222.2 47.4% 95.2%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --ring: 221.2 83.2% 53.3%;
-  }
-
-  .sales-dashboard.theme-green {
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 144.9 80.4% 97.3%;
-    --secondary: 142.1 70.6% 95.1%;
-    --secondary-foreground: 142.1 76.2% 36.3%;
-    --ring: 142.1 76.2% 36.3%;
-  }
-  
-  .sales-dashboard.theme-orange {
-    --primary: 24.6 95% 53.1%;
-    --primary-foreground: 20 14.3% 97.3%;
-    --secondary: 24.6 95% 95.1%;
-    --secondary-foreground: 24.6 95% 53.1%;
-    --ring: 24.6 95% 53.1%;
-  }
-
-  .sales-dashboard.theme-wine {
-    --primary: 347 77% 40%;
-    --primary-foreground: 347 77% 95%;
-    --secondary: 347 77% 97%;
-    --secondary-foreground: 347 77% 40%;
-    --ring: 347 77% 40%;
-  }
-
-  .sales-dashboard.theme-military-green {
-    --primary: 84 20% 30%;
-    --primary-foreground: 84 20% 95%;
-    --secondary: 84 20% 97%;
-    --secondary-foreground: 84 20% 30%;
-    --ring: 84 20% 30%;
-  }
-
-  .sales-dashboard.theme-gold {
-    --primary: 45 74% 47%;
-    --primary-foreground: 45 74% 95%;
-    --secondary: 45 74% 97%;
-    --secondary-foreground: 45 74% 47%;
-    --ring: 45 74% 47%;
-  }
-  
-  .sales-dashboard.theme-forest-green {
-    --primary: 160 100% 9%;
-    --primary-foreground: 160 100% 95%;
-    --secondary: 160 100% 97%;
-    --secondary-foreground: 160 100% 9%;
-    --ring: 160 100% 9%;
-  }
-
-  .sales-dashboard.theme-intense-red {
-    --primary: 360 95% 42%;
-    --primary-foreground: 360 95% 95%;
-    --secondary: 360 95% 97%;
-    --secondary-foreground: 360 95% 42%;
-    --ring: 360 95% 42%;
-  }
-  
-  .sales-dashboard.theme-purple {
-    --primary: 277 100% 50%;
-    --primary-foreground: 277 100% 95%;
-    --secondary: 277 100% 97%;
-    --secondary-foreground: 277 100% 50%;
-    --ring: 277 100% 50%;
-  }
-}
-
-@layer components {
-  /* Fixing circular dependency by using raw CSS instead of @apply */
-  .density-compact .p-6 { padding: 1rem; }
-  .density-compact .p-4 { padding: 0.75rem; }
-  .density-compact .h-10 { height: 2.25rem; }
-  .density-compact .h-12 { height: 2.75rem; }
-  .density-compact .h-20 { height: 4rem; }
-  .density-compact .text-lg { font-size: 1rem; line-height: 1.5rem; }
-  .density-compact .text-base { font-size: 0.875rem; line-height: 1.25rem; }
-  .density-compact .text-sm { font-size: 0.75rem; line-height: 1rem; }
-  .density-compact .text-xs { font-size: 0.65rem; line-height: 0.9rem; }
-  .density-compact .text-3xl { font-size: 1.5rem; line-height: 2rem; }
-  .density-compact .text-2xl { font-size: 1.25rem; line-height: 1.75rem; }
-  .density-compact .gap-2 { gap: 0.375rem; }
-  .density-compact .gap-4 { gap: 0.75rem; }
-  .density-compact .gap-6 { gap: 1rem; }
-  .density-compact .gap-8 { gap: 1.5rem; }
-  .density-compact .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
-  .density-compact .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
-
-  .density-spacious .p-6 { padding: 2rem; }
-  .density-spacious .p-4 { padding: 1.25rem; }
-  .density-spacious .h-10 { height: 3rem; }
-  .density-spacious .h-12 { height: 3.5rem; }
-  .density-spacious .h-20 { height: 6rem; }
-  .density-spacious .text-lg { font-size: 1.25rem; line-height: 1.75rem; }
-  .density-spacious .text-base { font-size: 1rem; line-height: 1.5rem; }
-  .density-spacious .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-  .density-spacious .text-xs { font-size: 0.8rem; line-height: 1.1rem; }
-  .density-spacious .text-3xl { font-size: 2.25rem; line-height: 2.5rem; }
-  .density-spacious .text-2xl { font-size: 1.75rem; line-height: 2.25rem; }
-  .density-spacious .gap-2 { gap: 0.75rem; }
-  .density-spacious .gap-4 { gap: 1.5rem; }
-  .density-spacious .gap-6 { gap: 2rem; }
-  .density-spacious .gap-8 { gap: 2.5rem; }
-  .density-spacious .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
-  .density-spacious .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 2rem; }
 }
 
 @layer base {
@@ -221,24 +82,42 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;
   }
 }
 
-.themed-background {
-  min-height: 100vh;
-  background:
-    linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)),
-    var(--page-background-image);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transition: background-image 0.5s ease-in-out, opacity 0.3s ease;
-  isolation: isolate;
-}
-
-
-@layer utilities {
-    .bg-soft-pink {
-        background-color: #FEF2F2; /* Mantener para los dashboards */
-    }
+@layer components {
+  .neumorphism-btn {
+    background-color: hsl(var(--surface-beige));
+    border: 1px solid hsl(var(--border-beige));
+    box-shadow: 4px 4px 8px #d1c5b8, -4px -4px 8px #ffffff;
+    transition: all 0.2s ease-in-out;
+  }
+  .neumorphism-btn:hover {
+    box-shadow: 2px 2px 4px #d1c5b8, -2px -2px 4px #ffffff;
+  }
+  .glassmorphism {
+    background: rgba(255, 249, 242, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--border-beige));
+  }
+  .brand-btn {
+    background-color: hsl(var(--brand-pink));
+    color: hsl(var(--warm-white));
+    transition: background-color 0.3s ease;
+  }
+  .brand-btn:hover {
+    background-color: hsl(var(--brand-pink-light));
+  }
+  .filter-btn {
+    background-color: hsl(var(--surface-beige));
+    border: 1px solid hsl(var(--border-beige));
+    color: hsl(var(--secondary-text));
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background-color: hsl(var(--brand-pink));
+    border-color: hsl(var(--brand-pink));
+    color: hsl(var(--warm-white));
+  }
 }

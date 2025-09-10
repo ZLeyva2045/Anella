@@ -1,7 +1,6 @@
 // src/app/layout.tsx
 'use client';
 import { usePathname } from 'next/navigation';
-import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/hooks/useAuth';
@@ -10,11 +9,6 @@ import { WhatsAppButton } from '@/components/anella/WhatsAppButton';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 import { IAnellaButton } from '@/components/anella/IAnellaButton';
-
-const metadata: Metadata = {
-  title: 'Anella',
-  description: 'El regalo perfecto',
-};
 
 export default function RootLayout({
   children,
@@ -58,11 +52,12 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <title>{String(metadata.title)}</title>
-        <meta name="description" content={String(metadata.description)} />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" />
+        <title>Anella - Tienda de Regalos</title>
       </head>
       <body>
-        <div id="app-container" className="bg-background">
+        <div id="app-container" className="relative flex size-full min-h-screen flex-col overflow-x-hidden">
             <AuthProvider>
             <CartProvider>
                 {children}

@@ -3,29 +3,28 @@ import { Instagram, Facebook, Twitter } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="bg-white">
-      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
-        <nav aria-label="Footer" className="flex flex-wrap justify-center gap-x-6 gap-y-4">
-          <Link className="text-sm leading-6 text-gray-600 hover:text-primary transition-colors" href="#">Política de privacidad</Link>
-          <Link className="text-sm leading-6 text-gray-600 hover:text-primary transition-colors" href="#">Términos de servicio</Link>
-          <Link className="text-sm leading-6 text-gray-600 hover:text-primary transition-colors" href="#">Contacto</Link>
-        </nav>
-        <div className="mt-10 flex justify-center space-x-6">
-          <a className="text-gray-400 hover:text-primary transition-colors" href="#">
-            <span className="sr-only">Instagram</span>
-            <Instagram className="h-6 w-6" />
-          </a>
-          <a className="text-gray-400 hover:text-primary transition-colors" href="#">
-            <span className="sr-only">Facebook</span>
-            <Facebook className="h-6 w-6" />
-          </a>
-          <a className="text-gray-400 hover:text-primary transition-colors" href="#">
-            <span className="sr-only">Twitter</span>
-            <Twitter className="h-6 w-6" />
-          </a>
+    <footer className="bg-[hsl(var(--surface-beige))]">
+        <div className="mx-auto max-w-[1200px] px-10">
+            <div className="flex flex-col gap-8 py-10 text-center">
+                <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+                    <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium" href="#">Política de Privacidad</a>
+                    <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium" href="#">Términos de Servicio</a>
+                    <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium" href="#">Contacto</a>
+                </div>
+                <div className="flex justify-center gap-6">
+                    <a aria-label="Instagram" className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--dark-gold))] transition-colors" href="#">
+                        <Instagram />
+                    </a>
+                    <a aria-label="Facebook" className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--dark-gold))] transition-colors" href="#">
+                       <Facebook />
+                    </a>
+                    <a aria-label="Twitter" className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--dark-gold))] transition-colors" href="#">
+                        <Twitter />
+                    </a>
+                </div>
+                <p className="text-[hsl(var(--secondary-text))] text-sm font-normal leading-normal">© 2025 Anella. Todos los derechos reservados.</p>
+            </div>
         </div>
-        <p className="mt-10 text-center text-xs leading-5 text-gray-500">© 2024 Anella. Todos los derechos reservados.</p>
-      </div>
     </footer>
   );
 }

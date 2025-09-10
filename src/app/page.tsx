@@ -6,15 +6,14 @@ import { HeroSection } from "@/components/anella/HeroSection";
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="layout-container flex h-full grow flex-col">
       <Header />
-      <main className="flex-grow">
-        <HeroSection />
-
-        <GiftGallery />
-
-        <GiftRecommendation />
-
+      <main className="flex flex-1 justify-center py-5">
+        <div className="layout-content-container flex flex-col max-w-[1200px] flex-1 px-10">
+            <HeroSection />
+            <GiftGallery />
+            <GiftRecommendation />
+        </div>
       </main>
       <Footer />
     </div>

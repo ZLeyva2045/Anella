@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import React from 'react';
 import { useCart } from '@/hooks/useCart';
 import Image from 'next/image';
+import { Input } from '../ui/input';
 
 export function Header() {
   const { user, signOut, loading } = useAuth();
@@ -40,13 +41,19 @@ export function Header() {
   };
 
   const UserMenu = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <User className="h-5 w-5" />
-          <span className="sr-only">Menú de usuario</span>
-        </Button>
-      </DropdownMenuTrigger>
+    <div className="flex items-center gap-2">
+        <button aria-label="Buscar" className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
+            <Search className="h-5 w-5" />
+        </button>
+        <button aria-label="Carrito" className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
+            <ShoppingCart className="h-5 w-5" />
+        </button>
+        <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <button aria-label="Menú de usuario" className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
+                <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-[var(--border-beige)]" style={{backgroundImage: `url("${user?.photoURL || 'https://i.pravatar.cc/40'}")`}}></div>
+            </button>
+        </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         {user ? (
           <>
@@ -92,95 +99,30 @@ export function Header() {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 
   const MainNav = ({ className }: { className?: string }) => (
-    <nav className={cn("hidden items-center gap-8 md:flex", className)}>
-        <Link className="text-[var(--text-primary)] text-sm font-medium leading-normal hover:text-[var(--primary-color)] transition-colors" href="/">Inicio</Link>
-        <Link className="text-[var(--text-primary)] text-sm font-medium leading-normal hover:text-[var(--primary-color)] transition-colors" href="/products">Regalos</Link>
-        <Link className="text-[var(--text-primary)] text-sm font-medium leading-normal hover:text-[var(--primary-color)] transition-colors" href="/#gallery">Galería</Link>
-        <Link className="text-[var(--text-primary)] text-sm font-medium leading-normal hover:text-[var(--primary-color)] transition-colors" href="/personalize">Personalizar</Link>
+    <nav className={cn("hidden items-center gap-9 md:flex", className)}>
+        <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium leading-normal" href="/">Inicio</a>
+        <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium leading-normal" href="/products">Regalos</a>
+        <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium leading-normal" href="/#gallery">Galería</a>
+        <a className="text-[hsl(var(--secondary-text))] hover:text-[hsl(var(--main-text))] text-sm font-medium leading-normal" href="/personalize">Personalizar</a>
     </nav>
   );
 
-  const MobileNav = () => (
-     <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-6 w-6" />
-          <span className="sr-only">Abrir menú</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
-         <SheetHeader className="p-4 border-b">
-            <SheetTitle>
-              <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-                <Image
-                  src="https://i.ibb.co/MyXzBh0r/Anella.png"
-                  alt="Anella Logo"
-                  width={140}
-                  height={35}
-                  className="object-contain"
-                />
-              </Link>
-            </SheetTitle>
-          </SheetHeader>
-        <nav className="flex flex-col h-full">
-          <div className="flex-grow p-4 space-y-2 overflow-y-auto">
-             <Link href="/" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Inicio</Link>
-             <Link href="/products" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Regalos</Link>
-             <Link href="/#gallery" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Galería</Link>
-             <Link href="/personalize" className="block py-2 text-lg" onClick={() => setMobileMenuOpen(false)}>Personalizar</Link>
-          </div>
-        </nav>
-      </SheetContent>
-    </Sheet>
-  );
-
   return (
-    <header className="sticky top-0 z-50 w-full whitespace-nowrap border-b border-solid border-gray-200 bg-white/80 backdrop-blur-lg">
-      <div className="container mx-auto flex h-20 items-center justify-between px-4">
+    <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[hsl(var(--border-beige))] px-10 py-4 bg-[hsl(var(--surface-beige))]/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="flex items-center gap-3 text-[hsl(var(--main-text))]">
+            <Image alt="Anella Logo" width={32} height={32} className="h-8 w-8 text-[hsl(var(--brand-pink))]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAYhmI8Slc2WLi7Exz7PvDE8MSR7DvuApGIGA1Fj_qkH4DNJF_9TMjXFultxoxybke23dwTU7KAdOHSjg1uDZGxW0_goOPVF_9CZg4LlD0NRdYn2J20y5LkNKNLZ900CwJE7JDAP67i4doZtgheVOk7t2Ru4rmUmdfkXwyUgxyR3nQR8apyEXIjkXUdZkh6_054UF80Br6DDLPeBMsy4u0jD4gjEmHHpznaSmUa-S4FUccvwUkucJiqzRrfE5Kijc_78EF2dKgMXI"/>
+            <h2 className="text-[hsl(var(--main-text))] text-2xl font-bold tracking-[-0.015em]">Anella</h2>
+        </div>
+        <nav className="flex flex-1 justify-center">
+            <MainNav />
+        </nav>
         <div className="flex items-center gap-4">
-           <MobileNav />
-          <Link href="/" className="flex items-center gap-3 text-[var(--text-primary)]">
-             <Image
-                src="https://i.ibb.co/MyXzBh0r/Anella.png"
-                alt="Anella Logo"
-                width={140}
-                height={35}
-                className="object-contain hidden sm:block"
-            />
-             <Image
-                src="https://i.ibb.co/MyXzBh0r/Anella.png"
-                alt="Anella Logo"
-                width={100}
-                height={25}
-                className="object-contain sm:hidden"
-            />
-          </Link>
+            {!loading && <UserMenu />}
         </div>
-
-        <MainNav />
-        
-        <div className="flex items-center gap-2">
-           <Button variant="ghost" size="icon" className="rounded-full">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Buscar</span>
-          </Button>
-          <Button asChild variant="ghost" size="icon" className="rounded-full relative">
-            <Link href="/cart">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="sr-only">Carrito</span>
-              {cartCount > 0 && (
-                <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground transform translate-x-1/4 -translate-y-1/4">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-          </Button>
-          {!loading && <UserMenu />}
-        </div>
-      </div>
     </header>
   );
 }
