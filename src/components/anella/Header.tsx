@@ -30,6 +30,8 @@ import { useCart } from '@/hooks/useCart';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Input } from '../ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 export function Header() {
   const { user, signOut, loading } = useAuth();
@@ -56,7 +58,10 @@ export function Header() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full w-11 h-11" aria-label='Abrir perfil'>
-                <Image src={user?.photoURL ?? ''} alt="Mi cuenta" width={40} height={40} className="avatar rounded-full border-2 border-[var(--border-subtle)]" />
+                 <Avatar className="h-10 w-10 border-2 border-border">
+                    <AvatarImage src={user?.photoURL ?? undefined} alt="Avatar de usuario" />
+                    <AvatarFallback>{user?.displayName?.charAt(0) ?? user?.email?.charAt(0)}</AvatarFallback>
+                </Avatar>
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 bg-[var(--surface)] border-[var(--border-soft)] shadow-neo-dark">
