@@ -5,12 +5,12 @@
 
 @layer base {
   :root {
-    --base-beige: 34 43% 87%;
-    --surface-beige: 37 100% 97%;
-    --border-beige: 33 42% 83%;
-    --brand-pink: 352 54% 63%;
-    --brand-pink-light: 353 54% 58%;
-    --light-pink-bg: 344 71% 83%;
+    --background-base: 34 43% 87%;
+    --background-surface: 37 100% 97%;
+    --border-subtle: 33 42% 83%;
+    --brand-pink: 353 54% 63%;
+    --brand-pink-hover: 353 54% 58%;
+    --light-pink: 350 71% 83%;
     --soft-gold: 34 47% 60%;
     --light-gold: 41 88% 82%;
     --dark-gold: 33 42% 50%;
@@ -18,22 +18,22 @@
     --secondary-text: 15 10% 40%;
     --neutral-border: 32 21% 82%;
     --warm-white: 40 100% 99%;
-    --pastel-pink: 6 52% 82%;
-    --sparkle-yellow: 43 100% 83%;
+    --pastel-pink-stories: 357 52% 82%;
+    --yellow-sparkle: 43 100% 83%;
 
-    --background: var(--base-beige);
+    --background: var(--background-base);
     --foreground: var(--main-text);
 
-    --card: var(--surface-beige);
+    --card: var(--background-surface);
     --card-foreground: var(--main-text);
 
-    --popover: var(--surface-beige);
+    --popover: var(--background-surface);
     --popover-foreground: var(--main-text);
 
     --primary: var(--brand-pink);
     --primary-foreground: var(--warm-white);
     
-    --secondary: var(--light-pink-bg);
+    --secondary: var(--light-pink);
     --secondary-foreground: var(--main-text);
     
     --muted: var(--neutral-border);
@@ -45,8 +45,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: var(--border-beige);
-    --input: var(--border-beige);
+    --border: var(--border-subtle);
+    --input: var(--border-subtle);
     --ring: var(--brand-pink);
 
     --radius: 0.75rem;

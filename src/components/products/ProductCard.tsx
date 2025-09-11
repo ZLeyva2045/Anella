@@ -1,12 +1,10 @@
 // src/components/products/ProductCard.tsx
 import Image from 'next/image';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Heart, Star } from 'lucide-react';
 import type { Gift } from '@/types/firestore';
-import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { Heart } from 'lucide-react';
+import Link from 'next/link';
 
 interface ProductCardProps {
   gift: Gift;
@@ -18,39 +16,45 @@ export function ProductCard({ gift }: ProductCardProps) {
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // In a real app, you would also update localStorage or a backend service
     setIsFavorite(!isFavorite);
   };
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Logic to add to cart
+    console.log(`Added ${gift.name} to cart`);
+  }
 
   return (
-    <Link href={`/products/${gift.id}`} className="group relative flex flex-col">
-        <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
-            <Image
-                alt={gift.name}
-                className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                src={gift.images[0] || 'https://placehold.co/400x400.png'}
-                width={400}
-                height={400}
-                data-ai-hint={gift.name}
-            />
-             <Button
-                size="icon"
-                variant="ghost"
-                className={cn(
-                "absolute top-2 right-2 h-8 w-8 rounded-full bg-white/70 backdrop-blur-sm transition-colors hover:scale-110 active:scale-100",
-                isFavorite ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                )}
+    <div className="group flex flex-col gap-4 bg-background-surface rounded-2xl p-4 shadow-[8px_8px_20px_#EBDCCD,-8px_-8px_20px_#FFF] hover:-translate-y-2 transition-all duration-300">
+        <div className="relative">
+            <Link href={`/products/${gift.id}`}>
+                <Image
+                    alt={gift.name}
+                    className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+                    src={gift.images[0] || 'https://placehold.co/400x400.png'}
+                    width={400}
+                    height={400}
+                />
+            </Link>
+            <button 
                 onClick={toggleFavorite}
-                aria-label={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                className="absolute top-2 right-2 bg-warm-white/50 backdrop-blur-sm text-brand-pink rounded-full h-8 w-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             >
-                <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
+                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : 'fill-none'}`} />
+            </button>
+        </div>
+        <div className="flex flex-col gap-2">
+            <p className="text-main-text text-base font-semibold leading-normal">{gift.name}</p>
+            <p className="text-secondary-text text-sm font-normal leading-normal">S/{gift.price.toFixed(2)}</p>
+            <Button 
+                onClick={handleAddToCart}
+                className="w-full mt-2 bg-brand-pink hover:bg-brand-pink-hover text-white font-bold py-2 px-4 rounded-lg shadow-[4px_4px_10px_#EBDCCD] transition-all duration-300"
+            >
+                Agregar al carrito
             </Button>
-            {gift.isNew && <Badge className="absolute top-2 left-2">Nuevo</Badge>}
         </div>
-        <div className="mt-4">
-            <h3 className="text-base font-semibold text-foreground">{gift.name}</h3>
-            <p className="mt-1 text-lg font-bold text-primary">S/{gift.price.toFixed(2)}</p>
-        </div>
-    </Link>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-
 // src/app/products/page.tsx
 'use client';
 
@@ -116,9 +115,8 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="container mx-auto px-4 py-8">
-        <main className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <aside className="lg:col-span-1">
+      <main className="flex flex-1 px-10 py-8 gap-8">
+          <aside className="w-72 flex-shrink-0">
              <ProductFilters
                 themes={themes}
                 selectedThemes={selectedThemes}
@@ -129,33 +127,15 @@ export default function ProductsPage() {
                 setRating={setRating}
             />
           </aside>
-          <div className="lg:col-span-3">
-            <AnimatePresence>
-                {activeTheme && (
-                    <motion.div
-                        key={activeTheme.id}
-                        initial={{ opacity: 0, y: -20, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                        transition={{ duration: 0.5, ease: "circOut" }}
-                        className="flex justify-center mb-12"
-                    >
-                        <img src={activeTheme.logoUrl} alt={`${activeTheme.name} Logo`} className="max-h-28" />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            <h2 className="text-3xl font-bold text-center text-foreground tracking-tight mb-12">Todos los Regalos</h2>
-            <Toolbar
+          <div className="flex-1">
+             <Toolbar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              sortOption={sortOption}
-              setSortOption={setSortOption}
               productCount={filteredGifts.length}
             />
             <ProductGrid gifts={filteredGifts} loading={loading} />
           </div>
         </main>
-      </div>
       <Footer />
     </div>
   );
