@@ -29,6 +29,7 @@ import React from 'react';
 import { useCart } from '@/hooks/useCart';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Input } from '../ui/input';
 
 export function Header() {
   const { user, signOut, loading } = useAuth();
@@ -54,11 +55,11 @@ export function Header() {
       </Link>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <button aria-label="Menú de usuario" className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
-                <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-[var(--border-beige)]" style={{backgroundImage: `url("${user?.photoURL || 'https://picsum.photos/40/40'}")`}}></div>
-            </button>
+            <Button variant="ghost" size="icon" className="rounded-full w-11 h-11" aria-label='Abrir perfil'>
+                <Image src={user?.photoURL || "https://picsum.photos/seed/1/40/40"} alt="Mi cuenta" width={40} height={40} className="avatar rounded-full border-2 border-[var(--border-subtle)]" />
+            </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="w-56 bg-[var(--surface)] border-[var(--border-soft)] shadow-neo-dark">
           {user ? (
             <>
               <DropdownMenuLabel>
@@ -118,7 +119,7 @@ export function Header() {
   return (
     <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[var(--border-beige)] px-10 py-4 bg-[var(--surface-beige)]/80 backdrop-blur-sm sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-3 text-[var(--main-text)]">
-            <Image alt="Anella Logo" width={32} height={32} className="h-8 w-8 text-[var(--brand-pink)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAYhmI8Slc2WLi7Exz7PvDE8MSR7DvuApGIGA1Fj_qkH4DNJF_9TMjXFultxoxybke23dwTU7KAdOHSjg1uDZGxW0_goOPVF_9CZg4LlD0NRdYn2J20y5LkNKNLZ900CwJE7JDAP67i4doZtgheVOk7t2Ru4rmUmdfkXwyUgxyR3nQR8apyEXIjkXUdZkh6_054UF80Br6DDLPeBMsy4u0jD4gjEmHHpznaSmUa-S4FUccvwUkucJiqzRrfE5Kijc_78EF2dKgMXI"/>
+             <Image alt="Anella Logo" width={232} height={95} className="w-[120px] h-auto object-contain" src="https://i.ibb.co/MyXzBh0r/Anella.png"/>
         </Link>
         <nav className="flex flex-1 justify-center">
             <MainNav />
