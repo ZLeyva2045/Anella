@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import type { Gift } from '@/types/firestore';
 import { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 
 interface ProductCardProps {
@@ -48,12 +48,15 @@ export function ProductCard({ gift }: ProductCardProps) {
         <div className="flex flex-col gap-2">
             <p className="text-[var(--main-text)] text-base font-semibold leading-normal">{gift.name}</p>
             <p className="text-[var(--secondary-text)] text-sm font-normal leading-normal">S/{gift.price.toFixed(2)}</p>
-            <Button 
-                onClick={handleAddToCart}
-                className="w-full mt-2 bg-[var(--pastel-pink-stories)] hover:bg-[var(--brand-pink)] text-[var(--main-text)] hover:text-white font-bold py-2 px-4 rounded-lg shadow-[4px_4px_10px_#EBDCCD] transition-all duration-300"
-            >
-                Agregar al carrito
-            </Button>
+            <div className="flex justify-center mt-2">
+                <Button 
+                    onClick={handleAddToCart}
+                    className="bg-[var(--pastel-pink-stories)] hover:bg-[var(--brand-pink)] text-[var(--main-text)] hover:text-white font-bold py-2 px-4 rounded-lg shadow-[4px_4px_10px_#EBDCCD] transition-all duration-300"
+                >
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Agregar al carrito
+                </Button>
+            </div>
         </div>
     </div>
   );
