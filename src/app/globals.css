@@ -5,21 +5,21 @@
 
 @layer base {
   :root {
-    --background-base: 34 43% 87%;
-    --background-surface: 37 100% 97%;
-    --border-subtle: 33 42% 83%;
-    --brand-pink: 353 54% 63%;
-    --brand-pink-hover: 353 54% 58%;
-    --light-pink: 350 71% 83%;
-    --soft-gold: 34 47% 60%;
-    --light-gold: 41 88% 82%;
-    --dark-gold: 33 42% 50%;
-    --main-text: 12 11% 21%;
-    --secondary-text: 15 10% 40%;
-    --neutral-border: 32 21% 82%;
-    --warm-white: 40 100% 99%;
-    --pastel-pink-stories: 357 52% 82%;
-    --yellow-sparkle: 43 100% 83%;
+    --background-base: #f3e8db;
+    --background-surface: #fff9f2;
+    --border-subtle: #ebdccd;
+    --brand-pink: #d56b77;
+    --brand-pink-hover: #c95f6b;
+    --light-pink: #f4a3b7;
+    --soft-gold: #c79d68;
+    --light-gold: #f7d596;
+    --dark-gold: #b67c4a;
+    --main-text: #3b2f2e;
+    --secondary-text: #6f605d;
+    --neutral-border: #ddd2c6;
+    --warm-white: #fffefb;
+    --pastel-pink-stories: #eabfb7;
+    --yellow-sparkle: #ffdfa8;
 
     --background: var(--background-base);
     --foreground: var(--main-text);
@@ -108,7 +108,7 @@
     transition: background-color 0.3s ease;
   }
   .brand-btn:hover {
-    background-color: hsl(var(--brand-pink-light));
+    background-color: hsl(var(--brand-pink-hover));
   }
   .filter-btn {
     background-color: hsl(var(--surface-beige));
@@ -119,5 +119,11 @@
     background-color: hsl(var(--brand-pink));
     border-color: hsl(var(--brand-pink));
     color: hsl(var(--warm-white));
+  }
+  .neumorphic-shadow {
+    box-shadow: 8px 8px 16px #d1ccc9, -8px -8px 16px #ffffff;
+  }
+  .neumorphic-shadow-inset {
+    box-shadow: inset 8px 8px 16px #d1ccc9, inset -8px -8px 16px #ffffff;
   }
 }

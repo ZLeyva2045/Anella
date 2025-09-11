@@ -2,15 +2,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import type { GiftDetail } from '@/lib/mock-data';
-import type { SelectedCustomization } from '@/app/products/[id]/page';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
-import { Heart, Share2, ShoppingCart, Star } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import type { GiftDetail } from '@/lib/mock-data';
+import type { SelectedCustomization } from '@/app/products/[id]/page';
 import type { Gift } from '@/types/firestore';
 
 interface ProductInfoProps {
@@ -21,107 +17,53 @@ interface ProductInfoProps {
 }
 
 export function ProductInfo({ product, totalPrice, customizationCost, selectedCustomizations }: ProductInfoProps) {
-  const [quantity, setQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] = useState(false);
   const { addToCart } = useCart();
   const { toast } = useToast();
 
   const handleAddToCart = () => {
-    // We need to cast the gift detail to a format the cart understands.
-    // The cart expects a Product-like structure, so we adapt it.
     const cartProduct = {
       ...(product as unknown as Gift),
-      price: totalPrice, // Use the final calculated price
+      price: totalPrice,
       customizations: selectedCustomizations,
     };
-    addToCart(cartProduct, quantity);
+    addToCart(cartProduct, 1); // Assuming quantity of 1 for now
     toast({
       title: "¡Añadido al carrito!",
-      description: `${quantity} x ${product.name} se ha añadido a tu carrito.`,
+      description: `${product.name} se ha añadido a tu carrito.`,
     });
   };
 
-  const handleToggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    toast({
-      title: isFavorite ? "Quitado de favoritos" : "¡Añadido a favoritos!",
-      description: `${product.name} se ha ${isFavorite ? 'quitado de tu' : 'añadido a tu'} lista de deseos.`,
-    });
-  }
-
-  const increaseQuantity = () => setQuantity(prev => prev + 1);
-  const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
-
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
-        <div className="flex items-center gap-4 mt-2">
-          {product.rating && (
-            <div className="flex items-center gap-1">
-              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-              <span className="font-semibold">{product.rating.toFixed(1)}</span>
-              <span className="text-sm text-muted-foreground ml-1">(25 reseñas)</span>
-            </div>
-          )}
-          <Badge variant={product.isNew ? "default" : "secondary"}>
-            {product.isNew ? 'Nuevo' : 'Popular'}
-          </Badge>
-        </div>
+    <>
+      <h1 className="text-4xl font-bold tracking-tight text-primary">{product.name}</h1>
+      <p className="mt-4 text-lg text-secondary">{product.description}</p>
+      <div className="mt-8">
+        <p className="text-4xl font-bold text-primary">S/{totalPrice.toFixed(2)}</p>
       </div>
       
-      <div>
-        <div className="flex justify-between items-baseline">
-            <span className="text-muted-foreground">Precio Base</span>
-            <span className="text-muted-foreground">S/{product.price.toFixed(2)}</span>
-        </div>
-         {customizationCost > 0 && (
-          <div className="flex justify-between items-baseline text-sm">
-            <span className="text-muted-foreground">Personalización</span>
-            <span className="text-muted-foreground">+ S/{customizationCost.toFixed(2)}</span>
-          </div>
-        )}
-        <p className="text-3xl font-bold text-primary text-right mt-1">S/{totalPrice.toFixed(2)}</p>
-      </div>
-
-      <p className="text-muted-foreground pb-4">{product.description}</p>
-      
-      <Separator />
-
-      <div className="py-4">
-        <div className="flex items-center justify-between">
-            <span className="font-medium">Cantidad</span>
-            <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={decreaseQuantity}>-</Button>
-                <span className="w-10 text-center font-bold text-lg">{quantity}</span>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={increaseQuantity}>+</Button>
-            </div>
+      {/* This section will be replaced by CustomizationOptions */}
+      <div className="mt-8 flex flex-col gap-4 p-6 rounded-2xl neumorphic-shadow-inset bg-[#fcfbfa]">
+        <h3 className="text-lg font-bold text-primary">Detalles del Producto</h3>
+        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-4 text-base">
+            <p className="font-medium text-secondary">Categoría</p>
+            <p className="text-primary">{product.category || 'General'}</p>
+            {customizationCost > 0 && (
+                 <>
+                    <p className="font-medium text-secondary">Personalización</p>
+                    <p className="text-primary">+ S/{customizationCost.toFixed(2)}</p>
+                 </>
+            )}
         </div>
       </div>
-      
-      <div className="flex flex-col gap-3">
-        <Button size="lg" className="w-full text-lg py-6" onClick={handleAddToCart}>
-            <ShoppingCart className="mr-2"/>
-            Añadir al Carrito
-        </Button>
-         <Button 
-            size="lg" 
-            variant="outline" 
-            className="w-full"
-            onClick={handleToggleFavorite}
-          >
-            <Heart className={cn("mr-2", isFavorite && "fill-current text-red-500")} />
-            {isFavorite ? 'En tu lista de deseos' : 'Añadir a Favoritos'}
-        </Button>
+
+      <div className="mt-10">
+        <button
+            onClick={handleAddToCart}
+            className="w-full flex items-center justify-center rounded-xl py-4 px-8 text-lg font-bold text-white bg-[var(--brand-pink)] hover:opacity-90 transition-opacity neumorphic-shadow"
+        >
+          Añadir al carrito
+        </button>
       </div>
-
-       <div className="text-center pt-4">
-        <Button variant="link">
-            <Share2 className="mr-2"/>
-            Compartir
-        </Button>
-       </div>
-
-    </div>
+    </>
   );
 }

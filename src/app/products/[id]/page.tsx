@@ -10,6 +10,11 @@ import { ProductImages } from '@/components/products/detail/ProductImages';
 import { ProductInfo } from '@/components/products/detail/ProductInfo';
 import { CustomizationOptions } from '@/components/products/detail/CustomizationOptions';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Star } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { ProductCard } from '@/components/products/ProductCard';
 
 export interface SelectedCustomization {
   [key: string]: {
@@ -78,7 +83,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-        <div className="flex flex-col min-h-screen bg-background">
+        <div className="flex flex-col min-h-screen">
             <Header />
             <main className="container mx-auto px-4 py-12">
                 <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
@@ -109,25 +114,38 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="container mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
-          <ProductImages images={gift.images} productName={gift.name} />
-          <div className="flex flex-col">
-            <ProductInfo 
-              product={gift}
-              totalPrice={totalPrice}
-              customizationCost={customizationCost}
-              selectedCustomizations={selectedCustomizations}
-            />
-            {gift.isPersonalizable && (
-              <CustomizationOptions
-                options={gift.customizationOptions}
-                onCustomizationChange={handleCustomizationChange}
+      <main className="px-40 flex flex-1 justify-center py-12">
+        <div className="layout-content-container flex flex-col max-w-6xl w-full flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <ProductImages images={gift.images} productName={gift.name} />
+            <div className="flex flex-col pt-16">
+              <ProductInfo 
+                product={gift}
+                totalPrice={totalPrice}
+                customizationCost={customizationCost}
+                selectedCustomizations={selectedCustomizations}
               />
-            )}
+              {gift.isPersonalizable && (
+                <CustomizationOptions
+                  options={gift.customizationOptions}
+                  onCustomizationChange={handleCustomizationChange}
+                />
+              )}
+            </div>
           </div>
+          
+          {/* Static sections from the design */}
+          <div className="mt-24">
+            <h3 className="text-3xl font-bold tracking-tight text-primary">Opiniones de Clientes</h3>
+            {/* Customer reviews would be dynamically rendered here */}
+          </div>
+          <div className="mt-24">
+            <h3 className="text-3xl font-bold tracking-tight text-primary">También te puede interesar</h3>
+            {/* Related products would be dynamically rendered here */}
+          </div>
+
         </div>
       </main>
       <Footer />
