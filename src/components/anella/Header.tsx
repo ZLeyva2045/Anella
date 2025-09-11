@@ -56,7 +56,7 @@ export function Header() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full w-11 h-11" aria-label='Abrir perfil'>
-                <Image src={user?.photoURL || ''} alt="Mi cuenta" width={40} height={40} className="avatar rounded-full border-2 border-[var(--border-subtle)]" />
+                <Image src={user?.photoURL ?? ''} alt="Mi cuenta" width={40} height={40} className="avatar rounded-full border-2 border-[var(--border-subtle)]" />
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 bg-[var(--surface)] border-[var(--border-soft)] shadow-neo-dark">
