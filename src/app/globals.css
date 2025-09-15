@@ -49,6 +49,49 @@
 
     --radius: 0.75rem;
   }
+
+  .dark {
+    --background-base: 20 14.3% 4.1%;
+    --background-surface: 20 14.3% 4.1%;
+    --border-subtle: 20 5.9% 9%;
+    --brand-pink: 350 82% 60%;
+    --brand-pink-hover: 350 82% 55%;
+    --light-pink: 345 80% 90%;
+    --soft-gold: 33 50% 60%;
+    --light-gold: 39 80% 80%;
+    --dark-gold: 33 45% 50%;
+    --main-text: 210 20% 98%;
+    --secondary-text: 210 20% 80%;
+    --warm-white: 0 0% 100%;
+
+    --background: hsl(var(--background-base));
+    --foreground: hsl(var(--main-text));
+
+    --card: hsl(var(--background-surface));
+    --card-foreground: hsl(var(--main-text));
+
+    --popover: hsl(var(--background-surface));
+    --popover-foreground: hsl(var(--main-text));
+
+    --primary: hsl(var(--brand-pink));
+    --primary-foreground: hsl(var(--warm-white));
+
+    --secondary: hsl(var(--dark-gold));
+    --secondary-foreground: hsl(var(--warm-white));
+
+    --muted: hsl(var(--border-subtle));
+    --muted-foreground: hsl(var(--secondary-text));
+
+    --accent: hsl(var(--soft-gold));
+    --accent-foreground: hsl(var(--warm-white));
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: hsl(var(--border-subtle));
+    --input: hsl(var(--border-subtle));
+    --ring: hsl(var(--brand-pink));
+  }
 }
 
 @layer base {
