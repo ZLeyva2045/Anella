@@ -5,74 +5,86 @@
 
 @layer base {
   :root {
-    --background-base: #f3e8db;
-    --background-surface: #fff9f2;
-    --border-subtle: #ebdccd;
-    --brand-pink: #d56b77;
-    --brand-pink-hover: #c95f6b;
-    --light-pink: #f4a3b7;
-    --soft-gold: #c79d68;
-    --light-gold: #f7d596;
-    --dark-gold: #b67c4a;
-    --main-text: #3b2f2e;
-    --secondary-text: #6f605d;
-    --neutral-border: #ddd2c6;
-    --warm-white: #fffefb;
-    --pastel-pink-stories: #eabfb7;
-    --yellow-sparkle: #ffdfa8;
+    --background-base: 220 40% 96%;
+    --background-surface: 220 40% 99%;
+    --border-subtle: 220 30% 90%;
+    --brand-pink: 336 72.2% 53.5%;
+    --brand-pink-hover: 336 72.2% 48.5%;
+    --light-pink: 345 80% 90%;
+    --soft-gold: 33 50% 60%;
+    --light-gold: 39 80% 80%;
+    --dark-gold: 33 45% 50%;
+    --main-text: 220 25% 25%;
+    --secondary-text: 220 15% 50%;
+    --warm-white: 0 0% 100%;
 
-    --background: var(--background-base);
-    --foreground: var(--main-text);
+    --background: hsl(var(--background-base));
+    --foreground: hsl(var(--main-text));
 
-    --card: var(--background-surface);
-    --card-foreground: var(--main-text);
+    --card: hsl(var(--background-surface));
+    --card-foreground: hsl(var(--main-text));
 
-    --popover: var(--background-surface);
-    --popover-foreground: var(--main-text);
+    --popover: hsl(var(--background-surface));
+    --popover-foreground: hsl(var(--main-text));
 
-    --primary: var(--brand-pink);
-    --primary-foreground: var(--warm-white);
+    --primary: hsl(var(--brand-pink));
+    --primary-foreground: hsl(var(--warm-white));
     
-    --secondary: var(--light-pink);
-    --secondary-foreground: var(--main-text);
+    --secondary: hsl(var(--light-pink));
+    --secondary-foreground: hsl(var(--main-text));
     
-    --muted: var(--neutral-border);
-    --muted-foreground: var(--secondary-text);
+    --muted: hsl(var(--border-subtle));
+    --muted-foreground: hsl(var(--secondary-text));
 
-    --accent: var(--soft-gold);
-    --accent-foreground: var(--main-text);
+    --accent: hsl(var(--soft-gold));
+    --accent-foreground: hsl(var(--main-text));
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: var(--border-subtle);
-    --input: var(--border-subtle);
-    --ring: var(--brand-pink);
+    --border: hsl(var(--border-subtle));
+    --input: hsl(var(--border-subtle));
+    --ring: hsl(var(--brand-pink));
 
     --radius: 0.75rem;
   }
 
   .dark {
-    /* Mantener el modo oscuro sin cambios si es necesario, o adaptarlo */
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 336 72.2% 53.5%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 336 72.2% 53.5%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 215 25% 65.1%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
+    /* Define base colors for dark mode */
+    --background-base: 224 71% 4%;
+    --background-surface: 224 71% 8%;
+    --border-subtle: 215 28% 17%;
+    --main-text: 210 20% 98%;
+    --secondary-text: 215 25% 65%;
+    
+    /* Re-map shadcn UI colors using the dark mode base colors */
+    --background: hsl(var(--background-base));
+    --foreground: hsl(var(--main-text));
+    
+    --card: hsl(var(--background-surface));
+    --card-foreground: hsl(var(--main-text));
+    
+    --popover: hsl(var(--background-surface));
+    --popover-foreground: hsl(var(--main-text));
+
+    --primary: hsl(var(--brand-pink));
+    --primary-foreground: hsl(var(--warm-white));
+    
+    --secondary: hsl(var(--border-subtle));
+    --secondary-foreground: hsl(var(--main-text));
+    
+    --muted: hsl(var(--border-subtle));
+    --muted-foreground: hsl(var(--secondary-text));
+
+    --accent: hsl(var(--soft-gold));
+    --accent-foreground: hsl(var(--main-text));
+    
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 85.7% 97.3%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 336 72.2% 53.5%;
+    
+    --border: hsl(var(--border-subtle));
+    --input: hsl(var(--border-subtle));
+    --ring: hsl(var(--brand-pink));
   }
 }
 
