@@ -51,41 +51,29 @@
   }
 
   .dark {
-    /* Define base colors for dark mode. We use light colors for components as requested. */
-    --background-base: 224 71% 4%; /* Fondo oscuro para el body */
-    --background-surface: 45 50% 98%; /* Fondo claro (blanco perla/crema) para tarjetas/modales */
-    --border-subtle: 45 25% 91%;
-    --main-text: 20 25% 25%; /* Texto oscuro para componentes claros */
-    --secondary-text: 20 15% 50%;
+    /* Define las variables para el modo oscuro */
+    --background-base: 224 71% 4%; /* Fondo oscuro principal para el body */
+    --background-surface: 220 13% 18%; /* Un gris oscuro para superficies de tarjetas */
+    --border-subtle: 220 13% 25%;
     
-    /* Re-map shadcn UI colors using the new dark mode base colors */
+    --main-text: 210 20% 98%; /* Texto claro para contraste */
+    --secondary-text: 215 14% 65%;
+    
+    /* Re-mapeo para ShadCN */
     --background: hsl(var(--background-base));
-    --foreground: hsl(var(--main-text)); /* El texto por defecto en el body ahora necesita ser claro */
+    --foreground: hsl(var(--main-text));
     
     --card: hsl(var(--background-surface));
     --card-foreground: hsl(var(--main-text));
     
     --popover: hsl(var(--background-surface));
     --popover-foreground: hsl(var(--main-text));
-
-    --primary: hsl(var(--brand-pink));
-    --primary-foreground: hsl(var(--warm-white));
-    
-    --secondary: hsl(var(--light-pink));
-    --secondary-foreground: hsl(var(--main-text));
     
     --muted: hsl(var(--border-subtle));
     --muted-foreground: hsl(var(--secondary-text));
 
-    --accent: hsl(var(--soft-gold));
-    --accent-foreground: hsl(var(--main-text));
-    
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    
     --border: hsl(var(--border-subtle));
     --input: hsl(var(--border-subtle));
-    --ring: hsl(var(--brand-pink));
   }
 }
 
@@ -96,9 +84,6 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;
-  }
-  .dark body {
-      color: hsl(var(--warm-white));
   }
 }
 

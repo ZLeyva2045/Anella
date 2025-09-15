@@ -1,3 +1,4 @@
+
 // src/app/layout.tsx
 'use client';
 import { usePathname } from 'next/navigation';
@@ -20,32 +21,29 @@ export default function RootLayout({
   const showWhatsAppButton = !isAdminOrSalesPath;
   
    useEffect(() => {
-    if (isAdminOrSalesPath) {
-      const theme = localStorage.getItem('anella-theme') || 'light';
-      document.documentElement.classList.add(theme);
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
     const handleThemeChange = () => {
+      const theme = localStorage.getItem('anella-theme') || 'light';
       if (isAdminOrSalesPath) {
-        const theme = localStorage.getItem('anella-theme') || 'light';
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
         }
+      } else {
+        // For public pages, always remove dark mode
+        document.documentElement.classList.remove('dark');
       }
     };
-
-    window.addEventListener('themeChange', handleThemeChange);
-    window.addEventListener('storage', handleThemeChange);
     
-    handleThemeChange(); // Initial check
+    handleThemeChange(); // Apply theme on initial load
+
+    // Listen for changes from the settings page
+    window.addEventListener('storage', handleThemeChange);
+    window.addEventListener('themeChange', handleThemeChange);
 
     return () => {
-      window.removeEventListener('themeChange', handleThemeChange);
       window.removeEventListener('storage', handleThemeChange);
+      window.removeEventListener('themeChange', handleThemeChange);
     };
   }, [isAdminOrSalesPath]);
 
