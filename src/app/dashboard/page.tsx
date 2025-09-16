@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-import { Loader2, Settings, ShoppingCart, Heart, Award, Gift, Star, Gem, Crown, Sparkles, Pencil } from 'lucide-react';
+import { Loader2, Settings, ShoppingCart, Heart, Award, Gift, Star, Gem, Crown, Sparkles, Pencil, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -72,7 +72,7 @@ export default function DashboardPage() {
   const tierProgress = (userPoints / currentTier.next) * 100;
 
   return (
-     <div className="min-h-screen w-full bg-cover bg-center p-4 md:p-8" style={{backgroundImage: 'url(https://i.ibb.co/mSBNfPZ/Fondo.png)'}}>
+     <div className="min-h-screen w-full bg-[#fcfbfa] p-4 md:p-8">
         <main className="max-w-4xl mx-auto bg-card/60 backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg">
             {/* --- Header --- */}
             <header className="p-6 border-b border-white/10 flex items-center justify-between">
@@ -195,7 +195,10 @@ export default function DashboardPage() {
                     </Card>
                 </aside>
             </div>
-             <CardFooter className="p-6 border-t border-white/10 mt-6">
+             <CardFooter className="p-6 border-t border-white/10 mt-6 flex justify-between">
+                <Button asChild>
+                  <Link href="/products"><ArrowLeft className="mr-2 h-4 w-4" /> Ir a la Tienda</Link>
+                </Button>
                 <Button onClick={handleSignOut} variant="destructive">
                     Cerrar Sesión
                 </Button>
