@@ -7,19 +7,18 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from '@/components/ui/separator';
 
-import { Loader2, Settings, ShoppingCart, Heart, Award, Gift, Star, Gem, Crown, Sparkles, Pencil, ArrowLeft } from 'lucide-react';
+import { Loader2, Settings, ShoppingCart, Heart, Award, Gift, Star, LogOut, Coins } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 const loyaltyTiers = {
-  Start: { level: 0, next: 100, icon: <Star className="h-5 w-5" /> },
-  Plus: { level: 1, next: 500, icon: <Gift className="h-5 w-5" /> },
-  Pro: { level: 2, next: 2000, icon: <Gem className="h-5 w-5" /> },
-  Elite: { level: 3, next: Infinity, icon: <Crown className="h-5 w-5" /> },
+  Start: { level: 0, next: 100, name: "Anella Start" },
+  Plus: { level: 1, next: 500, name: "Anella Plus" },
+  Pro: { level: 2, next: 2000, name: "Anella Pro" },
+  Elite: { level: 3, next: Infinity, name: "Anella Elite" },
 };
 
 const getCurrentTier = (points: number) => {
@@ -28,6 +27,19 @@ const getCurrentTier = (points: number) => {
   if (points >= 100) return loyaltyTiers.Plus;
   return loyaltyTiers.Start;
 };
+
+const benefits = [
+    { icon: <Gift className="h-6 w-6"/>, name: "Regalo Sorpresa" },
+    { icon: <ShoppingCart className="h-6 w-6"/>, name: "Envío Gratis" },
+    { icon: <Award className="h-6 w-6"/>, name: "Acceso VIP" },
+    { icon: <Heart className="h-6 w-6"/>, name: "Doble Puntos" },
+]
+
+const wishlistItems = [
+    { name: "Anillo de Oro Rosa", price: 120, image: "https://placehold.co/50x50/FFF9F2/D56B77?text=💍" },
+    { name: "Collar Personalizado", price: 85, image: "https://placehold.co/50x50/FFF9F2/D56B77?text=💎" },
+    { name: "Set de Broches", price: 45, image: "https://placehold.co/50x50/FFF9F2/D56B77?text=✨" },
+]
 
 export default function DashboardPage() {
   const { user, firestoreUser, signOut, loading } = useAuth();
@@ -53,7 +65,7 @@ export default function DashboardPage() {
   
   if (loading || !user || !firestoreUser) {
     return (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen bg-[#F3E8DB]">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
@@ -61,7 +73,7 @@ export default function DashboardPage() {
   
   if (firestoreUser.role !== 'customer') {
       return (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen bg-[#F3E8DB]">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
@@ -69,141 +81,120 @@ export default function DashboardPage() {
 
   const userPoints = firestoreUser.loyaltyPoints || 0;
   const currentTier = getCurrentTier(userPoints);
-  const tierProgress = (userPoints / currentTier.next) * 100;
+  const tierProgress = currentTier.next === Infinity ? 100 : (userPoints / currentTier.next) * 100;
 
   return (
-     <div className="min-h-screen w-full bg-[#fcfbfa] p-4 md:p-8">
-        <main className="max-w-4xl mx-auto bg-card/60 backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg">
-            {/* --- Header --- */}
-            <header className="p-6 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-4">
+     <div className="min-h-screen w-full bg-[#F3E8DB] p-4 md:p-8">
+        <div className="container mx-auto grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
+            
+            {/* --- Sidebar --- */}
+            <aside className="bg-[#FFF9F2] rounded-2xl p-6 shadow-lg border border-[#EBDCCD] flex flex-col items-center">
+                <div className="flex flex-col items-center mb-6 text-center">
                     <Image
-                        src={firestoreUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(firestoreUser.name)}&background=random`}
+                        src={firestoreUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(firestoreUser.name)}&background=D56B77&color=fff`}
                         alt="Avatar"
-                        width={64}
-                        height={64}
-                        className="rounded-full border-4 border-white shadow-md"
+                        width={120}
+                        height={120}
+                        className="rounded-full object-cover border-4 border-primary p-1 mb-4 transition-transform duration-300 hover:scale-105"
                     />
-                    <div>
-                        <h1 className="text-2xl font-bold text-foreground">¡Hola, {firestoreUser.name.split(' ')[0]}!</h1>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="px-2 py-0.5 bg-yellow-400/20 text-yellow-600 text-xs font-semibold rounded-full">Nivel: Pro</span>
-                            <span className="px-2 py-0.5 bg-pink-400/20 text-pink-600 text-xs font-semibold rounded-full">12 Regalos</span>
-                            <span className="px-2 py-0.5 bg-green-400/20 text-green-600 text-xs font-semibold rounded-full">850 Coins</span>
-                        </div>
+                    <h2 className="text-xl font-semibold text-primary mb-1">¡Hola, bienvenido!</h2>
+                    <p className="text-lg text-muted-foreground font-medium">{firestoreUser.name}</p>
+                </div>
+
+                <div className="w-full bg-gradient-to-br from-pink-400 to-primary rounded-xl p-4 text-white shadow-md mb-6 transition-transform duration-300 hover:-translate-y-1">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold text-lg">Tarjeta de Fidelización</h3>
+                        <span className="bg-white/20 text-xs font-bold px-3 py-1 rounded-full">{currentTier.name}</span>
+                    </div>
+                    <div className="bg-white/30 h-2 rounded-full my-2">
+                        <div className="bg-white h-full rounded-full" style={{ width: `${tierProgress}%` }}></div>
+                    </div>
+                    <div className="flex justify-between text-xs font-semibold">
+                        <span>{userPoints} pts</span>
+                        <span>{currentTier.next === Infinity ? 'MAX' : `${currentTier.next} pts`}</span>
                     </div>
                 </div>
-                 <div className="hidden md:flex items-center gap-2">
-                    <p className="text-sm font-medium text-muted-foreground">Tus favoritos:</p>
-                     <div className="flex -space-x-3">
-                      <div className="h-10 w-10 rounded-full bg-red-200 border-2 border-white flex items-center justify-center shadow-sm">🍫</div>
-                      <div className="h-10 w-10 rounded-full bg-amber-200 border-2 border-white flex items-center justify-center shadow-sm">🍺</div>
-                      <div className="h-10 w-10 rounded-full bg-blue-200 border-2 border-white flex items-center justify-center shadow-sm">🧸</div>
-                      <div className="h-10 w-10 rounded-full bg-pink-200 border-2 border-white flex items-center justify-center shadow-sm">🌹</div>
-                    </div>
-                </div>
-            </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
-                {/* --- Main Content --- */}
-                <div className="md:col-span-2 space-y-6">
-                    {/* Loyalty Card */}
-                    <Card className="neumorphic-shadow-inset bg-background/80">
-                      <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                          <Award className="text-primary" />
-                          Anella Club
-                        </CardTitle>
-                        <div className="flex items-center gap-2 font-bold text-primary">
-                          {currentTier.icon}
-                          <span>{Object.keys(loyaltyTiers).find(key => loyaltyTiers[key as keyof typeof loyaltyTiers] === currentTier)}</span>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Has acumulado <span className="font-bold">{userPoints}</span> puntos. ¡Te faltan {Math.max(0, currentTier.next - userPoints)} para el siguiente nivel!
-                        </p>
-                        <Progress value={tierProgress} className="h-3" />
-                      </CardContent>
-                      <CardFooter>
-                         <Button variant="outline" size="sm" className="ml-auto">Ver Beneficios</Button>
-                      </CardFooter>
-                    </Card>
+                <nav className="w-full flex-1">
+                    <ul className="space-y-2">
+                        <li><Link href="#" className="flex items-center gap-3 p-3 rounded-lg text-muted-foreground hover:bg-pink-100/50 hover:text-primary transition-colors"><Gift className="h-5 w-5" /> Regalos Comprados</Link></li>
+                        <li><Link href="#" className="flex items-center gap-3 p-3 rounded-lg text-muted-foreground hover:bg-pink-100/50 hover:text-primary transition-colors"><Coins className="h-5 w-5" /> Mis Anella Coins</Link></li>
+                        <li><Link href="#" className="flex items-center gap-3 p-3 rounded-lg text-muted-foreground hover:bg-pink-100/50 hover:text-primary transition-colors"><Star className="h-5 w-5" /> Mis Beneficios</Link></li>
+                        <li><Link href="#" className="flex items-center gap-3 p-3 rounded-lg text-muted-foreground hover:bg-pink-100/50 hover:text-primary transition-colors"><ShoppingCart className="h-5 w-5" /> Mis Compras</Link></li>
+                        <li><Link href="/wishlist" className="flex items-center gap-3 p-3 rounded-lg text-muted-foreground hover:bg-pink-100/50 hover:text-primary transition-colors"><Heart className="h-5 w-5" /> Mi Lista de Deseos</Link></li>
+                        <li><Link href="/dashboard/settings" className="flex items-center gap-3 p-3 rounded-lg text-muted-foreground hover:bg-pink-100/50 hover:text-primary transition-colors"><Settings className="h-5 w-5" /> Configuración</Link></li>
+                    </ul>
+                </nav>
 
-                    {/* Anella Coins */}
-                    <Card className="relative overflow-hidden neumorphic-shadow bg-background/80">
-                        <Sparkles className="absolute -top-4 -right-4 h-24 w-24 text-yellow-300/30" />
-                        <CardHeader>
-                            <CardTitle>Anella Coins</CardTitle>
-                            <CardDescription>Tus monedas para descuentos y sorpresas.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="relative">
-                                    <div className="absolute h-16 w-16 bg-yellow-400/50 rounded-full blur-lg animate-pulse"></div>
-                                    <Image src="https://i.ibb.co/Vvz1kSb/Anella-Coin.png" alt="Anella Coin" width={64} height={64} className="relative animate-bounce" />
-                                </div>
-                                <span className="text-4xl font-bold text-foreground">850</span>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <Button size="sm">Ganar Coins</Button>
-                                <Button size="sm" variant="outline">Canjear</Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-                
-                {/* --- Sidebar --- */}
-                <aside className="md:col-span-1 space-y-6">
-                    {/* Quick Actions */}
-                     <Card className="neumorphic-shadow-inset bg-background/80">
-                        <CardHeader><CardTitle>Acceso Rápido</CardTitle></CardHeader>
-                        <CardContent className="grid grid-cols-2 gap-4">
-                          <Button variant="outline" className="flex flex-col h-20 gap-1"><Award/><span className="text-xs">Beneficios</span></Button>
-                          <Button variant="outline" className="flex flex-col h-20 gap-1"><ShoppingCart/><span className="text-xs">Mis Compras</span></Button>
-                          <Button variant="outline" className="flex flex-col h-20 gap-1"><Heart/><span className="text-xs">Deseos</span></Button>
-                          <Button variant="outline" className="flex flex-col h-20 gap-1"><Settings/><span className="text-xs">Configurar</span></Button>
-                        </CardContent>
-                    </Card>
-
-                    {/* Quick Settings */}
-                    <Card className="neumorphic-shadow-inset bg-background/80">
-                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Pencil className="h-4 w-4"/>Configuración Rápida</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                             <div className="space-y-1">
-                                <Label htmlFor="alias">Alias</Label>
-                                <Input id="alias" defaultValue={firestoreUser.name} />
-                            </div>
-                             <div className="space-y-1">
-                                <Label htmlFor="phone">Teléfono</Label>
-                                <Input id="phone" defaultValue={firestoreUser.phone || ''} />
-                            </div>
-                            <div className="space-y-1">
-                                <Label htmlFor="location">Ubicación</Label>
-                                 <Select defaultValue="pe">
-                                    <SelectTrigger id="location"><SelectValue/></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="pe">Perú</SelectItem>
-                                        <SelectItem value="co">Colombia</SelectItem>
-                                        <SelectItem value="mx">Mexico</SelectItem>
-                                    </SelectContent>
-                                 </Select>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </aside>
-            </div>
-             <CardFooter className="p-6 border-t border-white/10 mt-6 flex justify-between">
-                <Button asChild>
-                  <Link href="/products"><ArrowLeft className="mr-2 h-4 w-4" /> Ir a la Tienda</Link>
-                </Button>
-                <Button onClick={handleSignOut} variant="destructive">
+                 <Button onClick={handleSignOut} variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-red-100/50">
+                    <LogOut className="mr-2 h-4 w-4" />
                     Cerrar Sesión
                 </Button>
-            </CardFooter>
-        </main>
-    </div>
+            </aside>
+            
+            {/* --- Main Content --- */}
+            <main className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="md:col-span-2 bg-gradient-to-br from-amber-300 to-yellow-500 text-yellow-900 shadow-lg border-none relative overflow-hidden transition-transform duration-300 hover:-translate-y-1">
+                     <Coins className="absolute -right-5 -bottom-5 h-32 w-32 text-white/20" />
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">Mis Anella Coins</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-4xl font-bold">1,250</p>
+                        <p className="text-sm">Canjea tus coins por increíbles beneficios.</p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-[#FFF9F2] shadow-lg border border-[#EBDCCD] transition-transform duration-300 hover:-translate-y-1">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Gift/>Regalos Comprados</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex justify-around text-center">
+                        <div>
+                            <p className="text-3xl font-bold text-primary">12</p>
+                            <p className="text-sm text-muted-foreground">Este mes</p>
+                        </div>
+                         <div>
+                            <p className="text-3xl font-bold text-primary">47</p>
+                            <p className="text-sm text-muted-foreground">En total</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                 
+                <Card className="bg-[#FFF9F2] shadow-lg border border-[#EBDCCD] transition-transform duration-300 hover:-translate-y-1">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Star/>Mis Beneficios</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4 text-center">
+                        {benefits.map(b => (
+                             <div key={b.name} className="bg-pink-100/50 p-3 rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-pink-100 transition-colors">
+                                <div className="text-primary">{b.icon}</div>
+                                <p className="text-xs font-semibold text-primary">{b.name}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                
+                <Card className="md:col-span-2 bg-[#FFF9F2] shadow-lg border border-[#EBDCCD] transition-transform duration-300 hover:-translate-y-1">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Heart/>Mi Lista de Deseos</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                         {wishlistItems.map((item, index) => (
+                             <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-amber-100/50">
+                                 <Image src={item.image} alt={item.name} width={50} height={50} className="rounded-md" />
+                                 <div className="flex-1">
+                                     <p className="font-semibold">{item.name}</p>
+                                     <p className="text-sm text-amber-600 font-bold">{item.price} Coins</p>
+                                 </div>
+                                 <Heart className="h-5 w-5 text-primary fill-current" />
+                             </div>
+                         ))}
+                    </CardContent>
+                </Card>
+            </main>
+
+        </div>
+     </div>
   );
 }

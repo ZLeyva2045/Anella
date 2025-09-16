@@ -28,19 +28,26 @@ import { QrCodeScannerDialog } from '@/components/shared/QrCodeScannerDialog';
 import { useToast } from '@/hooks/use-toast';
 import { recordAttendance } from '@/services/attendanceService';
 
-const MetricCard = ({ title, value, icon, loading }: { title: string, value: string, icon: React.ElementType, loading?: boolean }) => {
+const MetricCard = ({ title, value, icon, loading, link, linkText }: { title: string, value: string | number, icon: React.ElementType, loading?: boolean, link?: string, linkText?: string }) => {
   const Icon = icon;
   return (
-    <Card>
+    <Card className="transition-transform duration-300 hover:-translate-y-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            <Icon className="h-6 w-6 text-muted-foreground" />
+            <Icon className="h-5 w-5 text-muted-foreground" />
        </CardHeader>
        <CardContent>
             {loading ? (
                 <Loader2 className="h-8 w-8 animate-spin mt-1" />
             ) : (
-                <div className="text-2xl font-bold">{value}</div>
+               <>
+                <div className="text-2xl font-bold">{typeof value === 'number' && title.toLowerCase().includes('ingresos') ? `S/${value.toFixed(2)}` : value}</div>
+                {link && linkText && (
+                  <Link href={link} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                    {linkText}
+                  </Link>
+                )}
+               </>
             )}
        </CardContent>
     </Card>
@@ -89,9 +96,10 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
     }
 
     return (
-        <Card className="mt-10 overflow-hidden">
+        <Card className="mt-8 overflow-hidden">
             <CardHeader>
                 <CardTitle>Mis Pedidos Recientes</CardTitle>
+                 <CardDescription>Los últimos 5 pedidos que has gestionado.</CardDescription>
             </CardHeader>
              <CardContent>
                 <Table>
@@ -110,7 +118,7 @@ const RecentOrdersTable = ({ sellerId }: { sellerId: string }) => {
                                 <TableCell colSpan={5} className="text-center text-muted-foreground py-4">No has gestionado pedidos recientes.</TableCell>
                             </TableRow>
                         ) : orders.map((order) => (
-                        <TableRow key={order.id}>
+                        <TableRow key={order.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => window.location.href = `/sales/orders/${order.id}`}>
                             <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
                             <TableCell>{order.customerInfo.name}</TableCell>
                             <TableCell>S/{order.totalAmount.toFixed(2)}</TableCell>
@@ -133,7 +141,6 @@ export default function SalesDashboardPage() {
         monthlyRevenue: 0,
         monthlySalesCount: 0,
         newCustomersCount: 0,
-        closeRate: 0,
     });
     const [loading, setLoading] = useState(true);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -157,10 +164,8 @@ export default function SalesDashboardPage() {
         const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
             const monthlyOrders = snapshot.docs.map(doc => doc.data() as Order);
             
-            const completedOrders = monthlyOrders.filter(o => o.fulfillmentStatus === 'completed');
-            
-            const revenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
-            const salesCount = completedOrders.length;
+            const revenue = monthlyOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+            const salesCount = monthlyOrders.length;
             
             setMetrics(prev => ({
                 ...prev,
@@ -170,6 +175,10 @@ export default function SalesDashboardPage() {
             
             setTimeout(() => setLoading(false), 500);
         });
+
+        // Add a listener for new customers if needed
+        // const customersQuery = query(collection(db, "users"), where("role", "==", "customer"), where("createdAt", ">=", startOfMonthTimestamp));
+        // ...
 
         return () => unsubscribe();
 
@@ -203,35 +212,34 @@ export default function SalesDashboardPage() {
                 <p className="text-muted-foreground">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard
                     title="Mis Ingresos (Mes)"
-                    value={`S/${metrics.monthlyRevenue.toFixed(2)}`}
+                    value={metrics.monthlyRevenue}
                     icon={DollarSign}
                     loading={loading}
                 />
                 <MetricCard
                     title="Mis Ventas (Mes)"
-                    value={`${metrics.monthlySalesCount}`}
+                    value={metrics.monthlySalesCount}
                     icon={CreditCard}
                     loading={loading}
+                    link="/sales/orders"
+                    linkText="Ver todos mis pedidos"
                 />
-                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Acceso Rápido</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Button onClick={() => setIsScannerOpen(true)} className="w-full">
-                        <QrCode className="mr-2 h-4 w-4" />
-                        Registrar Mi Asistencia
+                 <Card className="flex flex-col justify-center items-center p-6 bg-primary text-primary-foreground transition-transform duration-300 hover:-translate-y-1">
+                    <Button onClick={() => setIsScannerOpen(true)} className="w-full h-full flex flex-col gap-2 bg-transparent hover:bg-white/10">
+                        <QrCode className="h-8 w-8" />
+                        <span className="font-semibold">Registrar Asistencia</span>
                     </Button>
-                  </CardContent>
                 </Card>
                 <MetricCard
-                    title="Mi Tasa de Cierre"
-                    value={`${metrics.closeRate}%`}
-                    icon={Activity}
-                    loading={true}
+                    title="Nuevos Clientes"
+                    value={metrics.newCustomersCount}
+                    icon={Users}
+                    loading={loading}
+                    link="/sales/customers"
+                    linkText="Gestionar clientes"
                 />
             </div>
 
