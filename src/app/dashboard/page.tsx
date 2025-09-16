@@ -15,7 +15,7 @@ import Image from 'next/image';
 const loyaltyTiers = {
   Start: { level: 0, name: "Anella Start", next: 200, benefits: ["Acumula puntos con cada compra"] },
   Plus: { level: 1, name: "Anella Plus", next: 500, benefits: ["Envío gratis en un pedido", "Regalo sorpresa pequeño"] },
-  Pro: { level: 2, name: "Anella Pro", next: 1500, benefits: ["Envío gratis siempre", "Doble puntos en tu cumpleaños"] },
+  Pro: { level: 2, name: "Anella Pro", next: 1500, benefits: ["Envíos gratis siempre", "Doble puntos en tu cumpleaños"] },
   Elite: { level: 3, name: "Anella Elite", next: Infinity, benefits: ["Acceso VIP a nuevos productos", "Regalo exclusivo anual"] },
 };
 
@@ -57,7 +57,7 @@ export default function DashboardPage() {
   
   if (loading || !user || !firestoreUser) {
     return (
-        <div className="flex items-center justify-center min-h-screen bg-[#F3E8DB]">
+        <div className="flex items-center justify-center min-h-screen bg-[#FFF9F2]">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
@@ -65,7 +65,7 @@ export default function DashboardPage() {
   
   if (firestoreUser.role !== 'customer') {
       return (
-        <div className="flex items-center justify-center min-h-screen bg-[#F3E8DB]">
+        <div className="flex items-center justify-center min-h-screen bg-[#FFF9F2]">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
@@ -78,7 +78,7 @@ export default function DashboardPage() {
   const unlockedBenefits = currentTier.benefits;
 
   return (
-     <div className="min-h-screen w-full bg-[#FFF9F2] p-4 md:p-8">
+     <div className="min-h-screen w-full bg-[#F3E8DB] p-4 md:p-8">
         <div className="container mx-auto grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
             
             {/* --- Sidebar --- */}

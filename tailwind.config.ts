@@ -81,6 +81,14 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+         'slideInLeft': {
+            'from': { opacity: '0', transform: 'translateX(-30px)' },
+            'to': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'fadeIn': {
+            'from': { opacity: '0', transform: 'translateY(20px)' },
+            'to': { opacity: '1', transform: 'translateY(0)' },
+        },
         'soft-glow': {
           '0%, 100%': { boxShadow: '0 0 5px hsl(var(--primary) / 0.2)' },
           '50%': { boxShadow: '0 0 20px hsl(var(--primary) / 0.4)' },
@@ -114,6 +122,8 @@ export default {
         'button-press': 'button-press 0.2s ease-in-out',
         bounce: 'bounce 1s infinite',
         'spin-slow': 'spin 5s linear infinite',
+        'slideInLeft': 'slideInLeft 0.8s ease-out forwards',
+        'fadeIn': 'fadeIn 1s ease-out forwards',
       },
       backgroundImage: {
         'soft-gradient': 'linear-gradient(120deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1), hsl(var(--background)))',

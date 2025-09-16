@@ -47,44 +47,19 @@
   }
 }
 
-@layer components {
-  .neumorphism-btn {
-    background-color: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    box-shadow: 4px 4px 8px #d1c5b8, -4px -4px 8px #ffffff;
-    transition: all 0.2s ease-in-out;
-  }
-  .neumorphism-btn:hover {
-    box-shadow: 2px 2px 4px #d1c5b8, -2px -2px 4px #ffffff;
-  }
-  .glassmorphism {
-    background: rgba(255, 249, 242, 0.5);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid hsl(var(--border));
-  }
-  .brand-btn {
-    background-color: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    transition: background-color 0.3s ease;
-  }
-  .brand-btn:hover {
-    background-color: hsl(var(--primary) / 0.9);
-  }
-  .filter-btn {
-    background-color: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    color: hsl(var(--muted-foreground));
-  }
-  .filter-btn.active, .filter-btn:hover {
-    background-color: hsl(var(--primary));
-    border-color: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-  }
-  .neumorphic-shadow {
-    box-shadow: 8px 8px 16px #d1ccc9, -8px -8px 16px #ffffff;
-  }
-  .neumorphic-shadow-inset {
-    box-shadow: inset 8px 8px 16px #d1ccc9, inset -8px -8px 16px #ffffff;
-  }
+@layer utilities {
+    @keyframes slideInLeft {
+        from { opacity: 0; transform: translateX(-30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slideInLeft {
+        animation: slideInLeft 0.8s ease-out forwards;
+    }
+    .animate-fadeIn {
+        animation: fadeIn 1s ease-out forwards;
+    }
 }
