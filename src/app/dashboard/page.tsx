@@ -5,14 +5,12 @@ import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress"
-import { Separator } from '@/components/ui/separator';
 
-import { Loader2, Settings, ShoppingCart, Heart, Award, Gift, Star, LogOut, Coins } from 'lucide-react';
+import { Loader2, Settings, ShoppingCart, Heart, Award, Gift, Star, LogOut, Coins, Store } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 const loyaltyTiers = {
   Start: { level: 0, next: 100, name: "Anella Start" },
@@ -106,10 +104,8 @@ export default function DashboardPage() {
                         <h3 className="font-bold text-lg">Tarjeta de Fidelización</h3>
                         <span className="bg-white/20 text-xs font-bold px-3 py-1 rounded-full">{currentTier.name}</span>
                     </div>
-                    <div className="bg-white/30 h-2 rounded-full my-2">
-                        <div className="bg-white h-full rounded-full" style={{ width: `${tierProgress}%` }}></div>
-                    </div>
-                    <div className="flex justify-between text-xs font-semibold">
+                    <Progress value={tierProgress} className="h-2 bg-white/30 [&>div]:bg-white" />
+                    <div className="flex justify-between text-xs font-semibold mt-1">
                         <span>{userPoints} pts</span>
                         <span>{currentTier.next === Infinity ? 'MAX' : `${currentTier.next} pts`}</span>
                     </div>
@@ -125,11 +121,18 @@ export default function DashboardPage() {
                         <li><Link href="/dashboard/settings" className="flex items-center gap-3 p-3 rounded-lg text-muted-foreground hover:bg-pink-100/50 hover:text-primary transition-colors"><Settings className="h-5 w-5" /> Configuración</Link></li>
                     </ul>
                 </nav>
-
-                 <Button onClick={handleSignOut} variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-red-100/50">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Cerrar Sesión
-                </Button>
+                 <div className="w-full mt-4 space-y-2">
+                    <Button asChild className="w-full">
+                        <Link href="/products">
+                            <Store className="mr-2 h-4 w-4"/>
+                            Ir a la Tienda
+                        </Link>
+                    </Button>
+                    <Button onClick={handleSignOut} variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-red-100/50">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Cerrar Sesión
+                    </Button>
+                </div>
             </aside>
             
             {/* --- Main Content --- */}
