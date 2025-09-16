@@ -13,16 +13,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const loyaltyTiers = {
-  Start: { level: 0, next: 100, name: "Anella Start" },
+  Start: { level: 0, next: 200, name: "Anella Start" },
   Plus: { level: 1, next: 500, name: "Anella Plus" },
-  Pro: { level: 2, next: 2000, name: "Anella Pro" },
+  Pro: { level: 2, next: 1500, name: "Anella Pro" },
   Elite: { level: 3, next: Infinity, name: "Anella Elite" },
 };
 
 const getCurrentTier = (points: number) => {
-  if (points >= 2000) return loyaltyTiers.Elite;
+  if (points >= 1500) return loyaltyTiers.Elite;
   if (points >= 500) return loyaltyTiers.Pro;
-  if (points >= 100) return loyaltyTiers.Plus;
+  if (points >= 200) return loyaltyTiers.Plus;
   return loyaltyTiers.Start;
 };
 
@@ -77,9 +77,10 @@ export default function DashboardPage() {
     );
   }
 
-  const userPoints = firestoreUser.loyaltyPoints || 0;
-  const currentTier = getCurrentTier(userPoints);
-  const tierProgress = currentTier.next === Infinity ? 100 : (userPoints / currentTier.next) * 100;
+  const anellaCoins = firestoreUser.loyaltyPoints || 0;
+  const totalGiftsPurchased = firestoreUser.orders?.length || 0;
+  const currentTier = getCurrentTier(anellaCoins);
+  const tierProgress = currentTier.next === Infinity ? 100 : (anellaCoins / currentTier.next) * 100;
 
   return (
      <div className="min-h-screen w-full bg-[#F3E8DB] p-4 md:p-8">
@@ -106,7 +107,7 @@ export default function DashboardPage() {
                     </div>
                     <Progress value={tierProgress} className="h-2 bg-white/30 [&>div]:bg-white" />
                     <div className="flex justify-between text-xs font-semibold mt-1">
-                        <span>{userPoints} pts</span>
+                        <span>{anellaCoins} pts</span>
                         <span>{currentTier.next === Infinity ? 'MAX' : `${currentTier.next} pts`}</span>
                     </div>
                 </div>
@@ -143,7 +144,7 @@ export default function DashboardPage() {
                         <CardTitle className="flex items-center gap-2">Mis Anella Coins</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-bold">1,250</p>
+                        <p className="text-4xl font-bold">{anellaCoins.toLocaleString()}</p>
                         <p className="text-sm">Canjea tus coins por increíbles beneficios.</p>
                     </CardContent>
                 </Card>
@@ -158,7 +159,7 @@ export default function DashboardPage() {
                             <p className="text-sm text-muted-foreground">Este mes</p>
                         </div>
                          <div>
-                            <p className="text-3xl font-bold text-primary">47</p>
+                            <p className="text-3xl font-bold text-primary">{totalGiftsPurchased}</p>
                             <p className="text-sm text-muted-foreground">En total</p>
                         </div>
                     </CardContent>
