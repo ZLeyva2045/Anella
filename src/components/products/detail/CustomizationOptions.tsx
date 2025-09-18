@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { CustomizationOption } from '@/lib/mock-data';
+import { Sparkles } from 'lucide-react';
 
 interface CustomizationOptionsProps {
   options?: CustomizationOption[];
@@ -16,8 +17,11 @@ export function CustomizationOptions({ options, onCustomizationChange }: Customi
   }
 
   return (
-    <div className="mt-8 flex flex-col gap-4 p-6 rounded-2xl neumorphic-shadow-inset bg-[#fcfbfa]">
-        <h3 className="text-lg font-bold text-primary">Personaliza tu Regalo</h3>
+    <div className="mt-8 flex flex-col gap-6 p-6 rounded-lg border bg-secondary/30">
+        <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Sparkles className="text-primary h-5 w-5"/>
+            Personaliza tu Regalo
+        </h3>
         {options.map((option) => (
         <div key={option.id} className="space-y-2">
             <Label htmlFor={option.id} className="text-base font-semibold">{option.label}</Label>
@@ -40,13 +44,13 @@ export function CustomizationOptions({ options, onCustomizationChange }: Customi
             {option.type === 'radio' && option.choices && (
             <RadioGroup
                 id={option.id}
-                className="flex gap-4 pt-2"
+                className="flex flex-wrap gap-4 pt-2"
                 onValueChange={(value) => onCustomizationChange(option, value)}
             >
                 {option.choices.map((choice) => (
                 <div key={choice.name} className="flex items-center space-x-2">
                     <RadioGroupItem value={choice.name} id={`${option.id}-${choice.name}`} />
-                    <Label htmlFor={`${option.id}-${choice.name}`} className="font-normal">{choice.name}</Label>
+                    <Label htmlFor={`${option.id}-${choice.name}`} className="font-normal cursor-pointer">{choice.name}</Label>
                 </div>
                 ))}
             </RadioGroup>
@@ -55,7 +59,7 @@ export function CustomizationOptions({ options, onCustomizationChange }: Customi
                 <Input
                 id={option.id}
                 type="file"
-                className="file:text-primary file:font-semibold bg-background"
+                className="file:text-primary file:font-semibold bg-background cursor-pointer"
                 onChange={(e) => onCustomizationChange(option, e.target.files ? e.target.files[0].name : '')}
             />
             )}

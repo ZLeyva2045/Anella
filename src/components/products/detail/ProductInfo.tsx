@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import type { GiftDetail } from '@/lib/mock-data';
 import type { SelectedCustomization } from './ProductDetailClient';
 import type { Gift } from '@/types/firestore';
+import { ShoppingCart } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface ProductInfoProps {
   product: GiftDetail | (Omit<GiftDetail, 'createdAt' | 'updatedAt'> & { createdAt: Date, updatedAt: Date });
@@ -26,7 +28,7 @@ export function ProductInfo({ product, totalPrice, customizationCost, selectedCu
       price: totalPrice,
       customizations: selectedCustomizations,
     };
-    addToCart(cartProduct, 1); // Assuming quantity of 1 for now
+    addToCart(cartProduct, 1);
     toast({
       title: "¡Añadido al carrito!",
       description: `${product.name} se ha añadido a tu carrito.`,
@@ -35,35 +37,35 @@ export function ProductInfo({ product, totalPrice, customizationCost, selectedCu
 
   return (
     <>
-      <h1 className="text-4xl font-bold tracking-tight text-primary">{product.name}</h1>
-      <p className="mt-4 text-lg text-secondary">{product.description}</p>
-      <div className="mt-8">
-        <p className="text-4xl font-bold text-primary">S/{totalPrice.toFixed(2)}</p>
-      </div>
+      <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground">{product.name}</h1>
+      <p className="mt-4 text-lg text-muted-foreground">{product.description}</p>
       
-      {/* This section will be replaced by CustomizationOptions */}
-      <div className="mt-8 flex flex-col gap-4 p-6 rounded-2xl neumorphic-shadow-inset bg-[#fcfbfa]">
-        <h3 className="text-lg font-bold text-primary">Detalles del Producto</h3>
-        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-4 text-base">
-            <p className="font-medium text-secondary">Categoría</p>
-            <p className="text-primary">{product.category || 'General'}</p>
-            {customizationCost > 0 && (
-                 <>
-                    <p className="font-medium text-secondary">Personalización</p>
-                    <p className="text-primary">+ S/{customizationCost.toFixed(2)}</p>
-                 </>
-            )}
-        </div>
+      <div className="mt-6">
+        <p className="text-4xl font-bold text-primary">S/{totalPrice.toFixed(2)}</p>
+        {customizationCost > 0 && (
+            <p className="text-sm text-muted-foreground">
+                Precio base: S/{product.price.toFixed(2)} + S/{customizationCost.toFixed(2)} en personalización
+            </p>
+        )}
       </div>
 
-      <div className="mt-10">
-        <button
+      <Separator className="my-8" />
+      
+      <div className="mt-4">
+        <Button
             onClick={handleAddToCart}
-            className="w-full flex items-center justify-center rounded-xl py-4 px-8 text-lg font-bold text-white bg-[var(--brand-pink)] hover:opacity-90 transition-opacity neumorphic-shadow"
+            size="lg"
+            className="w-full text-lg py-7"
         >
+          <ShoppingCart className="mr-2 h-5 w-5" />
           Añadir al carrito
-        </button>
+        </Button>
       </div>
+
+       <div className="mt-6 text-sm text-muted-foreground">
+            <p><span className="font-semibold">Categoría:</span> {product.category || 'General'}</p>
+            {product.themes && product.themes.length > 0 && <p><span className="font-semibold">Temáticas:</span> {product.themes.join(', ')}</p>}
+       </div>
     </>
   );
 }
