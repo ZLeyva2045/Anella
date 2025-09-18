@@ -15,6 +15,19 @@ import Image from 'next/image';
 import { Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { ProductCard } from '@/components/products/ProductCard';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+
+export async function generateStaticParams() {
+  const giftsCollection = collection(db, 'gifts');
+  const giftsSnapshot = await getDocs(giftsCollection);
+  
+  const params = giftsSnapshot.docs.map(doc => ({
+    id: doc.id,
+  }));
+
+  return params;
+}
 
 export interface SelectedCustomization {
   [key: string]: {
