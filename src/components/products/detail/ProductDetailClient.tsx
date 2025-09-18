@@ -18,8 +18,9 @@ export interface SelectedCustomization {
   };
 }
 
+// Accept either the original GiftDetail or one where Timestamps have been converted to Dates
 interface ProductDetailClientProps {
-    gift: GiftDetail;
+    gift: GiftDetail | (Omit<GiftDetail, 'createdAt' | 'updatedAt'> & { createdAt: Date, updatedAt: Date });
 }
 
 export function ProductDetailClient({ gift }: ProductDetailClientProps) {

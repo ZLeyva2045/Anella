@@ -6,11 +6,11 @@ import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import type { GiftDetail } from '@/lib/mock-data';
-import type { SelectedCustomization } from '@/app/products/[id]/page';
+import type { SelectedCustomization } from './ProductDetailClient';
 import type { Gift } from '@/types/firestore';
 
 interface ProductInfoProps {
-  product: GiftDetail;
+  product: GiftDetail | (Omit<GiftDetail, 'createdAt' | 'updatedAt'> & { createdAt: Date, updatedAt: Date });
   totalPrice: number;
   customizationCost: number;
   selectedCustomizations: SelectedCustomization;
