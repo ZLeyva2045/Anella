@@ -124,7 +124,7 @@ export function Header() {
   return (
     <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[var(--border-beige)] px-10 py-4 bg-[var(--surface-beige)]/80 backdrop-blur-sm sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-3 text-[var(--main-text)]">
-             <Image alt="Anella Logo" width={232} height={95} className="w-[120px] h-auto object-contain" src="https://i.ibb.co/MyXzBh0r/Anella.png"/>
+             <Image alt="Anella Logo" width={232} height={95} className="w-[120px] h-auto object-contain" src="https://i.ibb.co/MyXzBh0r/Anella.png" unoptimized/>
         </Link>
         <nav className="flex flex-1 justify-center">
             <MainNav />

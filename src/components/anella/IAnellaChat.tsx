@@ -1,8 +1,7 @@
-
 // src/components/anella/IAnellaChat.tsx
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,13 +12,16 @@ import {
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
-import { Bot, Loader2, Send, User } from 'lucide-react';
+import { Bot, Loader2, Send, User, Sparkles } from 'lucide-react';
 import { chatWithAnella } from '@/ai/flows/ianella-assistant';
 import type { ChatMessage } from '@/types/ianella';
+import { useAuth } from '@/hooks/useAuth';
+import { db } from '@/lib/firebase/config';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
-import { parseIntent } from '@/lib/intent';
 import ProductSuggestion from './ProductSuggestion';
+
 
 interface IAnellaChatProps {
   isOpen: boolean;
@@ -31,84 +33,113 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+        if (scrollAreaRef.current) {
+            const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+            if (viewport) {
+                viewport.scrollTop = viewport.scrollHeight;
+            }
+        }
+    }, 100);
+  }, []);
+
+  // Effect for fetching chat history
+  useEffect(() => {
+    if (!isOpen || !user) {
+        // If not logged in or chat is closed, ensure initial message is there
+        if(messages.length === 0) {
+           setMessages([{ role: 'model', content: '¡Hola! Soy IAnella, tu asistente de regalos. ¿En qué puedo ayudarte hoy? 😊' }]);
+        }
+        return;
+    }
+
+    setIsLoading(true);
+    const chatHistoryRef = collection(db, 'users', user.uid, 'chatHistory');
+    const q = query(chatHistoryRef, orderBy('createdAt', 'asc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const history = snapshot.docs.map(doc => doc.data() as ChatMessage);
+      if (history.length === 0) {
+        setMessages([{ role: 'model', content: `¡Hola, ${user.displayName}! Soy IAnella. ¿Qué regalo buscas hoy? 😊` }]);
+      } else {
+        setMessages(history);
+      }
+      setIsLoading(false);
+      scrollToBottom();
+    });
+
+    return () => unsubscribe();
+  }, [isOpen, user, scrollToBottom]);
+
 
   const handleSend = async (text: string) => {
     if (!text.trim()) return;
 
-    const userMessage: ChatMessage = { role: 'user', content: text };
+    const userMessage: ChatMessage = { role: 'user', content: text, createdAt: serverTimestamp() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
+    if (user) {
+        const chatHistoryRef = collection(db, 'users', user.uid, 'chatHistory');
+        await addDoc(chatHistoryRef, userMessage);
+    }
+    
     try {
-      const intent = parseIntent(text);
-
-      if (intent.recipient) {
-         const res = await fetch('/api/products/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              recipient: intent.recipient,
-              budget: intent.budget,
-              interests: intent.interests,
-              occasion: intent.occasion,
-            }),
-        });
-
-        const json = await res.json();
-
-        if (json.ok && json.products?.length) {
-            const productsMessage: ChatMessage = {
-                role: 'model',
-                content: "¡Claro! Basado en lo que me dijiste, aquí tienes algunas ideas de nuestro catálogo:",
-                products: json.products,
-            };
-            setMessages(prev => [...prev, productsMessage]);
-        } else {
-            const noResultMessage: ChatMessage = {
-                role: 'model',
-                content: "No encontré algo exacto en el catálogo, ¿te gustaría que te ofrezca un regalo personalizado? Puedo ayudarte a diseñarlo desde cero.",
-            };
-            setMessages(prev => [...prev, noResultMessage]);
-        }
-      } else {
-        // If no specific gift intent, use the general conversational AI
         const response = await chatWithAnella({
-            history: messages,
+            history: messages, // Send current context
             message: text,
         });
-        const modelMessage: ChatMessage = { role: 'model', content: response };
-        setMessages(prev => [...prev, modelMessage]);
-      }
+
+        // Simple check for product results from the tool
+        let modelResponse: ChatMessage;
+        try {
+            const parsedResponse = JSON.parse(response);
+            if (parsedResponse.products) {
+                 modelResponse = { 
+                    role: 'model', 
+                    content: parsedResponse.message, 
+                    products: parsedResponse.products,
+                    createdAt: serverTimestamp() 
+                };
+            } else {
+                 modelResponse = { role: 'model', content: response, createdAt: serverTimestamp() };
+            }
+        } catch (e) {
+            // If it's not a JSON string from the tool, it's a regular text response
+            modelResponse = { role: 'model', content: response, createdAt: serverTimestamp() };
+        }
+        
+        setMessages(prev => [...prev, modelResponse]);
+
+        if (user) {
+            const chatHistoryRef = collection(db, 'users', user.uid, 'chatHistory');
+            await addDoc(chatHistoryRef, modelResponse);
+        }
+
     } catch (error) {
-        const errorMessage: ChatMessage = { role: 'model', content: '¡Uy! Algo salió mal. Por favor, inténtalo de nuevo más tarde.' };
+        console.error("Error calling chatWithAnella:", error);
+        const errorMessage: ChatMessage = { role: 'model', content: '¡Uy! Algo salió mal. Por favor, inténtalo de nuevo más tarde.', createdAt: serverTimestamp() };
         setMessages(prev => [...prev, errorMessage]);
+        if (user) {
+             await addDoc(collection(db, 'users', user.uid, 'chatHistory'), errorMessage);
+        }
     } finally {
         setIsLoading(false);
+        scrollToBottom();
     }
   };
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (viewport) {
-            viewport.scrollTop = viewport.scrollHeight;
-        }
-    }
-  }, [messages]);
-  
-  useEffect(() => {
-    if(isOpen && messages.length === 0) {
-        setMessages([{ role: 'model', content: '¡Hola! Soy IAnella, tu asistente de regalos. ¿En qué puedo ayudarte hoy? 😊' }]);
-    }
-  }, [isOpen, messages]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md md:max-w-lg flex flex-col h-[80vh]">
+      <DialogContent className="sm:max-w-md md:max-w-lg flex flex-col h-[80vh] shadow-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Bot className="text-primary" />
+            <Sparkles className="text-primary animate-pulse" />
             Asistente IAnella
           </DialogTitle>
           <DialogDescription>
@@ -121,7 +152,7 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
             {messages.map((msg, index) => (
               <div key={index} className={cn('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                 {msg.role === 'model' && <Bot className="w-6 h-6 text-primary flex-shrink-0" />}
-                <div className={cn('p-3 rounded-lg max-w-sm prose prose-sm', msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
+                <div className={cn('p-3 rounded-lg max-w-sm prose prose-sm dark:prose-invert', msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                     {msg.products && msg.products.length > 0 && (
                         <div className="space-y-2 mt-2 not-prose">

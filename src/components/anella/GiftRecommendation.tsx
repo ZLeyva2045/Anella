@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Gift } from 'lucide-react';
 import { chatWithAnella } from '@/ai/flows/ianella-assistant';
 import type { ChatMessage } from '@/types/ianella';
+import { IAnellaChat } from './IAnellaChat';
 
 
 const recommendGiftSchema = z.object({
@@ -24,9 +25,7 @@ const recommendGiftSchema = z.object({
 type RecommendGiftFormValues = z.infer<typeof recommendGiftSchema>;
 
 export function GiftRecommendation() {
-  const [recommendation, setRecommendation] = useState<ChatMessage | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const form = useForm<RecommendGiftFormValues>({
     resolver: zodResolver(recommendGiftSchema),
@@ -38,32 +37,13 @@ export function GiftRecommendation() {
   });
 
  async function onSubmit(values: RecommendGiftFormValues) {
-    setIsLoading(true);
-    setError(null);
-    setRecommendation(null);
-    try {
-      // Format the input into a single prompt for the chatbot
-      const prompt = `Busco un regalo para ${values.occasion}. Es para alguien a quien le gusta ${values.recipientInterests}. Mi presupuesto es ${values.budget}.`;
-      
-      const response = await chatWithAnella({
-        history: [], // Start a new conversation for each recommendation
-        message: prompt,
-      });
-
-      // We'll just display the text for now.
-      // A more advanced version would parse the response for products.
-      setRecommendation({ role: 'model', content: response });
-
-    } catch (e) {
-      console.error(e);
-      setError('Lo sentimos, no pudimos generar recomendaciones en este momento. Por favor, inténtalo de nuevo más tarde.');
-    } finally {
-      setIsLoading(false);
-    }
+    // For now, this just opens the chat. A more advanced version could pre-fill the chat.
+    setIsChatOpen(true);
   }
 
 
   return (
+    <>
     <section className="bg-[hsl(var(--surface-beige))] rounded-3xl my-12 p-10">
         <div className="flex flex-col lg:flex-row gap-10 items-center">
             <div className="flex-1 text-center lg:text-left">
@@ -136,20 +116,16 @@ export function GiftRecommendation() {
                             </FormItem>
                         )}
                         />
-                    <Button type="submit" disabled={isLoading} className="brand-btn w-full flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-6 text-base font-bold leading-normal tracking-[0.015em]">
-                         {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Gift className="mr-2 h-5 w-5" />}
+                    <Button type="submit" className="brand-btn w-full flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-6 text-base font-bold leading-normal tracking-[0.015em]">
+                         <Gift className="mr-2 h-5 w-5" />
                         Obtener Recomendaciones
                     </Button>
                 </form>
                 </Form>
-                {recommendation && (
-                    <div className="mt-6 pt-4 border-t border-dashed border-[hsl(var(--border-beige))]">
-                        <p className="text-sm italic text-center">{recommendation.content}</p>
-                    </div>
-                )}
-                 {error && <p className="mt-6 text-center text-destructive">{error}</p>}
             </div>
         </div>
     </section>
+    <IAnellaChat isOpen={isChatOpen} setIsOpen={setIsChatOpen} />
+    </>
   );
 }

@@ -25,6 +25,3 @@ export function IAnellaButton() {
     </>
   );
 }
-
-// Custom animation in tailwind.config.ts if needed:
-// animation: { 'spin-slow': 'spin 3s linear infinite' }
