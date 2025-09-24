@@ -6,6 +6,8 @@ import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
 import { ProductDetailClient } from '@/components/products/detail/ProductDetailClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const gift = await getGiftDetails(params.id);
 
