@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Bot, Sparkles, X } from 'lucide-react';
 import { IAnellaChat } from './IAnellaChat';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export function IAnellaButton() {
   const [isChatOpen, setIsChatOpen] = useState(false);
