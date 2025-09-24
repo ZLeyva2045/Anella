@@ -2,17 +2,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
-import { Bot, Loader2, Send, User, Sparkles } from 'lucide-react';
+import { Bot, Loader2, Send, User, Sparkles, X } from 'lucide-react';
 import { chatWithAnella } from '@/ai/flows/ianella-assistant';
 import type { ChatMessage } from '@/types/ianella';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,7 +15,7 @@ import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import ProductSuggestion from './ProductSuggestion';
-
+import { motion } from 'framer-motion';
 
 interface IAnellaChatProps {
   isOpen: boolean;
@@ -46,10 +40,10 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
     }, 100);
   }, []);
 
-  // Effect for fetching chat history
   useEffect(() => {
-    if (!isOpen || !user) {
-        // If not logged in or chat is closed, ensure initial message is there
+    if (!isOpen) return;
+
+    if (!user) {
         if(messages.length === 0) {
            setMessages([{ role: 'model', content: '¡Hola! Soy IAnella, tu asistente de regalos. ¿En qué puedo ayudarte hoy? 😊' }]);
         }
@@ -90,11 +84,10 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
     
     try {
         const response = await chatWithAnella({
-            history: messages, // Send current context
+            history: messages,
             message: text,
         });
 
-        // Simple check for product results from the tool
         let modelResponse: ChatMessage;
         try {
             const parsedResponse = JSON.parse(response);
@@ -109,7 +102,6 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
                  modelResponse = { role: 'model', content: response, createdAt: serverTimestamp() };
             }
         } catch (e) {
-            // If it's not a JSON string from the tool, it's a regular text response
             modelResponse = { role: 'model', content: response, createdAt: serverTimestamp() };
         }
         
@@ -135,23 +127,29 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
 
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md md:max-w-lg flex flex-col h-[80vh] shadow-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="text-primary animate-pulse" />
-            Asistente IAnella
-          </DialogTitle>
-          <DialogDescription>
-            Tu experta personal en encontrar "El regalo perfecto".
-          </DialogDescription>
-        </DialogHeader>
+    <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="fixed bottom-24 left-6 z-40"
+    >
+      <Card className="w-[calc(100vw-3rem)] max-w-md h-[70vh] flex flex-col shadow-2xl border-primary/20">
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+                 <Sparkles className="text-primary h-5 w-5" />
+                <div>
+                    <CardTitle>Asistente IAnella</CardTitle>
+                    <CardDescription className="text-xs">Tu experta en regalos</CardDescription>
+                </div>
+            </div>
+        </CardHeader>
 
-        <ScrollArea className="flex-1 -mx-6 px-6" ref={scrollAreaRef}>
-          <div className="space-y-4 pr-4">
+        <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
+          <div className="space-y-4 pr-2 pb-4">
             {messages.map((msg, index) => (
               <div key={index} className={cn('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                {msg.role === 'model' && <Bot className="w-6 h-6 text-primary flex-shrink-0" />}
+                {msg.role === 'model' && <Bot className="w-6 h-6 text-primary flex-shrink-0 mt-1" />}
                 <div className={cn('p-3 rounded-lg max-w-sm prose prose-sm dark:prose-invert', msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                     {msg.products && msg.products.length > 0 && (
@@ -160,7 +158,7 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
                         </div>
                     )}
                 </div>
-                 {msg.role === 'user' && <User className="w-6 h-6 text-muted-foreground flex-shrink-0" />}
+                 {msg.role === 'user' && <User className="w-6 h-6 text-muted-foreground flex-shrink-0 mt-1" />}
               </div>
             ))}
             {isLoading && (
@@ -175,11 +173,11 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 pt-4 border-t">
+        <div className="flex gap-2 p-4 border-t">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Regalo para mi novio por aniversario..."
+            placeholder="Regalo para mi novio..."
             onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend(input)}
             disabled={isLoading}
           />
@@ -187,7 +185,7 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
             <Send className="w-4 h-4" />
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </Card>
+    </motion.div>
   );
 }
