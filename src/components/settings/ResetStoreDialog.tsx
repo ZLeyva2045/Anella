@@ -49,9 +49,11 @@ export function ResetStoreDialog({ isOpen, setIsOpen }: ResetStoreDialogProps) {
           await resetStoreData();
           toast({
               title: "Restauración Completa",
-              description: "Los datos de la tienda han sido eliminados permanentemente.",
+              description: "Todos los datos de la tienda han sido eliminados.",
           });
-          handleClose();
+          // After reset, the current user's data is gone, so logging out is a good idea.
+          // This would typically be handled by redirecting to a sign-out page.
+          window.location.href = '/login';
       } catch (error: any) {
            toast({
               variant: 'destructive',
@@ -68,7 +70,7 @@ export function ResetStoreDialog({ isOpen, setIsOpen }: ResetStoreDialogProps) {
         return (
           <>
             <DialogDescription>
-              Esta acción eliminará permanentemente todos los pedidos, ventas, clientes, gastos y datos de empleados (asistencias, evaluaciones). <strong>El inventario no se verá afectado.</strong> Esta acción no se puede deshacer.
+              Esta acción eliminará permanentemente <strong>TODOS</strong> los datos: pedidos, productos, inventario, regalos, clientes, empleados y configuraciones. <strong>Esta acción no se puede deshacer.</strong>
             </DialogDescription>
             <p className="text-sm font-medium mt-4">
               Para confirmar, escribe <strong>{CONFIRMATION_TEXT_1}</strong> en el campo de abajo.
@@ -95,7 +97,7 @@ export function ResetStoreDialog({ isOpen, setIsOpen }: ResetStoreDialogProps) {
         return (
             <>
                 <DialogDescription>
-                    Esta es tu segunda advertencia. Estás a punto de borrar todos los datos transaccionales. Esta acción es definitiva.
+                    Esta es tu segunda advertencia. Estás a punto de borrar <strong>TODA</strong> la información de la base de datos de la tienda.
                 </DialogDescription>
                 <p className="text-sm font-medium mt-4">
                     Para continuar, escribe <strong>{CONFIRMATION_TEXT_2}</strong> a continuación.
@@ -125,7 +127,7 @@ export function ResetStoreDialog({ isOpen, setIsOpen }: ResetStoreDialogProps) {
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Confirmación Final</AlertTitle>
                     <AlertDescription>
-                       Hacer clic en el siguiente botón borrará todos los datos especificados de forma permanente. No habrá vuelta atrás.
+                       Hacer clic en el siguiente botón borrará toda la tienda de forma permanente. Las cuentas de usuario de Firebase Auth deberán eliminarse manualmente. No habrá vuelta atrás.
                     </AlertDescription>
                 </Alert>
                  <DialogFooter className="pt-4">
@@ -138,7 +140,7 @@ export function ResetStoreDialog({ isOpen, setIsOpen }: ResetStoreDialogProps) {
                         disabled={loading}
                     >
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Entiendo, Eliminar Datos Permanentemente
+                        Entiendo, Eliminar Todo Permanentemente
                     </Button>
                 </DialogFooter>
             </>
@@ -154,7 +156,7 @@ export function ResetStoreDialog({ isOpen, setIsOpen }: ResetStoreDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle />
-            Acción Irreversible: Restaurar Datos
+            Acción Irreversible: Borrado Total
           </DialogTitle>
         </DialogHeader>
         <div className="py-4">

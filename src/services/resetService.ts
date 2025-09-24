@@ -1,5 +1,5 @@
 // src/services/resetService.ts
-import { collection, writeBatch, getDocs, query, where, Query } from 'firebase/firestore';
+import { collection, writeBatch, getDocs, query, type Query } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 // List of collections to delete ALL documents from
@@ -10,7 +10,13 @@ const COLLECTIONS_TO_CLEAR: string[] = [
     'evaluations',
     'feedback',
     'leaveRequests',
-    'notifications'
+    'notifications',
+    'products',
+    'gifts',
+    'themes',
+    'categories',
+    'lotes',
+    'users' // Now includes all users
 ];
 
 /**
@@ -26,24 +32,29 @@ async function batchDelete(batch: ReturnType<typeof writeBatch>, queryOrCollecti
 }
 
 /**
- * Resets the store's transactional data.
- * Deletes all documents from specified collections and deletes only customer users.
+ * Resets all store data.
+ * Deletes all documents from specified collections.
  * **This is a destructive and irreversible operation.**
  */
 export async function resetStoreData(): Promise<void> {
-    const batch = writeBatch(db);
-
-    // 1. Delete all documents from the specified collections
+    // Firestore allows a maximum of 500 operations in a single batch.
+    // We will process collections in separate batches to avoid exceeding this limit.
     for (const collectionName of COLLECTIONS_TO_CLEAR) {
+        const batch = writeBatch(db);
         const collRef = collection(db, collectionName);
-        await batchDelete(batch, collRef);
+        console.log(`Preparing to delete all documents from: ${collectionName}`);
+        
+        // This simple batch delete might fail if a collection is very large.
+        // For production apps, a more robust solution using Cloud Functions is recommended.
+        const snapshot = await getDocs(collRef);
+        snapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        
+        await batch.commit();
+        console.log(`Successfully deleted all documents from: ${collectionName}`);
     }
-
-    // 2. Delete only users with the role 'customer'
-    const usersRef = collection(db, 'users');
-    const customersQuery = query(usersRef, where('role', '==', 'customer'));
-    await batchDelete(batch, customersQuery);
-
-    // Commit the batch operation
-    await batch.commit();
+    
+    // Note: This process does NOT delete Firebase Auth users or files in Firebase Storage.
+    // Those must be handled separately, typically via a backend process or Cloud Function.
 }
