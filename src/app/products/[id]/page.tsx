@@ -6,23 +6,18 @@ import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
 import { ProductDetailClient } from '@/components/products/detail/ProductDetailClient';
 
-interface PageProps {
-  params: { id: string };
-}
-
-export default async function ProductDetailPage({ params }: PageProps) {
+export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const gift = await getGiftDetails(params.id);
 
   if (!gift) {
     notFound();
   }
   
-  // Aseguramos que los Timestamps de Firebase se conviertan en objetos Date de JS
-  // para que sean serializables y compatibles con los componentes de cliente.
+  // Convert Timestamps to serializable strings (ISO strings) before passing to a Client Component.
   const serializableGift = {
     ...gift,
-    createdAt: gift.createdAt instanceof Timestamp ? gift.createdAt.toDate() : new Date(gift.createdAt as any),
-    updatedAt: gift.updatedAt instanceof Timestamp ? gift.updatedAt.toDate() : new Date(gift.updatedAt as any),
+    createdAt: gift.createdAt instanceof Timestamp ? gift.createdAt.toDate().toISOString() : new Date(gift.createdAt as any).toISOString(),
+    updatedAt: gift.updatedAt instanceof Timestamp ? gift.updatedAt.toDate().toISOString() : new Date(gift.updatedAt as any).toISOString(),
   };
 
   return (

@@ -12,7 +12,7 @@ import { ShoppingCart } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface ProductInfoProps {
-  product: GiftDetail | (Omit<GiftDetail, 'createdAt' | 'updatedAt'> & { createdAt: Date, updatedAt: Date });
+  product: Omit<GiftDetail, 'createdAt' | 'updatedAt'> & { createdAt: string, updatedAt: string };
   totalPrice: number;
   customizationCost: number;
   selectedCustomizations: SelectedCustomization;
