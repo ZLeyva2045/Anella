@@ -8,6 +8,8 @@ import { Footer } from '@/components/anella/Footer';
 import { ProductDetailClient } from '@/components/products/detail/ProductDetailClient';
 
 
+export const dynamic = 'force-dynamic';
+
 type ProductDetailPageProps = {
   params: {
     id: string;
