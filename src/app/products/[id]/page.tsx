@@ -5,17 +5,6 @@ import { notFound } from 'next/navigation';
 import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
 import { ProductDetailClient } from '@/components/products/detail/ProductDetailClient';
-import { JSX } from 'react';
-
-// Definimos un tipo simple para los parámetros de la URL
-interface PageParams {
-  id: string;
-}
-
-// Definimos las props que recibirá la página
-interface ProductDetailPageProps {
-  params: PageParams;
-}
 
 // Genera las rutas estáticas en tiempo de compilación
 export async function generateStaticParams() {
@@ -36,19 +25,19 @@ export async function generateStaticParams() {
   }
 }
 
-
-// La firma de tu función es perfecta, la mantenemos
-export default async function ProductDetailPage({ params }: ProductDetailPageProps): Promise<JSX.Element> {
+// CORRECCIÓN PRINCIPAL:
+// Se simplifica la definición de los props directamente en la firma de la función.
+// Este es el formato estándar que Next.js espera para las páginas dinámicas,
+// eliminando la necesidad de interfaces separadas y resolviendo el conflicto de tipos.
+export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const gift = await getGiftDetails(params.id);
 
   if (!gift) {
     notFound();
   }
   
-  // CORRECCIÓN: Aseguramos que las fechas siempre sean objetos Date.
-  // El componente ProductDetailClient espera un objeto Date, pero desde el servidor
-  // podemos recibir un Timestamp de Firebase o incluso un string.
-  // Esta lógica convierte cualquier formato de fecha en un objeto Date para cumplir con el tipo requerido.
+  // La lógica para asegurar que las fechas sean objetos Date es correcta y se mantiene.
+  // El componente ProductDetailClient espera un objeto Date.
   const giftForClient = {
     ...gift,
     createdAt: gift.createdAt instanceof Timestamp ? gift.createdAt.toDate() : new Date(gift.createdAt as any),
@@ -63,3 +52,4 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     </div>
   );
 }
+
