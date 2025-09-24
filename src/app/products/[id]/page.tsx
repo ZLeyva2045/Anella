@@ -7,13 +7,15 @@ import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
 import { ProductDetailClient } from '@/components/products/detail/ProductDetailClient';
 
-// Define un tipo para las props de la página
+
 type ProductDetailPageProps = {
   params: {
     id: string;
   };
 };
 
+/*
+// HEMOS COMENTADO ESTA FUNCIÓN PARA FORZAR EL RENDERIZADO DINÁMICO
 export async function generateStaticParams() {
   const giftsCollection = collection(db, 'gifts');
   const giftsSnapshot = await getDocs(giftsCollection);
@@ -24,16 +26,14 @@ export async function generateStaticParams() {
 
   return params;
 }
-
-// Usa el tipo que definimos arriba
+*/
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const gift = await getGiftDetails(params.id);
 
   if (!gift) {
     notFound();
   }
-  
-  // Convert Firebase Timestamps to serializable format (JS Date objects)
+
   const serializableGift = {
     ...gift,
     createdAt: gift.createdAt instanceof Timestamp ? gift.createdAt.toDate() : gift.createdAt,
