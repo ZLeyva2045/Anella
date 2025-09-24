@@ -143,6 +143,10 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
                     <CardDescription className="text-xs">Tu experta en regalos</CardDescription>
                 </div>
             </div>
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                <X className="h-4 w-4"/>
+                <span className="sr-only">Cerrar chat</span>
+            </Button>
         </CardHeader>
 
         <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
