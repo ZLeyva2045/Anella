@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
-import { Bot, Sparkles } from 'lucide-react';
+import { Bot, Sparkles, X } from 'lucide-react';
 import { IAnellaChat } from './IAnellaChat';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -26,9 +26,7 @@ export function IAnellaButton() {
 
   return (
     <>
-      <AnimatePresence>
-        {isChatOpen && <IAnellaChat isOpen={isChatOpen} setIsOpen={setIsChatOpen} />}
-      </AnimatePresence>
+      {isChatOpen && <IAnellaChat isOpen={isChatOpen} setIsOpen={setIsChatOpen} />}
       <div className="fixed bottom-6 left-6 z-50 flex items-end gap-2">
          <AnimatePresence>
             {showBubble && !isChatOpen && (

@@ -15,7 +15,7 @@ import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import ProductSuggestion from './ProductSuggestion';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface IAnellaChatProps {
   isOpen: boolean;
@@ -127,69 +127,73 @@ export function IAnellaChat({ isOpen, setIsOpen }: IAnellaChatProps) {
 
 
   return (
-    <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="fixed bottom-24 left-6 z-40"
-    >
-      <Card className="w-[calc(100vw-3rem)] max-w-md h-[70vh] flex flex-col shadow-2xl border-primary/20">
-        <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-                 <Sparkles className="text-primary h-5 w-5" />
-                <div>
-                    <CardTitle>Asistente IAnella</CardTitle>
-                    <CardDescription className="text-xs">Tu experta en regalos</CardDescription>
-                </div>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                <X className="h-4 w-4"/>
-                <span className="sr-only">Cerrar chat</span>
-            </Button>
-        </CardHeader>
+    <AnimatePresence>
+        {isOpen && (
+            <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="fixed bottom-24 left-6 z-40"
+            >
+            <Card className="w-[calc(100vw-3rem)] max-w-md h-[70vh] flex flex-col shadow-2xl border-primary/20">
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="text-primary h-5 w-5" />
+                        <div>
+                            <CardTitle>Asistente IAnella</CardTitle>
+                            <CardDescription className="text-xs">Tu experta en regalos</CardDescription>
+                        </div>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                        <X className="h-4 w-4"/>
+                        <span className="sr-only">Cerrar chat</span>
+                    </Button>
+                </CardHeader>
 
-        <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
-          <div className="space-y-4 pr-2 pb-4">
-            {messages.map((msg, index) => (
-              <div key={index} className={cn('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                {msg.role === 'model' && <Bot className="w-6 h-6 text-primary flex-shrink-0 mt-1" />}
-                <div className={cn('p-3 rounded-lg max-w-sm prose prose-sm dark:prose-invert', msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                    {msg.products && msg.products.length > 0 && (
-                        <div className="space-y-2 mt-2 not-prose">
-                            {msg.products.map(p => <ProductSuggestion key={p.id} p={p} />)}
+                <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
+                <div className="space-y-4 pr-2 pb-4">
+                    {messages.map((msg, index) => (
+                    <div key={index} className={cn('flex items-start gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+                        {msg.role === 'model' && <Bot className="w-6 h-6 text-primary flex-shrink-0 mt-1" />}
+                        <div className={cn('p-3 rounded-lg max-w-sm prose prose-sm dark:prose-invert', msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            {msg.products && msg.products.length > 0 && (
+                                <div className="space-y-2 mt-2 not-prose">
+                                    {msg.products.map(p => <ProductSuggestion key={p.id} p={p} />)}
+                                </div>
+                            )}
+                        </div>
+                        {msg.role === 'user' && <User className="w-6 h-6 text-muted-foreground flex-shrink-0 mt-1" />}
+                    </div>
+                    ))}
+                    {isLoading && (
+                        <div className="flex items-start gap-3 justify-start">
+                            <Bot className="w-6 h-6 text-primary flex-shrink-0" />
+                            <div className="p-3 rounded-lg bg-secondary flex items-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin"/>
+                                <span>Buscando ideas...</span>
+                            </div>
                         </div>
                     )}
                 </div>
-                 {msg.role === 'user' && <User className="w-6 h-6 text-muted-foreground flex-shrink-0 mt-1" />}
-              </div>
-            ))}
-            {isLoading && (
-                <div className="flex items-start gap-3 justify-start">
-                    <Bot className="w-6 h-6 text-primary flex-shrink-0" />
-                     <div className="p-3 rounded-lg bg-secondary flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin"/>
-                        <span>Buscando ideas...</span>
-                    </div>
-                </div>
-            )}
-          </div>
-        </ScrollArea>
+                </ScrollArea>
 
-        <div className="flex gap-2 p-4 border-t">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Regalo para mi novio..."
-            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend(input)}
-            disabled={isLoading}
-          />
-          <Button onClick={() => handleSend(input)} disabled={isLoading || !input.trim()}>
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-      </Card>
-    </motion.div>
+                <div className="flex gap-2 p-4 border-t">
+                <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Regalo para mi novio..."
+                    onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend(input)}
+                    disabled={isLoading}
+                />
+                <Button onClick={() => handleSend(input)} disabled={isLoading || !input.trim()}>
+                    <Send className="w-4 h-4" />
+                </Button>
+                </div>
+            </Card>
+            </motion.div>
+        )}
+    </AnimatePresence>
   );
 }
