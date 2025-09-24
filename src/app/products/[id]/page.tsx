@@ -1,41 +1,32 @@
 // src/app/products/[id]/page.tsx
 import { collection, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { getGiftDetails, type GiftDetail } from '@/lib/mock-data';
+import { getGiftDetails } from '@/lib/mock-data'; // Asumo que type GiftDetail no es necesario aquí
 import { notFound } from 'next/navigation';
 import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
 import { ProductDetailClient } from '@/components/products/detail/ProductDetailClient';
+import { JSX } from 'react'; // Importamos JSX
 
-
-export const dynamic = 'force-dynamic';
-
-type ProductDetailPageProps = {
-  params: {
-    id: string;
-  };
-};
-
-/*
-// HEMOS COMENTADO ESTA FUNCIÓN PARA FORZAR EL RENDERIZADO DINÁMICO
-export async function generateStaticParams() {
-  const giftsCollection = collection(db, 'gifts');
-  const giftsSnapshot = await getDocs(giftsCollection);
-  
-  const params = giftsSnapshot.docs.map(doc => ({
-    id: doc.id,
-  }));
-
-  return params;
+// Definimos un tipo simple para los parámetros de la URL
+interface PageParams {
+  id: string;
 }
-*/
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+
+// Definimos las props que recibirá la página
+interface ProductDetailPageProps {
+  params: PageParams;
+}
+
+// Esta es la firma clave: le decimos a TypeScript explícitamente lo que la función devuelve
+export default async function ProductDetailPage({ params }: ProductDetailPageProps): Promise<JSX.Element> {
   const gift = await getGiftDetails(params.id);
 
   if (!gift) {
     notFound();
   }
-
+  
+  // Tu lógica de serialización es correcta
   const serializableGift = {
     ...gift,
     createdAt: gift.createdAt instanceof Timestamp ? gift.createdAt.toDate() : gift.createdAt,
