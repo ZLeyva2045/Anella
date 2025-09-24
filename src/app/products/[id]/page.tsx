@@ -7,6 +7,13 @@ import { Header } from '@/components/anella/Header';
 import { Footer } from '@/components/anella/Footer';
 import { ProductDetailClient } from '@/components/products/detail/ProductDetailClient';
 
+// Define un tipo para las props de la página
+type ProductDetailPageProps = {
+  params: {
+    id: string;
+  };
+};
+
 export async function generateStaticParams() {
   const giftsCollection = collection(db, 'gifts');
   const giftsSnapshot = await getDocs(giftsCollection);
@@ -18,7 +25,8 @@ export async function generateStaticParams() {
   return params;
 }
 
-export default async function ProductDetailPage({ params }: { params: { id: string } }) {
+// Usa el tipo que definimos arriba
+export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const gift = await getGiftDetails(params.id);
 
   if (!gift) {
@@ -31,7 +39,6 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
     createdAt: gift.createdAt instanceof Timestamp ? gift.createdAt.toDate() : gift.createdAt,
     updatedAt: gift.updatedAt instanceof Timestamp ? gift.updatedAt.toDate() : gift.updatedAt,
   };
-
 
   return (
     <div className="flex flex-col min-h-screen">
