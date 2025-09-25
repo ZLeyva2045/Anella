@@ -105,7 +105,7 @@ export type PaymentMethod = 'yapePlin' | 'bankTransfer' | 'card' | 'mercadoPago'
 export type FulfillmentStatus = 'pending' | 'processing' | 'finishing' | 'completed' | 'cancelled';
 export type PaymentStatus = 'unpaid' | 'partially-paid' | 'paid' | 'refunded';
 
-export const employeeRoles = ['manager', 'sales', 'designer', 'manufacturing', 'creative'] as const;
+export const employeeRoles = ['manager', 'sales', 'designer', 'manufacturing', 'creative', 'marketing'] as const;
 export type EmployeeRole = (typeof employeeRoles)[number];
 export type UserRole = 'customer' | EmployeeRole;
 
@@ -349,10 +349,9 @@ export interface ReportData {
  */
 export interface SocialPost {
     id: string;
-    platform: 'Instagram' | 'TikTok';
-    imageUrl: string;
-    link: string;
-    caption: string;
-    likes: number;
-    createdAt?: Timestamp;
+    platform: 'Instagram' | 'TikTok' | 'Facebook';
+    embedCode: string; // The full HTML embed code
+    caption: string; // A short caption for admin use
+    order: number; // To control the display order
+    createdAt: Timestamp;
 }

@@ -1,38 +1,65 @@
 // src/components/anella/FollowUsPageContent.tsx
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { Instagram, Clapperboard, Facebook, ArrowRight } from "lucide-react"
-import {
-  NavigationMenuLink,
-} from "@/components/ui/navigation-menu"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import React, { useState, useEffect } from 'react';
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import type { SocialPost } from '@/types/firestore';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Instagram, Clapperboard, Facebook } from "lucide-react";
+import { Skeleton } from '@/components/ui/skeleton';
 
-const mockInstagramPosts = [
-  { id: 1, alt: 'Post 1', src: 'https://placehold.co/400x400/FFF0F5/FF69B4?text=Anella+1' },
-  { id: 2, alt: 'Post 2', src: 'https://placehold.co/400x400/F0F8FF/4682B4?text=Anella+2' },
-  { id: 3, alt: 'Post 3', src: 'https://placehold.co/400x400/F5FFFA/3CB371?text=Anella+3' },
-  { id: 4, alt: 'Post 4', src: 'https://placehold.co/400x400/FAFAD2/FFD700?text=Anella+4' },
-  { id: 5, alt: 'Post 5', src: 'https://placehold.co/400x400/FFFACD/A52A2A?text=Anella+5' },
-  { id: 6, alt: 'Post 6', src: 'https://placehold.co/400x400/F0FFF0/20B2AA?text=Anella+6' },
-];
-
-const mockTikTokPosts = [
-  { id: 1, alt: 'Post 1', src: 'https://placehold.co/400x500/E6E6FA/4B0082?text=Anella+Vid+1' },
-  { id: 2, alt: 'Post 2', src: 'https://placehold.co/400x500/FFF5EE/D2691E?text=Anella+Vid+2' },
-  { id: 3, alt: 'Post 3', src: 'https://placehold.co/400x500/FFFAF0/FF4500?text=Anella+Vid+3' },
-];
-
-const mockFacebookPosts = [
-  { id: 1, alt: 'Post 1', src: 'https://placehold.co/600x400/DCDCDC/191970?text=Anella+FB+1' },
-  { id: 2, alt: 'Post 2', src: 'https://placehold.co/600x400/ADD8E6/00008B?text=Anella+FB+2' },
-];
+function PostEmbed({ embedCode }: { embedCode: string }) {
+  // This component will render the raw HTML embed code.
+  // Using dangerouslySetInnerHTML is necessary here.
+  return <div dangerouslySetInnerHTML={{ __html: embedCode }} />;
+}
 
 export function FollowUsPageContent() {
+  const [posts, setPosts] = useState<SocialPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const postsQuery = query(collection(db, 'socialPosts'), orderBy('order', 'asc'));
+    
+    const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
+      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SocialPost));
+      setPosts(postsData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const instagramPosts = posts.filter(p => p.platform === 'Instagram');
+  const tiktokPosts = posts.filter(p => p.platform === 'TikTok');
+  const facebookPosts = posts.filter(p => p.platform === 'Facebook');
+
+  const renderContent = (platformPosts: SocialPost[]) => {
+      if (loading) {
+          return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                  {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[400px] w-full" />)}
+              </div>
+          )
+      }
+      if (platformPosts.length === 0) {
+          return <p className="text-center text-muted-foreground mt-8">Próximamente... ¡Síguenos para no perderte nada!</p>
+      }
+      return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 justify-center">
+              {platformPosts.map(post => (
+                <div key={post.id} className="flex justify-center">
+                   <PostEmbed embedCode={post.embedCode} />
+                </div>
+              ))}
+          </div>
+      )
+  }
+
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto">
       <Tabs defaultValue="instagram" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="instagram">
@@ -47,71 +74,15 @@ export function FollowUsPageContent() {
         </TabsList>
 
         <TabsContent value="instagram">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-              {mockInstagramPosts.map(post => (
-                <Link href="#" key={post.id} className="group relative">
-                    <Image
-                      src={post.src}
-                      alt={post.alt}
-                      width={400}
-                      height={400}
-                      className="rounded-lg object-cover aspect-square transition-opacity"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                        <p className="text-white font-bold">Ver en Instagram</p>
-                    </div>
-                </Link>
-              ))}
-            </div>
-            <Link href="#" className="flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:underline mt-8">
-                Ver más en Instagram <ArrowRight className="h-4 w-4" />
-            </Link>
+          {renderContent(instagramPosts)}
         </TabsContent>
-
         <TabsContent value="tiktok">
-             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-              {mockTikTokPosts.map(post => (
-                 <Link href="#" key={post.id} className="group relative">
-                    <Image
-                      src={post.src}
-                      alt={post.alt}
-                      width={400}
-                      height={500}
-                      className="rounded-lg object-cover aspect-[4/5] transition-opacity"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                        <p className="text-white font-bold">Ver en TikTok</p>
-                    </div>
-                </Link>
-              ))}
-            </div>
-            <Link href="#" className="flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:underline mt-8">
-                Ver más en TikTok <ArrowRight className="h-4 w-4" />
-            </Link>
+          {renderContent(tiktokPosts)}
         </TabsContent>
-
         <TabsContent value="facebook">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              {mockFacebookPosts.map(post => (
-                 <Link href="#" key={post.id} className="group relative">
-                    <Image
-                      src={post.src}
-                      alt={post.alt}
-                      width={600}
-                      height={400}
-                      className="rounded-lg object-cover aspect-video transition-opacity"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                        <p className="text-white font-bold">Ver en Facebook</p>
-                    </div>
-                </Link>
-              ))}
-            </div>
-            <Link href="#" className="flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:underline mt-8">
-                Ver más en Facebook <ArrowRight className="h-4 w-4" />
-            </Link>
+          {renderContent(facebookPosts)}
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
