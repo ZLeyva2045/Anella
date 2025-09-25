@@ -225,7 +225,7 @@ export interface Compra {
   proveedor?: string;
   totalCompra: number;
   compradorId?: string;
-  loteIds: string[]; // references to documents in the 'lotes' collection
+  loteIds: string[]; // references to the 'lotes' collection
 }
 
 /**
@@ -342,4 +342,17 @@ export interface ReportData {
     attendance: MonthlyAttendance;
     tardinessCount: number;
     tardinessPenalty: number;
+}
+
+/**
+ * Represents a social media post to be displayed.
+ */
+export interface SocialPost {
+    id: string;
+    platform: 'Instagram' | 'TikTok';
+    imageUrl: string;
+    link: string;
+    caption: string;
+    likes: number;
+    createdAt?: Timestamp;
 }

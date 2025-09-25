@@ -4,7 +4,15 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +28,6 @@ import {
   User,
   LogOut,
   LogIn,
-  Menu,
   Heart,
   UserPlus
 } from 'lucide-react';
@@ -29,14 +36,13 @@ import React from 'react';
 import { useCart } from '@/hooks/useCart';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Input } from '../ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { FollowUsDropdown } from './FollowUsDropdown';
 
 
 export function Header() {
   const { user, signOut, loading } = useAuth();
   const { cartCount } = useCart();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -50,7 +56,7 @@ export function Header() {
       <Link href="/cart" aria-label="Carrito" className="relative flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full size-10 neumorphism-btn text-[var(--main-text)]">
         <ShoppingCart className="h-5 w-5" />
         {cartCount > 0 && (
-          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--brand-pink)] text-xs font-bold text-white">
+          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
             {cartCount}
           </span>
         )}
@@ -112,23 +118,44 @@ export function Header() {
     </div>
   );
 
-  const MainNav = ({ className }: { className?: string }) => (
-    <nav className={cn("hidden items-center gap-9 md:flex", className)}>
-      <Link className="text-[var(--secondary-text)] hover:text-[var(--main-text)] text-sm font-medium leading-normal" href="/">Inicio</Link>
-      <Link className="text-[var(--secondary-text)] hover:text-[var(--main-text)] text-sm font-medium leading-normal" href="/products">Regalos</Link>
-      <Link className="text-[var(--secondary-text)] hover:text-[var(--main-text)] text-sm font-medium leading-normal" href="/#gallery">Galería</Link>
-      <Link className="text-[var(--secondary-text)] hover:text-[var(--main-text)] text-sm font-medium leading-normal" href="/personalize">Personalizar</Link>
-    </nav>
-  );
-
   return (
-    <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[var(--border-beige)] px-10 py-4 bg-[var(--surface-beige)]/80 backdrop-blur-sm sticky top-0 z-50">
-        <Link href="/" className="flex items-center gap-3 text-[var(--main-text)]">
+    <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50 px-10 py-4">
+        <Link href="/" className="flex items-center gap-3 text-foreground">
              <Image alt="Anella Logo" width={232} height={95} className="w-[120px] h-auto object-contain" src="https://i.ibb.co/MyXzBh0r/Anella.png" unoptimized/>
         </Link>
-        <nav className="flex flex-1 justify-center">
-            <MainNav />
-        </nav>
+        
+        <NavigationMenu>
+            <NavigationMenuList>
+                <NavigationMenuItem>
+                    <Link href="/" legacyBehavior passHref>
+                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Inicio
+                        </NavigationMenuLink>
+                    </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                    <Link href="/products" legacyBehavior passHref>
+                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Regalos
+                        </NavigationMenuLink>
+                    </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                    <NavigationMenuTrigger>Síguenos</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                       <FollowUsDropdown />
+                    </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                    <Link href="/personalize" legacyBehavior passHref>
+                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Personalizar
+                        </NavigationMenuLink>
+                    </Link>
+                </NavigationMenuItem>
+            </NavigationMenuList>
+        </NavigationMenu>
+
         <div className="flex items-center gap-4">
             {!loading && <UserMenu />}
         </div>
