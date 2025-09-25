@@ -37,48 +37,57 @@ import {
 import type { SocialPost } from '@/types/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { SocialPostForm } from '@/components/marketing/SocialPostForm';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { deleteSocialPost } from '@/services/socialPostService';
 
-const platformIcons = {
+
+const platformIcons: { [key in SocialPost['platform']]: React.ReactElement } = {
   Instagram: <Instagram className="h-5 w-5 text-pink-600" />,
   TikTok: <Clapperboard className="h-5 w-5" />,
   Facebook: <Facebook className="h-5 w-5 text-blue-600" />,
 };
 
 export default function SocialPostsPage() {
-  const [posts, setPosts] = useState<Omit<SocialPost, 'createdAt'>[]>([]);
+  const [posts, setPosts] = useState<SocialPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<Omit<SocialPost, 'createdAt'> | null>(null);
+  const [selectedPost, setSelectedPost] = useState<SocialPost | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Using static data now
-    const staticPosts = [
-        {
-            id: '1',
-            platform: 'Instagram',
-            embedCode: `<blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/p/DOzlZ3xDPJN/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);"><div style="padding:16px;"> <a href="https://www.instagram.com/p/DOzlZ3xDPJN/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank">...</a></div></blockquote><script async src="//www.instagram.com/embed.js"></script>`,
-            caption: 'Publicación de Instagram de Anella Perú',
-            order: 1,
-        }
-    ];
-    setPosts(staticPosts);
-    setLoading(false);
-  }, []);
+    setLoading(true);
+    const q = query(collection(db, 'socialPosts'), orderBy('order', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SocialPost)));
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching posts:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las publicaciones.' });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
 
   const handleAddPost = () => {
     setSelectedPost(null);
     setIsFormOpen(true);
   };
 
-  const handleEditPost = (post: Omit<SocialPost, 'createdAt'>) => {
+  const handleEditPost = (post: SocialPost) => {
     setSelectedPost(post);
     setIsFormOpen(true);
   };
   
   const handleDeletePost = async (postId: string) => {
     if(!window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) return;
-    toast({ title: "Función no disponible", description: "El borrado está deshabilitado en modo estático." });
+    try {
+        await deleteSocialPost(postId);
+        toast({ title: 'Publicación Eliminada', description: 'La publicación ha sido eliminada de la base de datos.'});
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudo eliminar la publicación.'});
+    }
   }
 
   return (

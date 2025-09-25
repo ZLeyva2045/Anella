@@ -35,6 +35,7 @@ export interface Product {
   productType?: ProductType;
   expirationDate?: Date | Timestamp; // Fecha de vencimiento para consumibles
   isBreakfast?: boolean; // Flag para productos como desayunos que no tienen fecha de vencimiento fija
+  showInWebsite?: boolean;
 }
 
 /**
@@ -83,6 +84,7 @@ export interface Category {
  */
 export interface Subcategory {
   id: string; // ID único autogenerado por Firestore
+  categoryId?: string; // ID de la categoría padre
   name: string; // Nombre de la subcategoría
   order?: number;
   imageUrl?: string;
@@ -163,6 +165,7 @@ export interface Order {
   amountPaid: number; // Suma de los montos en paymentDetails
   amountDue: number; // totalAmount - amountPaid
   pointsAwarded?: boolean; // Flag para saber si ya se otorgaron los puntos de este pedido
+  paymentMethod?: PaymentMethod; // General payment method for the order
 }
 
 

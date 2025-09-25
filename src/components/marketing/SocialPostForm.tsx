@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import type { SocialPost } from '@/types/firestore';
 import { Loader2 } from 'lucide-react';
+import { saveSocialPost } from '@/services/socialPostService';
 
 const postSchema = z.object({
   platform: z.enum(['Instagram', 'TikTok', 'Facebook'], { required_error: 'Debes seleccionar una plataforma.' }),
@@ -41,7 +42,7 @@ type PostFormValues = z.infer<typeof postSchema>;
 interface SocialPostFormProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  post?: Omit<SocialPost, 'createdAt'> | null;
+  post?: SocialPost | null;
 }
 
 export function SocialPostForm({ isOpen, setIsOpen, post }: SocialPostFormProps) {
@@ -70,14 +71,22 @@ export function SocialPostForm({ isOpen, setIsOpen, post }: SocialPostFormProps)
 
   const onSubmit = async (data: PostFormValues) => {
     setLoading(true);
-    // This is now a mock function as data is static
-    await new Promise(resolve => setTimeout(resolve, 500));
-    toast({
-      title: `Publicación ${post ? 'actualizada' : 'creada'} (simulado)`,
-      description: 'Los cambios se reflejarán al recargar la página.',
-    });
-    setLoading(false);
-    setIsOpen(false);
+    try {
+        await saveSocialPost(post?.id, data);
+        toast({
+            title: `Publicación ${post ? 'actualizada' : 'creada'}`,
+            description: `La publicación de ${data.platform} ha sido guardada.`
+        });
+        setIsOpen(false);
+    } catch (error: any) {
+         toast({
+            variant: 'destructive',
+            title: 'Error al guardar',
+            description: error.message || 'No se pudo guardar la publicación.'
+        });
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (
