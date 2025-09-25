@@ -53,7 +53,7 @@ export default function AdminEmployeesPage() {
 
   useEffect(() => {
     setLoading(true);
-    const employeeRoles = ['manager', 'sales', 'designer', 'manufacturing', 'creative'];
+    const employeeRoles = ['manager', 'sales', 'designer', 'manufacturing', 'creative', 'marketing'];
     const employeesQuery = query(collection(db, 'users'), where('role', 'in', employeeRoles));
     
     const unsubscribe = onSnapshot(employeesQuery, (snapshot) => {
