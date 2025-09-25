@@ -31,7 +31,7 @@ export function middleware(request: NextRequest) {
     }
 
     // --- Control de Acceso por Rol ---
-    // Si un vendedor intenta acceder a una ruta de admin
+    // Si un vendedor intenta acceder a una ruta de admin o marketing
     if (userRole === 'sales' && (isAdminPath || isMarketingPath)) {
         return NextResponse.redirect(new URL('/sales', request.url)); // Redirigir a su dashboard de ventas
     }
@@ -42,6 +42,10 @@ export function middleware(request: NextRequest) {
     // Si un cliente intenta acceder a una ruta de admin, ventas o marketing
     if (userRole === 'customer' && (isAdminPath || isSalesPath || isMarketingPath)) {
         return NextResponse.redirect(new URL('/dashboard', request.url)); // Redirigir a su dashboard de cliente
+    }
+    // Si un usuario de marketing intenta acceder al dashboard de cliente
+    if (userRole === 'marketing' && isDashboardPath) {
+        return NextResponse.redirect(new URL('/marketing', request.url));
     }
   }
 
