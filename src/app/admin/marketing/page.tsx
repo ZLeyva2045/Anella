@@ -26,6 +26,7 @@ import {
   Loader2,
   Instagram,
   Clapperboard,
+  Facebook,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,17 +34,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import Image from 'next/image';
 import type { SocialPost } from '@/types/firestore';
-import {
-  collection,
-  onSnapshot,
-  deleteDoc,
-  doc,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
-// import { SocialPostForm } from '@/components/admin/marketing/SocialPostForm'; // Futuro componente
+import { SocialPostForm } from '@/components/marketing/SocialPostForm';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { deleteSocialPost } from '@/services/socialPostService';
+
+const platformIcons: { [key in SocialPost['platform']]: React.ReactElement } = {
+  Instagram: <Instagram className="h-5 w-5 text-pink-600" />,
+  TikTok: <Clapperboard className="h-5 w-5" />,
+  Facebook: <Facebook className="h-5 w-5 text-blue-600" />,
+};
+
 
 export default function AdminMarketingPage() {
   const [posts, setPosts] = useState<SocialPost[]>([]);
@@ -53,22 +56,41 @@ export default function AdminMarketingPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // En el futuro, se obtendrán los datos de una colección 'socialPosts'
-    // Por ahora, usamos datos de ejemplo:
-    const mockPosts: SocialPost[] = [
-      { id: '1', platform: 'Instagram', imageUrl: 'https://placehold.co/600x600/FFF0F5/FF69B4?text=Anella+Post', link: '#', caption: '¡Nuevo lanzamiento! Lámpara de luna personalizada.', likes: 1200 },
-      { id: '2', platform: 'TikTok', imageUrl: 'https://placehold.co/600x600/E6E6FA/4B0082?text=Anella+Video', link: '#', caption: 'El proceso detrás de nuestras tazas mágicas.', likes: 15000 },
-      { id: '3', platform: 'Instagram', imageUrl: 'https://placehold.co/600x600/F0FFF0/228B22?text=Anella+Story', link: '#', caption: 'Ideas de regalos para aniversarios.', likes: 850 },
-    ];
-    setPosts(mockPosts);
-    setLoading(false);
-  }, []);
+    setLoading(true);
+    const q = query(collection(db, 'socialPosts'), orderBy('order', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SocialPost)));
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching posts:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las publicaciones.' });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
+
 
   const handleAddPost = () => {
     setSelectedPost(null);
     setIsFormOpen(true);
-    toast({ title: "Función no disponible", description: "El formulario para añadir posts se implementará en el futuro."})
   };
+
+  const handleEditPost = (post: SocialPost) => {
+    setSelectedPost(post);
+    setIsFormOpen(true);
+  };
+
+   const handleDeletePost = async (postId: string) => {
+    if(!window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) return;
+    try {
+        await deleteSocialPost(postId);
+        toast({ title: 'Publicación Eliminada', description: 'La publicación ha sido eliminada de la base de datos.'});
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudo eliminar la publicación.'});
+    }
+  }
+
 
   return (
     <>
@@ -104,50 +126,40 @@ export default function AdminMarketingPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Orden</TableHead>
                     <TableHead>Plataforma</TableHead>
-                    <TableHead>Publicación</TableHead>
-                    <TableHead className="hidden md:table-cell">Interacciones</TableHead>
+                    <TableHead>Descripción</TableHead>
                     <TableHead>
                       <span className="sr-only">Acciones</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {posts.map((post) => (
+                   {posts.map((post) => (
                     <TableRow key={post.id}>
+                      <TableCell className="font-bold">{post.order}</TableCell>
                       <TableCell>
                           <div className="flex items-center gap-2 font-semibold">
-                            {post.platform === 'Instagram' ? <Instagram className="h-5 w-5 text-pink-600" /> : <Clapperboard className="h-5 w-5" />}
+                            {platformIcons[post.platform]}
                             {post.platform}
                           </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                           <Image
-                                alt={post.caption}
-                                className="aspect-square rounded-md object-cover"
-                                height="64"
-                                src={post.imageUrl}
-                                width="64"
-                            />
-                            <span className="font-medium line-clamp-2">{post.caption}</span>
-                        </div>
+                        <span className="font-medium line-clamp-2">{post.caption}</span>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{post.likes.toLocaleString()} likes</TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button aria-haspopup="true" size="icon" variant="ghost">
                               <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem disabled>
+                            <DropdownMenuItem onClick={() => handleEditPost(post)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" disabled>
+                            <DropdownMenuItem onClick={() => handleDeletePost(post.id)} className="text-destructive">
                               <Trash2 className="mr-2 h-4 w-4" />
                               Eliminar
                             </DropdownMenuItem>
@@ -163,10 +175,7 @@ export default function AdminMarketingPage() {
         </Card>
       </div>
       
-      {/* 
-        Futuro formulario para añadir/editar posts:
-        <SocialPostForm isOpen={isFormOpen} setIsOpen={setIsFormOpen} post={selectedPost} /> 
-      */}
+       <SocialPostForm isOpen={isFormOpen} setIsOpen={setIsFormOpen} post={selectedPost} />
     </>
   );
 }
