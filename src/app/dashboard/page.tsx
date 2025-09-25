@@ -46,6 +46,8 @@ export default function DashboardPage() {
         router.replace('/admin');
       } else if (firestoreUser.role === 'sales') {
         router.replace('/sales');
+      } else if (firestoreUser.role === 'marketing') {
+        router.replace('/marketing');
       }
     }
   }, [user, firestoreUser, loading, router]);
