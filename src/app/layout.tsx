@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isAdminOrSalesPath = pathname.startsWith('/admin') || pathname.startsWith('/sales');
+  const isAdminOrSalesPath = pathname.startsWith('/admin') || pathname.startsWith('/sales') || pathname.startsWith('/marketing');
   const showWhatsAppButton = !isAdminOrSalesPath;
   
    useEffect(() => {

@@ -36,7 +36,12 @@ const marketingNavItems: NavItem[] = [
 
 const MarketingNav = () => {
     const pathname = usePathname();
-    const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
+    const isActive = (path: string) => {
+        if (path === '/marketing') {
+            return pathname === '/marketing';
+        }
+        return pathname.startsWith(path);
+    }
     
     return (
         <Sidebar>
