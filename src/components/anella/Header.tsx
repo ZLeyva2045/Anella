@@ -64,7 +64,7 @@ export function Header() {
                 </Avatar>
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 bg-[var(--surface)] border-[var(--border-soft)] shadow-neo-dark">
+        <DropdownMenuContent align="end" className="w-56">
           {user ? (
             <>
               <DropdownMenuLabel>
