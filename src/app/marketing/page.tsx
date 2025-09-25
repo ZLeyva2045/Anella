@@ -1,7 +1,7 @@
 // src/app/marketing/page.tsx
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Activity, BarChart, Eye, Users, Palette, Megaphone } from 'lucide-react';
+import { Activity, BarChart, Eye, Users, Palette, Megaphone, Share2 } from 'lucide-react';
 import Link from 'next/link';
 
 const MetricCard = ({ title, value, icon: Icon, link }: { title: string; value: string; icon: React.ElementType, link?: string }) => (
