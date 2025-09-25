@@ -37,8 +37,6 @@ import { useCart } from '@/hooks/useCart';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { FollowUsDropdown } from './FollowUsDropdown';
-
 
 export function Header() {
   const { user, signOut, loading } = useAuth();
