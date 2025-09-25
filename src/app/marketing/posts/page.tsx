@@ -35,10 +35,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { SocialPost } from '@/types/firestore';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
-import { deleteSocialPost } from '@/services/socialPostService';
 import { SocialPostForm } from '@/components/marketing/SocialPostForm';
 
 const platformIcons = {
@@ -48,22 +45,25 @@ const platformIcons = {
 };
 
 export default function SocialPostsPage() {
-  const [posts, setPosts] = useState<SocialPost[]>([]);
+  const [posts, setPosts] = useState<Omit<SocialPost, 'createdAt'>[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<SocialPost | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Omit<SocialPost, 'createdAt'> | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    setLoading(true);
-    const postsQuery = query(collection(db, 'socialPosts'), orderBy('order', 'asc'));
-    
-    const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
-      setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SocialPost)));
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    // Using static data now
+    const staticPosts = [
+        {
+            id: '1',
+            platform: 'Instagram',
+            embedCode: `<blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/p/DOzlZ3xDPJN/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);"><div style="padding:16px;"> <a href="https://www.instagram.com/p/DOzlZ3xDPJN/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank">...</a></div></blockquote><script async src="//www.instagram.com/embed.js"></script>`,
+            caption: 'Publicación de Instagram de Anella Perú',
+            order: 1,
+        }
+    ];
+    setPosts(staticPosts);
+    setLoading(false);
   }, []);
 
   const handleAddPost = () => {
@@ -71,19 +71,14 @@ export default function SocialPostsPage() {
     setIsFormOpen(true);
   };
 
-  const handleEditPost = (post: SocialPost) => {
+  const handleEditPost = (post: Omit<SocialPost, 'createdAt'>) => {
     setSelectedPost(post);
     setIsFormOpen(true);
   };
   
   const handleDeletePost = async (postId: string) => {
     if(!window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) return;
-    try {
-      await deleteSocialPost(postId);
-      toast({ title: "Publicación eliminada" });
-    } catch (error) {
-       toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar la publicación." });
-    }
+    toast({ title: "Función no disponible", description: "El borrado está deshabilitado en modo estático." });
   }
 
   return (
@@ -108,7 +103,7 @@ export default function SocialPostsPage() {
           <CardHeader>
             <CardTitle>Publicaciones Activas</CardTitle>
             <CardDescription>
-              Publicaciones que aparecen en la página "Síguenos". Arrastra para reordenar.
+              Publicaciones que aparecen en la página "Síguenos".
             </CardDescription>
           </CardHeader>
           <CardContent>

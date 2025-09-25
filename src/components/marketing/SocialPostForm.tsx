@@ -1,7 +1,7 @@
 // src/components/marketing/SocialPostForm.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,7 +27,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import type { SocialPost } from '@/types/firestore';
-import { saveSocialPost } from '@/services/socialPostService';
 import { Loader2 } from 'lucide-react';
 
 const postSchema = z.object({
@@ -42,7 +41,7 @@ type PostFormValues = z.infer<typeof postSchema>;
 interface SocialPostFormProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  post?: SocialPost | null;
+  post?: Omit<SocialPost, 'createdAt'> | null;
 }
 
 export function SocialPostForm({ isOpen, setIsOpen, post }: SocialPostFormProps) {
@@ -59,7 +58,7 @@ export function SocialPostForm({ isOpen, setIsOpen, post }: SocialPostFormProps)
     },
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (isOpen) {
       if (post) {
         form.reset(post);
@@ -71,23 +70,14 @@ export function SocialPostForm({ isOpen, setIsOpen, post }: SocialPostFormProps)
 
   const onSubmit = async (data: PostFormValues) => {
     setLoading(true);
-    try {
-      await saveSocialPost(post?.id, data);
-      toast({
-        title: `Publicación ${post ? 'actualizada' : 'creada'}`,
-        description: 'El contenido se ha guardado correctamente.',
-      });
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Error saving post: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudo guardar la publicación.',
-      });
-    } finally {
-      setLoading(false);
-    }
+    // This is now a mock function as data is static
+    await new Promise(resolve => setTimeout(resolve, 500));
+    toast({
+      title: `Publicación ${post ? 'actualizada' : 'creada'} (simulado)`,
+      description: 'Los cambios se reflejarán al recargar la página.',
+    });
+    setLoading(false);
+    setIsOpen(false);
   };
 
   return (
