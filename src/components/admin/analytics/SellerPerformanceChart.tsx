@@ -2,21 +2,52 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import type { Order, User } from '@/types/firestore';
+import { useMemo } from 'react';
 
-// Datos de ejemplo
-const data = [
-  { name: 'Ana', ventas: 50 },
-  { name: 'Luis', ventas: 42 },
-  { name: 'Maria', ventas: 35 },
-  { name: 'Carlos', ventas: 28 },
-];
+export function SellerPerformanceChart({ orders, users }: { orders: Order[], users: User[] }) {
+    
+  const data = useMemo(() => {
+    const sellerSales: { [key: string]: number } = {};
+    const sellerMap = new Map(users.filter(u => u.role !== 'customer').map(u => [u.id, u.name]));
 
-export function SellerPerformanceChart() {
+    orders.forEach(order => {
+        if(order.sellerId) {
+            if (!sellerSales[order.sellerId]) {
+                sellerSales[order.sellerId] = 0;
+            }
+            sellerSales[order.sellerId]++;
+        }
+    });
+
+    return Object.entries(sellerSales)
+        .map(([sellerId, count]) => ({
+            name: sellerMap.get(sellerId) || 'Desconocido',
+            ventas: count,
+        }))
+        .sort((a,b) => b.ventas - a.ventas);
+
+  }, [orders, users]);
+  
+  if (data.length === 0) {
+      return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Rendimiento por Vendedor</CardTitle>
+                <CardDescription>Cantidad de ventas gestionadas por cada vendedor.</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[350px] flex items-center justify-center">
+                 <p className="text-muted-foreground">No hay datos de ventas para mostrar.</p>
+            </CardContent>
+        </Card>
+      )
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Rendimiento por Vendedor</CardTitle>
-        <CardDescription>Cantidad de ventas gestionadas por cada vendedor en el último mes.</CardDescription>
+        <CardDescription>Cantidad de ventas gestionadas por cada vendedor.</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>

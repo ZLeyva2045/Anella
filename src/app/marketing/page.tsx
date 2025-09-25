@@ -13,6 +13,7 @@ const MetricCard = ({ title, value, icon: Icon, link }: { title: string; value: 
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
+         <p className="text-xs text-muted-foreground">Datos de ejemplo</p>
       </CardContent>
     </Link>
   </Card>
@@ -29,9 +30,9 @@ export default function MarketingDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <MetricCard title="Visitas a la Web (Mes)" value="12,450" icon={Eye} />
-        <MetricCard title="Nuevos Seguidores (Mes)" value="+820" icon={Users} />
-        <MetricCard title="Interacción (Mes)" value="3.4%" icon={Activity} />
+        <MetricCard title="Visitas a la Web (Mes)" value="Próximamente" icon={Eye} />
+        <MetricCard title="Nuevos Seguidores (Mes)" value="Próximamente" icon={Users} />
+        <MetricCard title="Interacción (Mes)" value="Próximamente" icon={Activity} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
