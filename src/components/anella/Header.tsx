@@ -141,10 +141,11 @@ export function Header() {
                     </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                    <NavigationMenuTrigger>Síguenos</NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                       <FollowUsDropdown />
-                    </NavigationMenuContent>
+                    <Link href="/follow-us" legacyBehavior passHref>
+                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Síguenos
+                        </NavigationMenuLink>
+                    </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                     <Link href="/personalize" legacyBehavior passHref>
