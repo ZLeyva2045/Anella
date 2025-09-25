@@ -125,28 +125,28 @@ export function Header() {
         <NavigationMenu>
             <NavigationMenuList>
                 <NavigationMenuItem>
-                    <Link href="/" legacyBehavior passHref>
+                    <Link href="/" asChild>
                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Inicio
                         </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                    <Link href="/products" legacyBehavior passHref>
+                    <Link href="/products" asChild>
                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Regalos
                         </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                    <Link href="/follow-us" legacyBehavior passHref>
+                    <Link href="/follow-us" asChild>
                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Síguenos
                         </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                    <Link href="/personalize" legacyBehavior passHref>
+                    <Link href="/personalize" asChild>
                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Personalizar
                         </NavigationMenuLink>
