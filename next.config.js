@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
+
+// Load environment variables from .env file
+require('dotenv').config({ path: './.env' });
+
 const nextConfig = {
   typescript: {
     // !! WARN !!
