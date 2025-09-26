@@ -5,12 +5,13 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: 'anella-boutique.firebasestorage.app', // Corregido al nombre exacto del bucket
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyDebUCPTSwiyTdPhpBbe0fwAcMa_7wGnlA",
+  authDomain: "anella-boutique.firebaseapp.com",
+  projectId: "anella-boutique",
+  storageBucket: "anella-boutique.firebasestorage.app",
+  messagingSenderId: "762665326989",
+  appId: "1:762665326989:web:043807ca3ec66d536ac5c4",
+  measurementId: "G-YM6540GV18"
 };
 
 // Inicializar Firebase
