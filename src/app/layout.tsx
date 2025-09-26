@@ -51,6 +51,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" />
+        <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
         <title>Anella - Tienda de Regalos</title>
       </head>
       <body>

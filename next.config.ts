@@ -14,7 +14,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "script-src 'self' 'unsafe-eval' 'unsafe-inline' *.googletagmanager.com *.vercel-insights.com;",
+            value: "script-src 'self' 'unsafe-eval' 'unsafe-inline' *.googletagmanager.com *.vercel-insights.com; connect-src 'self' *.googleapis.com;",
           },
         ],
       },
