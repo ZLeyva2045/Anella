@@ -29,7 +29,7 @@ interface ProductImportDialogProps {
   onSuccess: () => void;
 }
 
-const requiredHeaders = ['name', 'description', 'price', 'stock', 'category', 'subcategory', 'productType'];
+const requiredHeaders = ['name', 'description', 'price', 'stock', 'category', 'productType'];
 
 export function ProductImportDialog({ isOpen, setIsOpen, onSuccess }: ProductImportDialogProps) {
   const [loading, setLoading] = useState(false);
@@ -68,7 +68,7 @@ export function ProductImportDialog({ isOpen, setIsOpen, onSuccess }: ProductImp
           price: parseFloat(row.price) || 0,
           costPrice: parseFloat(row.costPrice) || undefined,
           category: row.category || 'General',
-          subcategory: row.subcategory || 'Varios',
+          subcategory: row.subcategory || undefined,
           images: row.images ? (row.images as string).split(',') : [],
           stock: parseInt(row.stock, 10) || 0,
           supplier: row.supplier || '',
@@ -126,7 +126,7 @@ export function ProductImportDialog({ isOpen, setIsOpen, onSuccess }: ProductImp
             </div>
             <p className="text-sm text-muted-foreground mt-2">
               Asegúrate de que tu archivo tenga las siguientes columnas obligatorias: <strong>{requiredHeaders.join(', ')}</strong>.
-              Otras columnas como `costPrice`, `images`, `supplier` son opcionales. Las imágenes deben ser URLs separadas por comas.
+              Otras columnas como `subcategory`, `costPrice`, `images`, `supplier` son opcionales. Las imágenes deben ser URLs separadas por comas.
             </p>
           </div>
           <Input type="file" accept=".xlsx, .csv" onChange={handleFileChange} disabled={loading} />

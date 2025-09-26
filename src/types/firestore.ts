@@ -23,8 +23,8 @@ export interface Product {
   costPrice?: number; // Precio de costo del producto
   category: string; // Nombre de la categoría
   categoryId?: string; // ID de la categoría
-  subcategory: string; // Nombre de la subcategoría
-  subcategoryId: string; // ID de la subcategoría
+  subcategory?: string; // Nombre de la subcategoría
+  subcategoryId?: string; // ID de la subcategoría
   images: string[]; 
   createdAt: Date | Timestamp; 
   updatedAt: Date | Timestamp; 

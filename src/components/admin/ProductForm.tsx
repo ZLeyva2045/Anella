@@ -47,8 +47,8 @@ const baseProductSchema = z.object({
   price: z.coerce.number().min(0, 'El precio no puede ser negativo.'),
   category: z.string().min(1, 'Debes seleccionar una categoría.'),
   categoryId: z.string().min(1, 'ID de categoría no válido.'),
-  subcategory: z.string().min(1, 'Debes seleccionar una subcategoría.'),
-  subcategoryId: z.string().min(1, 'ID de subcategoría no válido.'),
+  subcategory: z.string().optional(),
+  subcategoryId: z.string().optional(),
   productType: z.enum(productTypes, { required_error: 'Debes seleccionar un tipo de producto.' }),
   images: z.array(z.string()).optional(),
   stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo.').optional(),
@@ -301,7 +301,7 @@ export function ProductForm({ isOpen, setIsOpen, product }: ProductFormProps) {
                 )}/>
                  <FormField control={form.control} name="subcategory" render={({ field }) => (
                     <FormItem className="flex flex-col">
-                        <FormLabel>Subcategoría</FormLabel>
+                        <FormLabel>Subcategoría (Opcional)</FormLabel>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <FormControl>
