@@ -20,6 +20,22 @@ type ProductData = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'rating'>;
 type CategoryData = Omit<Category, 'id'>;
 type SubcategoryData = Omit<Subcategory, 'id'>;
 
+/**
+ * Removes undefined properties from an object.
+ * Firestore doesn't allow undefined values.
+ * @param obj The object to clean.
+ * @returns A new object with undefined properties removed.
+ */
+function cleanObject<T extends object>(obj: T): T {
+  const newObj = { ...obj };
+  for (const key in newObj) {
+    if (newObj[key] === undefined) {
+      delete newObj[key];
+    }
+  }
+  return newObj;
+}
+
 export async function uploadImage(file: File, path: string): Promise<string> {
   const storageRef = ref(storage, `${path}/${Date.now()}-${file.name}`);
   const snapshot = await uploadBytes(storageRef, file);
@@ -32,12 +48,7 @@ export async function saveProduct(
   data: Partial<ProductData>
 ) {
   // Clean up data before sending to Firestore
-  const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
-    if (value !== undefined && value !== null && (value !== '' || key === 'description')) {
-      (acc as any)[key] = value;
-    }
-    return acc;
-  }, {} as Partial<ProductData>);
+  const cleanData = cleanObject(data);
 
   if (productId) {
     // Update existing product
@@ -91,7 +102,7 @@ export async function deleteProducts(productIds: string[]): Promise<void> {
 export async function updateProductsInBatch(productIds: string[], data: Partial<Product>): Promise<void> {
     const batch = writeBatch(db);
     const updateData = {
-        ...data,
+        ...cleanObject(data),
         updatedAt: serverTimestamp(),
     };
     productIds.forEach(id => {
@@ -108,7 +119,7 @@ export async function importProducts(products: ProductData[]): Promise<void> {
     for (const productData of products) {
         const newProductRef = doc(productsCollection);
         const newProduct = {
-            ...productData,
+            ...cleanObject(productData), // Clean the object before setting
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
             rating: Math.floor(Math.random() * (50 - 40) + 40) / 10,

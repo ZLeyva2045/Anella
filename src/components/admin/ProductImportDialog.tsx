@@ -59,6 +59,7 @@ export function ProductImportDialog({ isOpen, setIsOpen, onSuccess }: ProductImp
                 description: `El archivo debe contener las siguientes columnas: ${missingHeaders.join(', ')}`,
             });
             setParsedData([]);
+            setLoading(false);
             return;
         }
 
@@ -68,15 +69,15 @@ export function ProductImportDialog({ isOpen, setIsOpen, onSuccess }: ProductImp
           price: parseFloat(row.price) || 0,
           costPrice: parseFloat(row.costPrice) || undefined,
           category: row.category || 'General',
-          subcategory: row.subcategory || undefined,
+          subcategory: row.subcategory || undefined, // Allow undefined here, it will be cleaned by the service
           images: row.images ? (row.images as string).split(',') : [],
           stock: parseInt(row.stock, 10) || 0,
-          supplier: row.supplier || '',
+          supplier: row.supplier || undefined,
           productType: row.productType || 'Bienes',
-          // Default empty fields
+          // Default empty/undefined fields
           categoryId: '',
-          subcategoryId: '',
-          barcode: '',
+          subcategoryId: undefined,
+          barcode: row.barcode || undefined,
         }));
         setParsedData(formattedData);
       } catch (error) {
