@@ -1,5 +1,8 @@
 
 // /app/api/products/search/route.ts
+import { config } from 'dotenv';
+config();
+
 import { NextResponse } from 'next/server';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
