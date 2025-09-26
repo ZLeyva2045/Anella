@@ -101,6 +101,24 @@ export async function updateProductsInBatch(productIds: string[], data: Partial<
     await batch.commit();
 }
 
+export async function importProducts(products: ProductData[]): Promise<void> {
+    const batch = writeBatch(db);
+    const productsCollection = collection(db, 'products');
+
+    for (const productData of products) {
+        const newProductRef = doc(productsCollection);
+        const newProduct = {
+            ...productData,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            rating: Math.floor(Math.random() * (50 - 40) + 40) / 10,
+        };
+        batch.set(newProductRef, newProduct);
+    }
+
+    await batch.commit();
+}
+
 
 // --- Category Functions ---
 

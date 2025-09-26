@@ -29,6 +29,7 @@ import {
   TrendingUp,
   FilePenLine,
   AlertTriangle,
+  Upload,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -58,6 +59,7 @@ import {
 import { db } from '@/lib/firebase/config';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { ProductBulkEditForm } from '@/components/admin/ProductBulkEditForm';
+import { ProductImportDialog } from '@/components/admin/ProductImportDialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { deleteProducts } from '@/services/productService';
@@ -67,6 +69,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // State for deletion flow
@@ -215,6 +218,10 @@ export default function AdminProductsPage() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
+             <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
+              <Upload className="mr-2 h-4 w-4" />
+              Importar
+            </Button>
             <Button onClick={handleAddProduct}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Añadir Producto
@@ -363,6 +370,14 @@ export default function AdminProductsPage() {
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
         product={selectedProduct}
+      />
+      
+       <ProductImportDialog
+        isOpen={isImportDialogOpen}
+        setIsOpen={setIsImportDialogOpen}
+        onSuccess={() => {
+            // Can add a refresh logic if needed
+        }}
       />
 
        <ProductBulkEditForm
